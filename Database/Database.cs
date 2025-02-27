@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Data.SQLite;
+using System.IO;
 using System.Threading;
 
 // ===================================================================
@@ -42,15 +43,21 @@ namespace Budget
         public static void newDatabase(string filename)
         {
 
-            // If there was a database open before, close it and release the lock
+            // If there was a database open before, close it and release file
             CloseDatabaseAndReleaseFile();
 
             // Define the database file path
             string databasePath = @"URI=file:" + filename;
-
-            // Create and open the new database connection
-            _connection = new SQLiteConnection(databasePath);
-            _connection.Open();
+            try 
+            {
+                // Create and open the new database connection
+                _connection = new SQLiteConnection(databasePath);
+                _connection.Open();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Failed to create and open the new Database...", ex);
+            }
         }
 
        // ===================================================================
@@ -58,14 +65,20 @@ namespace Budget
        // ===================================================================
        public static void existingDatabase(string filename)
         {
-            // If there was a database open before, close it and release the lock
+            // If there was a database open before, close it and release file
             CloseDatabaseAndReleaseFile();
 
             // Define the database file path
             string databasePath = @"URI=file:" + filename;
 
             // Check if the database file exists before attempting to open it
-            if (File.Exists(filename))
+            if (!File.Exists(databasePath))
+            {
+                //if it does not exist, throw a filenotfound exception
+                throw new FileNotFoundException("The specified database file does not exist.", filename);
+            }
+
+            try
             {
                 // Create and open the existing database connection
                 _connection = new SQLiteConnection(databasePath);
@@ -73,10 +86,9 @@ namespace Budget
                 _connection.Open();
 
             }
-            else
+            catch (Exception ex)
             {
-                //if it does not exist, throw a filenotfound exception
-                throw new FileNotFoundException("The specified database file does not exist.", filename);
+                throw new Exception("Failed to create and open the existing database...", ex);
             }
 
         }
