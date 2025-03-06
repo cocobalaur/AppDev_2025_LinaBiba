@@ -61,7 +61,6 @@ namespace BudgetCodeTests
 
             cmd.CommandText = "INSERT INTO categoryTypes(Description) VALUES('Whatever')";
             cmd.ExecuteNonQuery();
-            cmd.Dispose();
 
 
             // Act
@@ -77,7 +76,6 @@ namespace BudgetCodeTests
         [Fact]
         public void SQLite_TestNewDatabase_ForeignKeyConstraintsEnabled()
         {
-
             // For SQLite, you need to use the following as a connection string
             // if you want your foreign key constraints to work.
 

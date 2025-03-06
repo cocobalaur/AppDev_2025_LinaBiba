@@ -45,14 +45,19 @@ namespace Budget
 
             // If there was a database open before, close it and release file
             CloseDatabaseAndReleaseFile();
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename); //using GetCurrentDirectory() instead of using \\..\\..\\, source: https://stackoverflow.com/questions/40994534/get-relative-path-of-a-file-c-sharp
 
-            // Define the database file path
-            string databasePath = @"URI=file:" + filename;
-            try 
+            try
             {
+                // Define the database file path, fixed to use foreign keys
+                string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
+
                 // Create and open the new database connection
                 _connection = new SQLiteConnection(databasePath);
                 _connection.Open();
+
+                CreateTables();
+
             }
             catch (Exception ex)
             {
@@ -60,29 +65,27 @@ namespace Budget
             }
         }
 
-       // ===================================================================
-       // open an existing database
-       // ===================================================================
-       public static void existingDatabase(string filename)
+        // ===================================================================
+        // open an existing database
+        // ===================================================================
+        public static void existingDatabase(string filename)
         {
-            // If there was a database open before, close it and release file
             CloseDatabaseAndReleaseFile();
 
-            // Define the database file path
-            string databasePath = @"URI=file:" + filename;
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename); //get the file path with GetCurrentDirectory
 
-            // Check if the database file exists before attempting to open it
-            if (!File.Exists(databasePath))
+            if (!File.Exists(filePath))
             {
-                //if it does not exist, throw a filenotfound exception
                 throw new FileNotFoundException("The specified database file does not exist.", filename);
             }
 
             try
             {
+                // Define the database connection string with the URI prefix, fixed to use foreign keys
+                string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
+
                 // Create and open the existing database connection
                 _connection = new SQLiteConnection(databasePath);
-                // Open the connection
                 _connection.Open();
 
             }
@@ -90,27 +93,80 @@ namespace Budget
             {
                 throw new Exception("Failed to create and open the existing database...", ex);
             }
-
         }
 
-       // ===================================================================
-       // close existing database, wait for garbage collector to
-       // release the lock before continuing
-       // ===================================================================
+        // ===================================================================
+        // close existing database, wait for garbage collector to
+        // release the lock before continuing
+        // ===================================================================
         static public void CloseDatabaseAndReleaseFile()
         {
             if (Database.dbConnection != null)
             {
                 // close the database connection
                 Database.dbConnection.Close();
-                
+
 
                 // wait for the garbage collector to remove the
                 // lock from the database file
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
+
+        }
+
+        private static void CreateTables()
+        {
+            DropTables();
+
+            using var cmd = new SQLiteCommand(_connection);
+
+            //categories
+            cmd.CommandText = @"
+                CREATE TABLE categories (
+                    Id INTEGER PRIMARY KEY,
+                    Description TEXT NOT NULL,
+                    TypeId INTEGER NOT NULL,
+                    FOREIGN KEY (TypeId) REFERENCES categoryTypes(Id)
+                );";
+            cmd.ExecuteNonQuery();
+
+            //expenses
+            cmd.CommandText = @"
+                CREATE TABLE expenses (
+                    Id INTEGER PRIMARY KEY,
+                    Date TEXT NOT NULL,
+                    Description TEXT NOT NULL,
+                    Amount DOUBLE NOT NULL,
+                    CategoryId INTEGER NOT NULL,
+                    FOREIGN KEY (CategoryId) REFERENCES categories(Id) 
+                );";
+            cmd.ExecuteNonQuery();
+
+            //categoryTypes
+            cmd.CommandText = @"
+                CREATE TABLE categoryTypes (
+                    Id INTEGER PRIMARY KEY,
+                    Description TEXT NOT NULL
+                );";
+            cmd.ExecuteNonQuery();
+
+        }
+
+        private static void DropTables()
+        {
+            using var cmd = new SQLiteCommand(_connection);
+
+            //drop the tables if they already exist 
+            cmd.CommandText = "DROP TABLE IF EXISTS categories;";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = "DROP TABLE IF EXISTS expenses;";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = "DROP TABLE IF EXISTS categoryTypes;";
+            cmd.ExecuteNonQuery();
+;
         }
     }
-
 }

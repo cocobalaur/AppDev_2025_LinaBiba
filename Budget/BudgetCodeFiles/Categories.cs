@@ -1,4 +1,7 @@
-﻿using System.Xml;
+﻿using System.Data.Entity;
+using System.Data.SqlClient;
+using System.Data.SQLite;
+using System.Xml;
 
 // ============================================================================
 // (c) Sandy Bultena 2018
