@@ -121,10 +121,18 @@ namespace Budget
 
             using var cmd = new SQLiteCommand(_connection);
 
+            //categoryTypes
+            cmd.CommandText = @"
+                CREATE TABLE categoryTypes (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    Description TEXT NOT NULL
+                );";
+            cmd.ExecuteNonQuery();
+
             //categories
             cmd.CommandText = @"
                 CREATE TABLE categories (
-                    Id INTEGER PRIMARY KEY,
+                    Id INTEGER PRIMARY KEY NOT NULL,
                     Description TEXT NOT NULL,
                     TypeId INTEGER NOT NULL,
                     FOREIGN KEY (TypeId) REFERENCES categoryTypes(Id)
@@ -134,7 +142,7 @@ namespace Budget
             //expenses
             cmd.CommandText = @"
                 CREATE TABLE expenses (
-                    Id INTEGER PRIMARY KEY,
+                    Id INTEGER PRIMARY KEY NOT NULL,
                     Date TEXT NOT NULL,
                     Description TEXT NOT NULL,
                     Amount DOUBLE NOT NULL,
@@ -143,30 +151,16 @@ namespace Budget
                 );";
             cmd.ExecuteNonQuery();
 
-            //categoryTypes
-            cmd.CommandText = @"
-                CREATE TABLE categoryTypes (
-                    Id INTEGER PRIMARY KEY,
-                    Description TEXT NOT NULL
-                );";
-            cmd.ExecuteNonQuery();
-
         }
 
         private static void DropTables()
         {
             using var cmd = new SQLiteCommand(_connection);
-
-            //drop the tables if they already exist 
-            cmd.CommandText = "DROP TABLE IF EXISTS categories;";
+            cmd.CommandText = @"
+                DROP TABLE IF EXISTS expenses;
+                DROP TABLE IF EXISTS categories;
+                DROP TABLE IF EXISTS categoryTypes;";
             cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "DROP TABLE IF EXISTS expenses;";
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "DROP TABLE IF EXISTS categoryTypes;";
-            cmd.ExecuteNonQuery();
-;
         }
     }
 }
