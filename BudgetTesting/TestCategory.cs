@@ -4,6 +4,7 @@ using Budget;
 
 namespace BudgetCodeTests
 {
+    [Collection("Sequential")]
     public class TestCategory
     {
         // ========================================================================
@@ -11,7 +12,6 @@ namespace BudgetCodeTests
         [Fact]
         public void CategoryObject_New()
         {
-
             // Arrange
             string descr = "Clothing";
             int id = 42;
@@ -27,6 +27,23 @@ namespace BudgetCodeTests
             Assert.Equal(type, category.Type);
         }
 
+        [Fact]
+        public void CategoryObject_PropertiesAreReadOnly()
+        {
+            // Arrange
+            string descr = "Clothing";
+            int id = 42;
+            Category.CategoryType type = Category.CategoryType.Credit;
+
+            // Act
+            Category category = new Category(id, descr, type);
+
+            // Assert 
+            Assert.IsType<Category>(category);
+            Assert.True(typeof(Category).GetProperty("Id").CanWrite == false);
+            Assert.True(typeof(Category).GetProperty("Description").CanWrite == false);
+            Assert.True(typeof(Category).GetProperty("Type").CanWrite == false);
+        }
 
 
         // ========================================================================
@@ -122,33 +139,6 @@ namespace BudgetCodeTests
             Assert.Equal(type, category.Type);
 
         }
-
-        // ========================================================================
-
-        [Fact]
-        public void CategoryObject_GetSetProperties()
-        {
-            // Question: why am I allowed to change the id?
-
-            // Arrange
-            string descr = "Eating Out";
-            int id = 42;
-            int newID = 15;
-            string newDescr = "Restaurants";
-            Category category = new Category(id, descr, Category.CategoryType.Expense);
-
-            // Act
-            category.Id = newID;
-            category.Description = newDescr;
-            category.Type = Category.CategoryType.Savings;
-
-            // Assert 
-            Assert.Equal(newID, category.Id);
-            Assert.Equal(newDescr, category.Description);
-            Assert.Equal(Category.CategoryType.Savings, category.Type);
-
-        }
-
 
 
         // ========================================================================
