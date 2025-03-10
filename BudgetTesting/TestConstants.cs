@@ -331,8 +331,6 @@ namespace BudgetCodeTests
 
             // this is valid for C# .Net Foundation (not for C# .Net Core)
             return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\"));
-    
-
         }
 
         // source taken from: https://www.dotnetperls.com/file-equals

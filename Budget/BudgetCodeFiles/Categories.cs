@@ -1,8 +1,10 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Common;
 using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Data.SQLite;
+using System.Reflection.PortableExecutable;
 using System.Xml;
 
 // ============================================================================
@@ -80,48 +82,7 @@ namespace Budget
             }
             else
             {
-                LoadCategoriesFromDatabase();
-            }
-        }
-
-        // Method to load categories from the database
-        private void LoadCategoriesFromDatabase()
-        {
-            string query = "SELECT Id, Description FROM categories";
-
-            try
-            {
-                Console.WriteLine("Opening connection...");
-                if (_connection.State != System.Data.ConnectionState.Open)
-                {
-                    _connection.Open();
-                }
-
-                Console.WriteLine("Executing query...");
-                using (SQLiteCommand cmd = new SQLiteCommand(query, _connection))
-                {
-                    using (SQLiteDataReader reader = cmd.ExecuteReader())
-                    {
-                        if (reader.HasRows)
-                        {
-                            Console.WriteLine("Rows found. Reading data...");
-                            while (reader.Read())
-                            {
-                                int id = reader.GetInt32(0);
-                                string description = reader.GetString(1);
-                                Console.WriteLine($"Id: {id}, Description: {description}");
-                            }
-                        }
-                        else
-                        {
-                            Console.WriteLine("No categories found.");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error loading categories: {ex.Message}");
+                List();
             }
         }
 
@@ -144,21 +105,29 @@ namespace Budget
         /// </example>
         public Category GetCategoryFromId(int id)
         {
-            using (SQLiteCommand cmd = new SQLiteCommand("SELECT Description, TypeId FROM categories WHERE Id = @id;", _connection))
+            string query = "SELECT Id, Description, TypeId FROM categories WHERE Id = @id;";
+            using var cmd = new SQLiteCommand(query, _connection);
+            cmd.Parameters.AddWithValue("@id", id); //avoid sql injection 
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read()) //if a record was found
             {
-                cmd.Parameters.AddWithValue("@id", id);
-                using (SQLiteDataReader reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        return new Category(id, reader.GetString(0), (Category.CategoryType)reader.GetInt32(1));
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Category with Id {id} not found.");
-                        return null;  // Ensure this part is correct.
-                    }
-                }
+                int indexCategoryId = 0;
+                int indexDescription = 1;
+                int indexTypeId = 2;
+
+                //get id, description and typeId from the reader
+                int categoryId = reader.GetInt32(indexCategoryId);
+                string description = reader.GetString(indexDescription);
+                int typeId = reader.GetInt32(indexTypeId);
+
+                Category.CategoryType type = (Category.CategoryType)typeId - 1;
+
+                return new Category(categoryId, description, type);
+            }
+            else
+            {
+                throw new Exception("Cannot find category with id " + id);
             }
         }
 
@@ -270,7 +239,7 @@ namespace Budget
         /// categories.SetCategoriesToDefaults();
         /// </code>
         /// </example>
-  
+
 
         // ===================================================================
         // INSERT DATA USING PARAMETERIZED QUERIES TO PREVENT SQL INJECTION
@@ -278,17 +247,21 @@ namespace Budget
         // This method ensures that category types are inserted and then sets the default categories.
         public void SetCategoriesToDefaults()
         {
-            // Insert category types if they don't already exist
-            InsertCategoryTypeIfNotExists(Category.CategoryType.Income.ToString());
-            InsertCategoryTypeIfNotExists(Category.CategoryType.Savings.ToString());
-            InsertCategoryTypeIfNotExists(Category.CategoryType.Expense.ToString());
-            InsertCategoryTypeIfNotExists(Category.CategoryType.Credit.ToString());
+             DeleteAll();
 
+            // Insert category types if they don't already exist
+            InsertCategoryTypeIfNotExists("Income");
+            InsertCategoryTypeIfNotExists("Savings");
+            InsertCategoryTypeIfNotExists("Expense");
+            InsertCategoryTypeIfNotExists("Credit");
+
+
+           
             // Get the IDs of the predefined category types
-            int incomeTypeId = GetCategoryTypeId(Category.CategoryType.Income);
-            int savingsTypeId = GetCategoryTypeId(Category.CategoryType.Savings);
-            int expenseTypeId = GetCategoryTypeId(Category.CategoryType.Expense);
-            int creditTypeId = GetCategoryTypeId(Category.CategoryType.Credit);
+            int incomeTypeId = GetCategoryTypeId("Income");
+            int savingsTypeId = GetCategoryTypeId("Savings");
+            int expenseTypeId = GetCategoryTypeId("Expense");
+            int creditTypeId = GetCategoryTypeId("Credit");
 
             // Insert default categories for each category type
             InsertCategory("Utilities", expenseTypeId);
@@ -309,6 +282,22 @@ namespace Budget
 
         }
 
+        private int GetCategoryTypeId(string categoryTypeDescription)
+        {
+            switch (categoryTypeDescription)
+            {
+                case "Income":
+                    return 1;
+                case "Expense":
+                    return 2;
+                case "Credit":
+                    return 3;
+                case "Savings":
+                    return 4;
+                default:
+                    throw new Exception("Unknown category type: " + categoryTypeDescription);
+            }
+        }
         // Inserts a category type into the categoryTypes table if it doesn't already exist.
         private void InsertCategoryTypeIfNotExists(string description)
         {
@@ -355,54 +344,6 @@ namespace Budget
             }
         }
 
-        // Gets the category type ID based on the description
-
-        private int GetCategoryTypeId(Category.CategoryType type)
-        {
-            try
-            {
-                using (SQLiteCommand cmd = new SQLiteCommand("SELECT Id FROM categoryTypes WHERE Description = @desc", _connection))
-                {
-                    cmd.Parameters.AddWithValue("@desc", type.ToString());
-                    object result = cmd.ExecuteScalar();
-
-                    if (result != null && int.TryParse(result.ToString(), out int typeId))
-                    {
-                        return typeId;  // Return the valid TypeId
-                    }
-                    else
-                    {
-                        // If category type is not found, insert the new category type and fetch its Id
-                        using (SQLiteCommand insertCmd = new SQLiteCommand("INSERT INTO categoryTypes (Description) VALUES (@desc)", _connection))
-                        {
-                            insertCmd.Parameters.AddWithValue("@desc", type.ToString());
-                            insertCmd.ExecuteNonQuery();  // Insert the new category type
-                        }
-
-                        // Now fetch the Id of the newly inserted category type
-                        using (SQLiteCommand getIdCmd = new SQLiteCommand("SELECT Id FROM categoryTypes WHERE Description = @desc", _connection))
-                        {
-                            getIdCmd.Parameters.AddWithValue("@desc", type.ToString());
-                            object newResult = getIdCmd.ExecuteScalar();
-                            if (newResult != null && int.TryParse(newResult.ToString(), out int newTypeId))
-                            {
-                                return newTypeId;  // Return the newly inserted Id
-                            }
-                            else
-                            {
-                                throw new Exception($"Failed to fetch Id for newly added category type '{type}'");
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error fetching CategoryType ID: {ex.Message}");
-                throw;  // Rethrow to ensure proper error handling in the calling method
-            }
-        }
-
 
         // Inserts a category into the categories table with a given type ID
         private void InsertCategory(string description, int typeId)
@@ -418,10 +359,10 @@ namespace Budget
         // ====================================================================
         // Add category
         // ====================================================================
-        //private void Add(Category cat)
-        //{
-        //    _Cats.Add(cat);
-        //}
+        private void Add(Category cat)
+        {
+            _Cats.Add(cat);
+        }
 
         /// <summary>
         /// Adds a new category with a description and type.
@@ -435,31 +376,30 @@ namespace Budget
         /// categories.Add("Travel", Category.CategoryType.Expense);
         /// </code>
         /// </example>
-        public void Add(string description, Category.CategoryType type)
+        public void Add(string desc, Category.CategoryType type)
         {
             try
             {
-                // Get the TypeId for the given category type
-                int typeId = GetCategoryTypeId(type);
-
-                // Insert a new category into the database
+                int typeId = (int)type + 1;
+                // SQL query to insert the new category into the categories table
                 string query = "INSERT INTO categories (Description, TypeId) VALUES (@desc, @typeId)";
 
                 using (SQLiteCommand cmd = new SQLiteCommand(query, _connection))
                 {
-                    cmd.Parameters.AddWithValue("@desc", description); ///////////////////
-                    cmd.Parameters.AddWithValue("@typeId", typeId);
+                    // Add parameters to the query to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@desc", desc);
+                    cmd.Parameters.AddWithValue("@typeId", typeId); // Use the typeId directly from the switch expression
 
-                    cmd.ExecuteNonQuery();  // Execute the query to insert the new category
+                    // Execute the query to insert the new category
+                    cmd.ExecuteNonQuery();
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine("Error adding category: " + ex.Message);
+                throw;
             }
-
         }
-
 
         // ====================================================================
         // Delete category
@@ -475,17 +415,31 @@ namespace Budget
         /// categories.Delete(1); // Deletes the category with Id 1
         /// </code>
         /// </example>
-        public void Delete(int id)
+        public void Delete(int id) //throw error 
         {
-            using (SQLiteConnection conn = new SQLiteConnection(connectionString))
+            using var conn = new SQLiteConnection(connectionString);
+            conn.Open();
+            string query = "DELETE FROM categories WHERE Id = @id;";
+            using var cmd = new SQLiteCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.ExecuteNonQuery();
+        }
+
+        public void DeleteAll()
+        {
+            using var conn = new SQLiteConnection(connectionString);
+            try
             {
                 conn.Open();
-                string query = "DELETE FROM categories WHERE Id = @id;";
-                using (SQLiteCommand cmd = new SQLiteCommand(query, conn))
-                {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    cmd.ExecuteNonQuery();
-                }
+
+                string deleteQuery = "DELETE FROM categories;";
+                using var deleteCmd = new SQLiteCommand(deleteQuery, conn);
+                int rowsAffected = deleteCmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting all categories: {ex.Message}");
+                throw;
             }
         }
 
@@ -507,67 +461,44 @@ namespace Budget
         /// ]]>
         /// </code>
         /// </example>
+        /// 
         public List<Category> List()
         {
-            List<Category> categoriesList = new List<Category>();
+            List<Category> categoriesList = new List<Category>();  
+
+            string query = "SELECT Id, Description, TypeId FROM categories ORDER BY Id";
 
             try
             {
-                // Ensure the connection is open
-                if (_connection.State != System.Data.ConnectionState.Open)
-                {
-                    _connection.Open();
-                }
-
-                // Query to fetch categories along with type descriptions
-                string query = @"
-                    SELECT c.Id, c.Description, ct.Description AS Type 
-                    FROM categories c
-                    JOIN categoryTypes ct ON c.TypeId = ct.Id";
-
-                // Use 'using' for SQLiteCommand and SQLiteDataReader to ensure proper disposal
                 using (SQLiteCommand cmd = new SQLiteCommand(query, _connection))
                 using (SQLiteDataReader reader = cmd.ExecuteReader())
                 {
-                    // Check if there are any rows returned
-                    while (reader.Read())
+                    if (reader.HasRows)
                     {
-                        try
+                        while (reader.Read())
                         {
-                            // Read and map the data
-                            int id = reader.GetInt32(0);
-                            string description = reader.GetString(1);
-                            string typeString = reader.GetString(2);
+                            int id = reader.GetInt32(0);          // Read Id (Index 0)
+                            string description = reader.GetString(1);  // Read Description (Index 1)
+                            int typeId = reader.GetInt32(2);  // Read TypeId (Index 2)
 
-                            // Parse the CategoryType enum
-                            if (Enum.TryParse(typeString, out Category.CategoryType type))
-                            {
-                                // Create category and add to list
-                                categoriesList.Add(new Category(id, description, type));
-                            }
-                            else
-                            {
-                                Console.WriteLine($"Warning: Invalid CategoryType '{typeString}' for category ID {id}. Skipping...");
-                            }
+                            Category.CategoryType type = (Category.CategoryType)typeId ;  // If TypeId is an int in DB
+                            // Add the category to the list
+                            categoriesList.Add(new Category(id, description, type));
                         }
-                        catch (Exception ex)
-                        {
-                            // Log any unexpected errors for each row
-                            Console.WriteLine($"Error processing row: {ex.Message}");
-                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("No categories found in the database.");
                     }
                 }
             }
-            catch (SQLiteException ex)
-            {
-                Console.WriteLine("Database error while retrieving categories: " + ex.Message);
-            }
             catch (Exception ex)
             {
-                Console.WriteLine("Unexpected error: " + ex.Message);
+                Console.WriteLine("Error loading categories: " + ex.Message);
+                throw;
             }
 
-            return categoriesList;
+            return categoriesList;  // Return new list instead of modifying _Cats
         }
 
 
@@ -608,8 +539,7 @@ namespace Budget
                             type = Category.CategoryType.Savings;
                             break;
                     }
-                    //this.Add(new Category(int.Parse(id), desc, type));
-                    this.Add(desc, type);
+                    this.Add(new Category(int.Parse(id), desc, type));
                 }
 
             }
@@ -667,52 +597,34 @@ namespace Budget
         // ====================================================================
         public void UpdateProperties(int id, string newDescription, Category.CategoryType newType)
         {
-            string updateQuery = "UPDATE categories SET Description = @desc WHERE Id = @id";
-
             try
             {
-                // Step 1: Check if category exists before updating
-                using (SQLiteCommand checkCmd = new SQLiteCommand(_connection))
-                {
-                    checkCmd.Parameters.AddWithValue("@id", id);
-                    string checkQuery = "SELECT COUNT(*) FROM categories WHERE Id = @id";
-                    checkCmd.CommandText = checkQuery;
-                    int count = Convert.ToInt32(checkCmd.ExecuteScalar());
+                // Get the typeId directly from the enum value (no need to add 1)
+                int typeId = (int)newType + 1; 
 
-                    if (count == 0)
+                string query = "UPDATE categories SET Description = @desc, TypeId = @typeId WHERE Id = @id";
+
+                using (SQLiteCommand cmd = new SQLiteCommand(query, _connection))
+                {
+                    // Add parameters to the query
+                    cmd.Parameters.AddWithValue("@desc", newDescription);
+                    cmd.Parameters.AddWithValue("@typeId", typeId);
+                    cmd.Parameters.AddWithValue("@id", id); // The category Id to be updated
+
+                    // Execute the query
+                    int rowsAffected = cmd.ExecuteNonQuery();
+                    if (rowsAffected == 0)
                     {
-                        Console.WriteLine($"No category found with Id {id}. Update aborted.");
-                        return;
+                        throw new Exception($"Category with Id {id} not found.");
                     }
                 }
-
-                // Step 2: Execute the update if the category exists
-                SQLiteCommand cmd = new SQLiteCommand(updateQuery, _connection);
-
-                cmd.Parameters.AddWithValue("@desc", newDescription);
-                cmd.Parameters.AddWithValue("@type", newType);
-
-                int updated = cmd.ExecuteNonQuery();
-
-                if (updated == 0)
-                {
-                    Console.WriteLine($"Category with Id {id} exists but was not updated.");
-                }
-                else
-                {
-                    Console.WriteLine($"Category with Id {id} updated successfully.");
-                }
-
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error updating category: " + ex.Message);
+                Console.WriteLine($"Error updating category: {ex.Message}");
+                throw;
             }
         }
-
-
-
-
     }
 }
 
