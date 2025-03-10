@@ -6,6 +6,7 @@ using Budget;
 
 namespace BudgetCodeTests
 {
+    [Collection("Sequential")]
     public class TestExpenses
     {
         int numberOfExpensesInFile = TestConstants.numberOfExpensesInFile;
@@ -24,7 +25,7 @@ namespace BudgetCodeTests
             // Act
             Expenses expenses = new Expenses();
 
-            // Assert 
+            // Assert
             Assert.IsType<Expenses>(expenses);
 
             Assert.True(typeof(Expenses).GetProperty("FileName").CanWrite == false);
@@ -53,7 +54,7 @@ namespace BudgetCodeTests
         public void ExpensesMethod_ReadFromFile_ValidateCorrectDataWasRead()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
 
             // Act
@@ -80,7 +81,7 @@ namespace BudgetCodeTests
         public void ExpensesMethod_List_ReturnsListOfExpenses()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
 
@@ -98,13 +99,13 @@ namespace BudgetCodeTests
         public void ExpensesMethod_List_ModifyListDoesNotModifyExpensesInstance()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             List<Expense> list = expenses.List();
 
             // Act
-            list[0].Amount = list[0].Amount + 21.03; 
+            list[0].Amount = list[0].Amount + 21.03;
 
             // Assert
             Assert.NotEqual(list[0].Amount, expenses.List()[0].Amount);
@@ -117,7 +118,7 @@ namespace BudgetCodeTests
         public void ExpensesMethod_Add()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             int category = 57;
@@ -141,7 +142,7 @@ namespace BudgetCodeTests
         public void ExpensesMethod_Delete()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             int IdToDelete = 3;
@@ -163,7 +164,7 @@ namespace BudgetCodeTests
         public void ExpensesMethod_Delete_InvalidIDDoesntCrash()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             int IdToDelete = 1006;
@@ -190,7 +191,7 @@ namespace BudgetCodeTests
         public void ExpenseMethod_WriteToFile()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             string fileName = TestConstants.ExpenseOutputTestFile;
@@ -221,7 +222,7 @@ namespace BudgetCodeTests
         public void ExpenseMethod_WriteToFile_VerifyNewExpenseWrittenCorrectly()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             string fileName = TestConstants.ExpenseOutputTestFile;
@@ -252,7 +253,7 @@ namespace BudgetCodeTests
         public void ExpenseMethod_WriteToFile_WriteToLastFileWrittenToByDefault()
         {
             // Arrange
-            String dir = GetSolutionDir();
+            String dir = TestConstants.GetSolutionDir();
             Expenses expenses = new Expenses();
             expenses.ReadFromFile(dir + "\\" + testInputFile);
             string fileName = TestConstants.ExpenseOutputTestFile;
@@ -286,12 +287,6 @@ namespace BudgetCodeTests
         // helpful functions, ... they are not tests
         // -------------------------------------------------------
 
-        private String GetSolutionDir() {
-
-            // this is valid for C# .Net Foundation (not for C# .Net Core)
-            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\"));
-        }
-
         // source taken from: https://www.dotnetperls.com/file-equals
 
         private bool FileEquals(string path1, string path2)
@@ -313,4 +308,3 @@ namespace BudgetCodeTests
         }
     }
 }
-
