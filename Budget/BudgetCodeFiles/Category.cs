@@ -58,19 +58,19 @@ namespace Budget
             /// <summary>
             /// Represents income-related categories, such as salary, bonuses, etc.
             /// </summary>
-            Income,
+            Income = 1,
             /// <summary>
             /// Represents expense-related categories, such as bills, rent, groceries, etc.
             /// </summary>
-            Expense,
+            Expense =2,
             /// <summary>
             /// Represents credit-related categories, such as credit card payments, loans, etc.
             /// </summary>
-            Credit,
+            Credit =3,
             /// <summary>
             /// Represents savings-related categories, such as retirement savings, emergency funds, etc.
             /// </summary>
-            Savings
+            Savings=4
         };
 
         // ====================================================================
