@@ -31,7 +31,7 @@ namespace Budget
         /// <value>
         /// An integer representing the unique identifier for the category.
         /// </value>
-        public int Id { get; set; }
+        public int Id { get; }
 
         /// <summary>
         /// Gets or sets the description of the category.
@@ -39,7 +39,7 @@ namespace Budget
         /// <value>
         /// A string representing the description of the category.
         /// </value>
-        public String Description { get; set; }
+        public string Description { get; }
 
         /// <summary>
         /// Gets or sets the type of category (Income, Expense, Credit, Savings).
@@ -48,7 +48,7 @@ namespace Budget
         /// A `CategoryType` enum that represents the type of the category. 
         /// The valid types are: Income, Expense, Credit, and Savings.
         /// </value>
-        public CategoryType Type { get; set; }
+        public CategoryType Type { get; }
 
         /// <summary>
         /// Defines valid category types.

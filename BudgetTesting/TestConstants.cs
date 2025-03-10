@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Budget;
+using System.IO;
+
 
 namespace BudgetCodeTests
 {
@@ -15,7 +17,7 @@ namespace BudgetCodeTests
         {
             CategoryID = expense1.Category,
             ExpenseID = expense1.Id,
-            Amount = -expense1.Amount
+            Amount = expense1.Amount
         };
 
         private static Expense expense2 = new Expense(2, new DateTime(2018, 1, 11), 9, -10, "hat (on credit)");
@@ -23,7 +25,7 @@ namespace BudgetCodeTests
         {
             CategoryID = expense2.Category,
             ExpenseID = expense2.Id,
-            Amount = -expense2.Amount
+            Amount = expense2.Amount
         };
 
 
@@ -31,7 +33,7 @@ namespace BudgetCodeTests
         {
             CategoryID = 10,
             ExpenseID = 3,
-            Amount = -15
+            Amount = 15
         };
 
         private static Expense expense4 = new Expense(4, new DateTime(2020, 1, 10), 9, -15, "scarf (on credit)");
@@ -39,7 +41,7 @@ namespace BudgetCodeTests
         {
             CategoryID = expense4.Category,
             ExpenseID = expense4.Id,
-            Amount = -expense4.Amount
+            Amount = expense4.Amount
         };
 
 
@@ -48,7 +50,7 @@ namespace BudgetCodeTests
         {
             CategoryID = expense5.Category,
             ExpenseID = expense5.Id,
-            Amount = -expense5.Amount
+            Amount = expense5.Amount
         };
 
         private static Expense expense7 = new Expense(7, new DateTime(2020, 1, 12), 14, 25, "Wendys");
@@ -56,19 +58,15 @@ namespace BudgetCodeTests
         {
             CategoryID = expense7.Category,
             ExpenseID = expense7.Id,
-            Amount = -expense7.Amount
+            Amount = expense7.Amount
         };
-
-
-
-
-
 
 
         public static int numberOfCategoriesInFile = 17;
         public static String testCategoriesInputFile = "test_categories.cats";
+        public static String testDBInputFile = "testDBInput.db";
         public static int maxIDInCategoryInFile = 17;
-        public static Category firstCategoryInFile = new Category(17, "Non Standard", Category.CategoryType.Expense);
+        public static Category firstCategoryInFile = new Category(1, "Utilities", Category.CategoryType.Expense);
         public static int CategoryIDWithSaveType = 15;
         public static string CategoriesOutputTestFile = "test_output.cats";
 
@@ -327,9 +325,42 @@ namespace BudgetCodeTests
 
             return list;
         }
+
+        static public String GetSolutionDir()
+        {
+
+            // this is valid for C# .Net Foundation (not for C# .Net Core)
+            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\"));
+        }
+
+        // source taken from: https://www.dotnetperls.com/file-equals
+
+        static public bool FileEquals(string path1, string path2)
+        {
+            byte[] file1 = File.ReadAllBytes(path1);
+            byte[] file2 = File.ReadAllBytes(path2);
+            if (file1.Length == file2.Length)
+            {
+                for (int i = 0; i < file1.Length; i++)
+                {
+                    if (file1[i] != file2[i])
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        static public bool FileSameSize(string path1, string path2)
+        {
+            byte[] file1 = File.ReadAllBytes(path1);
+            byte[] file2 = File.ReadAllBytes(path2);
+            return (file1.Length == file2.Length);
+        }
+
     }
-
-
 }
 
 

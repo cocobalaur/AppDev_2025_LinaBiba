@@ -70,10 +70,11 @@ namespace Budget
         // ===================================================================
         public static void existingDatabase(string filename)
         {
-            CloseDatabaseAndReleaseFile();
+            // Build the full path to the database file
+            string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename);
+            Console.WriteLine($"Attempting to open database from: {filePath}");  // Debugging log to see the full path
 
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename); //get the file path with GetCurrentDirectory
-
+            // Check if the file exists at the specified path
             if (!File.Exists(filePath))
             {
                 throw new FileNotFoundException("The specified database file does not exist.", filename);
@@ -81,18 +82,48 @@ namespace Budget
 
             try
             {
-                // Define the database connection string with the URI prefix, fixed to use foreign keys
+                // Define the database connection string
                 string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
 
-                // Create and open the existing database connection
+                // Log the connection string (optional, remove in production)
+                Console.WriteLine($"Database connection string: {databasePath}");
+
+                // Create and open the database connection
                 _connection = new SQLiteConnection(databasePath);
                 _connection.Open();
 
+                // Log successful connection
+                Console.WriteLine("Database connection successfully opened.");
             }
             catch (Exception ex)
             {
+                // If there's an issue opening the database, log the error
+                Console.WriteLine($"Error opening database: {ex.Message}");
                 throw new Exception("Failed to create and open the existing database...", ex);
             }
+            //CloseDatabaseAndReleaseFile();
+
+            //string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename); //get the file path with GetCurrentDirectory
+
+            //if (!File.Exists(filePath))
+            //{
+            //    throw new FileNotFoundException("The specified database file does not exist.", filename);
+            //}
+
+            //try
+            //{
+            //    // Define the database connection string with the URI prefix, fixed to use foreign keys
+            //    string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
+
+            //    // Create and open the existing database connection
+            //    _connection = new SQLiteConnection(databasePath);
+            //    _connection.Open();
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    throw new Exception("Failed to create and open the existing database...", ex);
+            //}
         }
 
         // ===================================================================
@@ -121,10 +152,18 @@ namespace Budget
 
             using var cmd = new SQLiteCommand(_connection);
 
+            //categoryTypes
+            cmd.CommandText = @"
+                CREATE TABLE categoryTypes (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    Description TEXT NOT NULL
+                );";
+            cmd.ExecuteNonQuery();
+
             //categories
             cmd.CommandText = @"
                 CREATE TABLE categories (
-                    Id INTEGER PRIMARY KEY,
+                    Id INTEGER PRIMARY KEY NOT NULL,
                     Description TEXT NOT NULL,
                     TypeId INTEGER NOT NULL,
                     FOREIGN KEY (TypeId) REFERENCES categoryTypes(Id)
@@ -134,7 +173,7 @@ namespace Budget
             //expenses
             cmd.CommandText = @"
                 CREATE TABLE expenses (
-                    Id INTEGER PRIMARY KEY,
+                    Id INTEGER PRIMARY KEY NOT NULL,
                     Date TEXT NOT NULL,
                     Description TEXT NOT NULL,
                     Amount DOUBLE NOT NULL,
@@ -143,30 +182,16 @@ namespace Budget
                 );";
             cmd.ExecuteNonQuery();
 
-            //categoryTypes
-            cmd.CommandText = @"
-                CREATE TABLE categoryTypes (
-                    Id INTEGER PRIMARY KEY,
-                    Description TEXT NOT NULL
-                );";
-            cmd.ExecuteNonQuery();
-
         }
 
         private static void DropTables()
         {
             using var cmd = new SQLiteCommand(_connection);
-
-            //drop the tables if they already exist 
-            cmd.CommandText = "DROP TABLE IF EXISTS categories;";
+            cmd.CommandText = @"
+                DROP TABLE IF EXISTS expenses;
+                DROP TABLE IF EXISTS categories;
+                DROP TABLE IF EXISTS categoryTypes;";
             cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "DROP TABLE IF EXISTS expenses;";
-            cmd.ExecuteNonQuery();
-
-            cmd.CommandText = "DROP TABLE IF EXISTS categoryTypes;";
-            cmd.ExecuteNonQuery();
-;
         }
     }
 }

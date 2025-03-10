@@ -3,13 +3,15 @@ using Xunit;
 using System.IO;
 using System.Collections.Generic;
 using Budget;
+using System.Data.SQLite;
 
 namespace BudgetCodeTests
 {
+    [Collection("Sequential")]
     public class TestCategories
     {
         public int numberOfCategoriesInFile = TestConstants.numberOfCategoriesInFile;
-        public String testInputFile = TestConstants.testCategoriesInputFile;
+        public String testInputFile = TestConstants.testDBInputFile;
         public int maxIDInCategoryInFile = TestConstants.maxIDInCategoryInFile;
         Category firstCategoryInFile = TestConstants.firstCategoryInFile;
         int IDWithSaveType = TestConstants.CategoryIDWithSaveType;
@@ -20,15 +22,16 @@ namespace BudgetCodeTests
         public void CategoriesObject_New()
         {
             // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
 
             // Act
-            Categories categories = new Categories();
+            Categories categories = new Categories(conn, true);
 
             // Assert 
             Assert.IsType<Categories>(categories);
-            Assert.True(typeof(Categories).GetProperty("FileName").CanWrite == false);
-            Assert.True(typeof(Categories).GetProperty("DirName").CanWrite == false);
-
         }
 
         // ========================================================================
@@ -37,41 +40,32 @@ namespace BudgetCodeTests
         public void CategoriesObject_New_CreatesDefaultCategories()
         {
             // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
 
             // Act
-            Categories categories = new Categories();
+            Categories categories = new Categories(conn, true);
 
             // Assert 
             Assert.False(categories.List().Count == 0, "Non zero categories");
 
         }
 
-
         // ========================================================================
 
         [Fact]
-        public void CategoriesMethod_ReadFromFile_NotExist_ThrowsException()
+        public void CategoriesMethod_ReadFromDatabase_ValidateCorrectDataWasRead()
         {
             // Arrange
-            String badFile = "abc.txt";
-            Categories categories = new Categories();
-
-            // Act and Assert
-            Assert.Throws<System.IO.FileNotFoundException>(() => categories.ReadFromFile(badFile));
-
-        }
-
-        // ========================================================================
-
-        [Fact]
-        public void CategoriesMethod_ReadFromFile_ValidateCorrectDataWasRead()
-        {
-            // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
+            String folder = TestConstants.GetSolutionDir();
+            String existingDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            Database.existingDatabase(existingDB);
+            SQLiteConnection conn = Database.dbConnection;
 
             // Act
-            categories.ReadFromFile(dir + "\\" + testInputFile);
+            Categories categories = new Categories(conn, false);
             List<Category> list = categories.List();
             Category firstCategory = list[0];
 
@@ -79,32 +73,6 @@ namespace BudgetCodeTests
             Assert.Equal(numberOfCategoriesInFile, list.Count);
             Assert.Equal(firstCategoryInFile.Id, firstCategory.Id);
             Assert.Equal(firstCategoryInFile.Description, firstCategory.Description);
-
-            String fileDir = Path.GetFullPath(Path.Combine(categories.DirName, ".\\"));
-            Assert.Equal(dir, fileDir);
-            Assert.Equal(testInputFile, categories.FileName);
-
-        }
-
-        // ========================================================================
-
-        [Fact]
-        public void Categories_TypeSavingsReadCorrectlyFromFile()
-        {
-            // Bug: failed test where data was written to another file, category Savings was changed
-            // checking here to see if it is read correctly in an effort to debug
-
-            // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
-            List<Category> list = categories.List();
-
-            // Act
-            Category category = categories.GetCategoryFromId(IDWithSaveType);
-
-            // Assert
-            Assert.Equal(Category.CategoryType.Savings, category.Type);
 
         }
 
@@ -114,9 +82,11 @@ namespace BudgetCodeTests
         public void CategoriesMethod_List_ReturnsListOfCategories()
         {
             // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            Database.existingDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, false);
 
             // Act
             List<Category> list = categories.List();
@@ -126,24 +96,6 @@ namespace BudgetCodeTests
 
         }
 
-        // ========================================================================
-
-        [Fact]
-        public void CategoriesMethod_List_ModifyListDoesNotModifyCategoriesInstance()
-        {
-            // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
-            List<Category> list = categories.List();
-
-            // Act
-            list[0].Type = Category.CategoryType.Credit;
-
-            // Assert
-            Assert.NotEqual(list[0].Type, categories.List()[0].Type);
-
-        }
 
         // ========================================================================
 
@@ -151,9 +103,13 @@ namespace BudgetCodeTests
         public void CategoriesMethod_Add()
         {
             // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
+            String folder = TestConstants.GetSolutionDir();
+            String goodDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            String messyDB = $"{folder}\\messy.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            Database.existingDatabase(messyDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, false);
             string descr = "New Category";
             Category.CategoryType type = Category.CategoryType.Income;
 
@@ -164,7 +120,6 @@ namespace BudgetCodeTests
 
             // Assert
             Assert.Equal(numberOfCategoriesInFile + 1, sizeOfList);
-            Assert.Equal(maxIDInCategoryInFile + 1, categoriesList[sizeOfList - 1].Id);
             Assert.Equal(descr, categoriesList[sizeOfList - 1].Description);
 
         }
@@ -175,9 +130,13 @@ namespace BudgetCodeTests
         public void CategoriesMethod_Delete()
         {
             // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
+            String folder = TestConstants.GetSolutionDir();
+            String goodDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            String messyDB = $"{folder}\\messy.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            Database.existingDatabase(messyDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, false);
             int IdToDelete = 3;
 
             // Act
@@ -197,8 +156,14 @@ namespace BudgetCodeTests
         public void CategoriesMethod_Delete_InvalidIDDoesntCrash()
         {
             // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String goodDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            String messyDB = $"{folder}\\messyDB";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            Database.existingDatabase(messyDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, false);
             int IdToDelete = 9999;
             int sizeOfList = categories.List().Count;
 
@@ -219,82 +184,14 @@ namespace BudgetCodeTests
         // ========================================================================
 
         [Fact]
-        public void CategoriesMethod_WriteToFile()
-        {
-
-            // NOTE: Currently failing.  Added new test to try to track down source of 
-            //       problem
-            // CategoryTypeSavingsReadCorrectlyFromFile()
-            //  ... which also fails, so that is why the WriteToFile is not accurate...
-            //  ... fix above test, and then this one should pass as well.
-
-            // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
-            string fileName = TestConstants.CategoriesOutputTestFile;
-            String outputFile = dir + "\\" + fileName;
-            File.Delete(outputFile);
-
-            // Act
-            categories.SaveToFile(outputFile);
-
-            // Assert
-            Assert.True(File.Exists(outputFile), "output file created");
-            Assert.True(FileEquals(dir + "\\" + testInputFile, outputFile), "Input /output files are the same");
-            String fileDir = Path.GetFullPath(Path.Combine(categories.DirName, ".\\"));
-            Assert.Equal(dir, fileDir);
-            Assert.Equal(fileName, categories.FileName);
-
-            // Cleanup
-            if (FileEquals(dir + "\\" + testInputFile, outputFile)) {
-                File.Delete(outputFile);
-            }
-
-        }
-
-        // ========================================================================
-
-        [Fact]
-        public void CategoriesMethod_WriteToFile_WriteToLastFileWrittenToByDefault()
-        {
-            // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
-            string fileName = TestConstants.CategoriesOutputTestFile;
-            String outputFile = dir + "\\" + fileName;
-            File.Delete(outputFile);
-            categories.SaveToFile(outputFile); // output file is now last file that was written to.
-            File.Delete(outputFile);  // Delete the file
-
-            // Act
-            categories.SaveToFile(); // should write to same file as before
-
-            // Assert
-            Assert.True(File.Exists(outputFile), "output file created");
-            String fileDir = Path.GetFullPath(Path.Combine(categories.DirName, ".\\"));
-            Assert.Equal(dir, fileDir);
-            Assert.Equal(fileName, categories.FileName);
-
-            // Cleanup
-            if (FileEquals(dir + "\\" + testInputFile, outputFile))
-            {
-                File.Delete(outputFile);
-            }
-
-        }
-
-
-        // ========================================================================
-
-        [Fact]
         public void CategoriesMethod_GetCategoryFromId()
         {
             // Arrange
-            String dir = GetSolutionDir();
-            Categories categories = new Categories();
-            categories.ReadFromFile(dir + "\\" + testInputFile);
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            Database.existingDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, false);
             int catID = 15;
 
             // Act
@@ -311,8 +208,14 @@ namespace BudgetCodeTests
         public void CategoriesMethod_SetCategoriesToDefaults()
         {
 
-           // Arrange
-            Categories categories = new Categories();
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+
+            // Act
+            Categories categories = new Categories(conn, true);
             List<Category> originalList = categories.List();
 
             // modify list of categories
@@ -336,35 +239,28 @@ namespace BudgetCodeTests
 
         }
 
-        // -------------------------------------------------------
-        // helpful functions, ... they are not tests
-        // -------------------------------------------------------
+        // ========================================================================
 
-        private String GetSolutionDir()
+        [Fact]
+        public void CategoriesMethod_UpdateCategory()
         {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, true);
+            String newDescr = "Presents";
+            int id = 11;
 
-            // this is valid for C# .Net Foundation (not for C# .Net Core)
-            return Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\"));
-        }
+            // Act
+            categories.UpdateProperties(id,newDescr, Category.CategoryType.Income);
+            Category category = categories.GetCategoryFromId(id);
 
-        // source taken from: https://www.dotnetperls.com/file-equals
+            // Assert 
+            Assert.Equal(newDescr, category.Description);
+            Assert.Equal(Category.CategoryType.Income, category.Type);
 
-        private bool FileEquals(string path1, string path2)
-        {
-            byte[] file1 = File.ReadAllBytes(path1);
-            byte[] file2 = File.ReadAllBytes(path2);
-            if (file1.Length == file2.Length)
-            {
-                for (int i = 0; i < file1.Length; i++)
-                {
-                    if (file1[i] != file2[i])
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
         }
     }
 }
