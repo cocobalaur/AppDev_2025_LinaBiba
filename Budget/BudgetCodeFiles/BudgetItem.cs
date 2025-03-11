@@ -72,15 +72,15 @@ namespace Budget
 
 
         // The expense amount will automatically be deducted or added to the balance.
-        public BudgetItem(Expense expense)
-        {
-            this.ExpenseID = expense.Id;
-            this.CategoryID = expense.Category;
-            this.Date = expense.Date;
-            this.ShortDescription = expense.Description;
-            this.Amount = expense.Amount; 
-            this.Balance = this.Amount;  
-        }
+        //public BudgetItem(Expense expense)
+        //{
+        //    this.ExpenseID = expense.Id;
+        //    this.CategoryID = expense.Category;
+        //    this.Date = expense.Date;
+        //    this.ShortDescription = expense.Description;
+        //    this.Amount = expense.Amount; 
+        //    this.Balance = this.Amount;  
+        //}
     }
 
     /// <summary>
