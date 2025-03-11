@@ -50,7 +50,7 @@ namespace Budget
             try
             {
                 // Define the database file path, fixed to use foreign keys
-                string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
+                string databasePath = $"Data Source={filePath}; Foreign Keys=1;"; 
 
                 // Create and open the new database connection
                 _connection = new SQLiteConnection(databasePath);
@@ -70,60 +70,28 @@ namespace Budget
         // ===================================================================
         public static void existingDatabase(string filename)
         {
-            // Build the full path to the database file
-            string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename);
-            Console.WriteLine($"Attempting to open database from: {filePath}");  // Debugging log to see the full path
-
-            // Check if the file exists at the specified path
-            if (!File.Exists(filePath))
-            {
-                throw new FileNotFoundException("The specified database file does not exist.", filename);
-            }
-
             try
             {
-                // Define the database connection string
-                string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
+                string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename);
 
-                // Log the connection string (optional, remove in production)
-                Console.WriteLine($"Database connection string: {databasePath}");
+                // Check if the file exists 
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException("The specified database file does not exist.", filename);
+                }
+
+                string databasePath = $"Data Source={filePath}; Foreign Keys=1;"; 
 
                 // Create and open the database connection
                 _connection = new SQLiteConnection(databasePath);
                 _connection.Open();
 
-                // Log successful connection
                 Console.WriteLine("Database connection successfully opened.");
             }
             catch (Exception ex)
             {
-                // If there's an issue opening the database, log the error
-                Console.WriteLine($"Error opening database: {ex.Message}");
-                throw new Exception("Failed to create and open the existing database...", ex);
+                throw new Exception("Failed to create and open the existing database.", ex);
             }
-            //CloseDatabaseAndReleaseFile();
-
-            //string filePath = Path.Combine(Directory.GetCurrentDirectory(), filename); //get the file path with GetCurrentDirectory
-
-            //if (!File.Exists(filePath))
-            //{
-            //    throw new FileNotFoundException("The specified database file does not exist.", filename);
-            //}
-
-            //try
-            //{
-            //    // Define the database connection string with the URI prefix, fixed to use foreign keys
-            //    string databasePath = $"Data Source={filePath}; Foreign Keys=1;";
-
-            //    // Create and open the existing database connection
-            //    _connection = new SQLiteConnection(databasePath);
-            //    _connection.Open();
-
-            //}
-            //catch (Exception ex)
-            //{
-            //    throw new Exception("Failed to create and open the existing database...", ex);
-            //}
         }
 
         // ===================================================================
@@ -163,7 +131,7 @@ namespace Budget
             //categories
             cmd.CommandText = @"
                 CREATE TABLE categories (
-                    Id INTEGER PRIMARY KEY NOT NULL,
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     Description TEXT NOT NULL,
                     TypeId INTEGER NOT NULL,
                     FOREIGN KEY (TypeId) REFERENCES categoryTypes(Id)

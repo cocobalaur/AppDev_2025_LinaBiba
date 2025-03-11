@@ -4,6 +4,7 @@ using Budget;
 
 namespace BudgetCodeTests
 {
+    [Collection("Sequential")]
     public class TestExpense
     {
         // ========================================================================
