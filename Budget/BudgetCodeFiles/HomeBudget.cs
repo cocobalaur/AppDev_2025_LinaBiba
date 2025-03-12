@@ -109,7 +109,9 @@ namespace Budget
         /// <param name="budgetFileName">The name of the budget file.</param>
         public HomeBudget(String budgetFileName)
         {
+            Database.newDatabase(budgetFileName);
             _categories = new Categories();
+            //_categories = new Categories(Database.dbConnection, false);
             _expenses = new Expenses();
             ReadFromFile(budgetFileName);
         }
@@ -137,6 +139,7 @@ namespace Budget
             _expenses = new Expenses();
             _expenses.ReadFromFile(expensesXMLFile);
         }
+
         #region OpenNewAndSave
         // ---------------------------------------------------------------
         // Read
