@@ -175,7 +175,7 @@ namespace Budget
         /// ]]>
         /// </code>
         /// </example>
-        public void Add(DateTime date, int category, Double amount, String description)
+        public void Add(DateTime date, Double amount, String description, int category)
         {
             int new_id = 1;
 
