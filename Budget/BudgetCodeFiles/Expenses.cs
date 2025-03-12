@@ -1,4 +1,5 @@
 ﻿using System.Xml;
+using System.Data.SQLite;
 
 // ============================================================================
 // (c) Sandy Bultena 2018
@@ -187,6 +188,8 @@ namespace Budget
             }
 
             _Expenses.Add(new Expense(new_id, date, category, amount, description));
+
+            //Using System.DataSqlite
 
         }
 
