@@ -13,57 +13,60 @@ namespace Budget
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            //Console.WriteLine("Hello, World!");
 
-            budget = new HomeBudget("..\\..\\..\\..\\BudgetTesting\\test.budget");
+            //budget = new HomeBudget("..\\..\\..\\..\\BudgetTesting\\test.budget");
 
 
-            // Menu loop
-            while (true)
-            {
-                DisplayMenu();
+            //// Menu loop
+            //while (true)
+            //{
+            //    DisplayMenu();
 
-                Console.Write("Choose an option (1-4): ");
+            //    Console.Write("Choose an option (1-4): ");
 
-                int choice;
-                if (!int.TryParse(Console.ReadLine(), out choice))
-                {
-                    PrintInvalidInputMessage();
-                    //skips any code after the "continue" and move directly to the next iteration of thr loop
-                    continue;
-                }
+            //    int choice;
+            //    if (!int.TryParse(Console.ReadLine(), out choice))
+            //    {
+            //        PrintInvalidInputMessage();
+            //        //skips any code after the "continue" and move directly to the next iteration of thr loop
+            //        continue;
+            //    }
 
-                switch (choice)
-                {
-                    case 1:
-                        GetBudgetItems();
-                        break;
-                    case 2:
-                        GetBudgetItemsByMonth();
-                        break;
-                    case 3:
-                        GetBudgetItemsByCategory();
-                        break;
-                    case 4:
-                        GetBudgetDictionaryByCategoryAndMonth();
-                        break;
-                    case 5:
-                        Console.Clear();
-                        Console.WriteLine("\nExiting the application. Goodbye!");
-                        return;
-                    default:
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("Invalid choice. Please enter a number from 1 to 4.\n");
-                        Console.ResetColor();
-                        break;
-                }
+            //    switch (choice)
+            //    {
+            //        case 1:
+            //            GetBudgetItems();
+            //            break;
+            //        case 2:
+            //            GetBudgetItemsByMonth();
+            //            break;
+            //        case 3:
+            //            GetBudgetItemsByCategory();
+            //            break;
+            //        case 4:
+            //            GetBudgetDictionaryByCategoryAndMonth();
+            //            break;
+            //        case 5:
+            //            Console.Clear();
+            //            Console.WriteLine("\nExiting the application. Goodbye!");
+            //            return;
+            //        default:
+            //            Console.ForegroundColor = ConsoleColor.Red;
+            //            Console.WriteLine("Invalid choice. Please enter a number from 1 to 4.\n");
+            //            Console.ResetColor();
+            //            break;
+            //    }
 
-                Console.WriteLine("\nPress any key to continue...");
-                Console.ReadKey();
-                Console.Clear();
+            //    Console.WriteLine("\nPress any key to continue...");
+            //    Console.ReadKey();
+            //    Console.Clear();
 
-                //keeps on looping until valid choice is set to true
-            }
+            //    //keeps on looping until valid choice is set to true
+            //}
+
+            DemoSprint1.Option();
+
         }
 
         public static void DisplayMenu()
@@ -241,7 +244,7 @@ namespace Budget
             foreach (BudgetItemsByCategory categoryItem in categoryItems)
             {
                 // Print category name and total for the category
-                Console.WriteLine($"\n{"Category: " + categoryItem.Category, Width}   Total: {categoryItem.Total:C}");
+                Console.WriteLine($"\n{"Category: " + categoryItem.Category,Width}   Total: {categoryItem.Total:C}");
                 // loop through each BudgetItem for the category and print its details
                 foreach (BudgetItem detail in categoryItem.Details)
                 {
@@ -259,7 +262,7 @@ namespace Budget
                 // Safely print the month and total for the record
                 if (record.TryGetValue("Month", out object month) && record.TryGetValue("Total", out object total))
                 {
-                    Console.WriteLine($"\n{"Month:"+ month,Width} Total: {Convert.ToDecimal(total):C}");
+                    Console.WriteLine($"\n{"Month:" + month,Width} Total: {Convert.ToDecimal(total):C}");
                 }
 
                 // Check for category details (starts with "details:")
@@ -284,9 +287,5 @@ namespace Budget
                 }
             }
         }
-
-
-
-
     }
 }
