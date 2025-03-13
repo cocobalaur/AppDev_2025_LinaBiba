@@ -1,5 +1,7 @@
-﻿using System.Xml;
+﻿using System.Data.Common;
+using System.Data.SqlClient;
 using System.Data.SQLite;
+using System.Xml;
 
 // ============================================================================
 // (c) Sandy Bultena 2018
@@ -19,6 +21,17 @@ namespace Budget
     /// </summary>
     public class Expenses
     {
+
+        //Database connection 
+        private SQLiteConnection _connection;
+        public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
+        public Expenses()
+        {
+        }
+        public Expenses(SQLiteConnection conn)
+        {
+            Connection = conn;
+        }
         private static String DefaultFileName = "budget.txt";
         private List<Expense> _Expenses = new List<Expense>();
         private string _FileName;
@@ -365,6 +378,36 @@ namespace Budget
             }
         }
 
+
+        //
+        public void RetrieveExpenses()
+        {
+            try
+            {
+                string cs = "...";
+
+                using var connection = new SQLiteConnection(cs);
+                connection.Open();
+
+                string retrieves = "SELECT * FROM Expense";
+                using var cmd = new SQLiteCommand(retrieves, connection);
+                using SQLiteDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    int id = rdr.GetInt32(0);
+                    DateTime dateTime = DateTime.Parse(rdr.GetString(1));
+                    int category = rdr.GetInt32(2);
+                    Double amount = rdr.GetDouble(3);
+                    string description = rdr.GetString(4);
+                    _Expenses.Add(new Expense(id, dateTime, category, amount, description));
+                }
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("Error in retrieve Expense.");
+            }
+
+        }
     }
 }
 
