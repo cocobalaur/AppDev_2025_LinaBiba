@@ -45,7 +45,7 @@ namespace Budget
         /// <value>
         /// A <see cref="Double"/> value representing the financial amount of the expense.
         /// </value>
-        public Double Amount { get; set; }
+        public Double Amount { get; }
 
         /// <summary>
         /// Gets or sets the description of the expense.
@@ -53,7 +53,7 @@ namespace Budget
         /// <value>
         /// A <see cref="String"/> containing a short text description explaining the expense.
         /// </value>
-        public String Description { get; set; }
+        public String Description { get; }
 
         /// <summary>
         /// Gets or sets the category ID associated with the expense.
@@ -61,7 +61,7 @@ namespace Budget
         /// <value>
         /// An integer representing the identifier linking the expense to a category.
         /// </value>
-        public int Category { get; set; }
+        public int Category { get; }
 
 
 
@@ -84,7 +84,7 @@ namespace Budget
             this.Id = id;
             this.Date = date;
             this.Category = category;
-            this.Amount = amount;
+            this.Amount = amount < 0 ? amount : -amount;
             this.Description = description;
         }
 
@@ -101,7 +101,7 @@ namespace Budget
             this.Id = obj.Id;
             this.Date = obj.Date;
             this.Category = obj.Category;
-            this.Amount = obj.Amount;
+            this.Amount = obj.Amount < 0 ? obj.Amount : -Amount;
             this.Description = obj.Description;
            
         }

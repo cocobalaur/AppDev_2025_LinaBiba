@@ -1,4 +1,5 @@
 ﻿using System.Xml;
+using System.Data.SQLite;
 
 // ============================================================================
 // (c) Sandy Bultena 2018
@@ -175,7 +176,7 @@ namespace Budget
         /// ]]>
         /// </code>
         /// </example>
-        public void Add(DateTime date, int category, Double amount, String description)
+        public void Add(DateTime date, Double amount, String description, int category)
         {
             int new_id = 1;
 
@@ -187,6 +188,8 @@ namespace Budget
             }
 
             _Expenses.Add(new Expense(new_id, date, category, amount, description));
+
+            //Using System.DataSqlite
 
         }
 
