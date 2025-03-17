@@ -490,7 +490,7 @@ namespace Budget
                                 string categoryDescription = reader.GetString(reader.GetOrdinal("CategoryDescription"));
 
                                 
-                                totalBalance -= amount;
+                                totalBalance += amount;
 
                                 // Add the item to the list
                                 items.Add(new BudgetItem
@@ -498,7 +498,7 @@ namespace Budget
                                         ExpenseID = expenseId,
                                         Date = date,
                                         ShortDescription = expenseDescription,
-                                        Amount = -amount, // Make the amount negative as per business logic
+                                        Amount = amount, // Make the amount negative as per business logic
                                         CategoryID = categoryId,
                                         Category = categoryDescription,
                                         Balance = totalBalance
