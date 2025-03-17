@@ -257,9 +257,33 @@ namespace Budget
         public List<Expense> List()
         {
             List<Expense> newList = new List<Expense>();
-            foreach (Expense expense in _Expenses)
+            string retrieves = "SELECT Id, DateTime, Amount, Category, Description FROM Expense";
+            //foreach (Expense expense in _Expenses)
+            //{
+            //    newList.Add(new Expense(expense));
+            //}
+            //return newList;
+            //
+            try
             {
-                newList.Add(new Expense(expense));
+
+                int colId = 0, colDate = 1, colCategory = 2, colAmount = 3, colDescription = 4;
+
+                using var cmd = new SQLiteCommand(retrieves, Connection);
+                using SQLiteDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    int id = rdr.GetInt32(colId);
+                    DateTime dateTime = DateTime.Parse(rdr.GetString(colDate));
+                    int category = rdr.GetInt32(colCategory);
+                    Double amount = rdr.GetDouble(colAmount);
+                    String description = rdr.GetString(colDescription);
+                    newList.Add(new Expense(id, dateTime, category, amount, description));
+                }
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("Error in retrieve Expense.");
             }
             return newList;
         }
