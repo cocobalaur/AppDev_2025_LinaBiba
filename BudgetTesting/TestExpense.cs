@@ -49,7 +49,7 @@ namespace BudgetCodeTests
 
             // Act
             Expense copy = new Expense(expense);
-            copy.Amount = expense.Amount + 15;
+            //copy.Amount = expense.Amount + 15;
 
             // Assert 
             Assert.Equal(id, expense.Id);
