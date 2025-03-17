@@ -489,19 +489,19 @@ namespace Budget
                                 int categoryId = reader.GetInt32(reader.GetOrdinal("CategoryId"));
                                 string categoryDescription = reader.GetString(reader.GetOrdinal("CategoryDescription"));
 
-                                // Track running balance
-                                totalBalance -= amount; // Expenses are negative in the budget
+                                
+                                totalBalance -= amount;
 
                                 // Add the item to the list
                                 items.Add(new BudgetItem
                                 {
-                                    ExpenseID = expenseId,
-                                    Date = date,
-                                    ShortDescription = expenseDescription,
-                                    Amount = -amount, // Make the amount negative as per business logic
-                                    CategoryID = categoryId,
-                                    Category = categoryDescription,
-                                    Balance = totalBalance
+                                        ExpenseID = expenseId,
+                                        Date = date,
+                                        ShortDescription = expenseDescription,
+                                        Amount = -amount, // Make the amount negative as per business logic
+                                        CategoryID = categoryId,
+                                        Category = categoryDescription,
+                                        Balance = totalBalance
                                 });
                             }
                             catch (Exception ex)
