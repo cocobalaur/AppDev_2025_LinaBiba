@@ -191,19 +191,36 @@ namespace Budget
         /// </example>
         public void Add(DateTime date, Double amount, String description, int category)
         {
-            int new_id = 1;
+            //int new_id = 1;
 
-            // if we already have expenses, set Id to max
-            if (_Expenses.Count > 0)
-            {
-                new_id = (from e in _Expenses select e.Id).Max();
-                new_id++;
-            }
+            //// if we already have expenses, set Id to max
+            //if (_Expenses.Count > 0)
+            //{
+            //    new_id = (from e in _Expenses select e.Id).Max();
+            //    new_id++;
+            //}
 
-            _Expenses.Add(new Expense(new_id, date, category, amount, description));
+            //_Expenses.Add(new Expense(new_id, date, category, amount, description));
 
             //Using System.DataSqlite
+            try
+            {
+                //is the id automatic??
+                string queryInsertNewExpense = "INSERT INTO expenses (date, category, amount, description) VALUES (@date, @idCategory, @amount, @desc)";
 
+                using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
+
+                //Add the parameters
+                cmd.Parameters.AddWithValue("@date", date);
+                cmd.Parameters.AddWithValue("@idCategory", category);
+                cmd.Parameters.AddWithValue("@amount", amount);
+                cmd.Parameters.AddWithValue("@desc", description);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error adding the expense: " + ex.Message);
+            }
         }
 
         // ====================================================================
