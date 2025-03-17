@@ -84,7 +84,7 @@ namespace Budget
             this.Id = id;
             this.Date = date;
             this.Category = category;
-            this.Amount = amount < 0 ? amount : -amount;
+            this.Amount = amount;
             this.Description = description;
         }
 
@@ -101,7 +101,7 @@ namespace Budget
             this.Id = obj.Id;
             this.Date = obj.Date;
             this.Category = obj.Category;
-            this.Amount = obj.Amount < 0 ? obj.Amount : -Amount;
+            this.Amount = obj.Amount;
             this.Description = obj.Description;
            
         }
