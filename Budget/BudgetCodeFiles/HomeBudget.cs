@@ -581,43 +581,69 @@ namespace Budget
         /// </example>
         public List<BudgetItemsByMonth> GetBudgetItemsByMonth(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
         {
-            // -----------------------------------------------------------------------
-            // get all items first
-            // -----------------------------------------------------------------------
-            List<BudgetItem> items = GetBudgetItems(Start, End, FilterFlag, CategoryID);
-
-            // -----------------------------------------------------------------------
-            // Group by year/month
-            // -----------------------------------------------------------------------
-            var GroupedByMonth = items.GroupBy(c => c.Date.Year.ToString("D4") + "/" + c.Date.Month.ToString("D2"));
-
-            // -----------------------------------------------------------------------
-            // create new list
-            // -----------------------------------------------------------------------
-            var summary = new List<BudgetItemsByMonth>();
-            foreach (var MonthGroup in GroupedByMonth)
+            try
             {
-                // calculate total for this month, and create list of details
-                double total = 0;
-                var details = new List<BudgetItem>();
-                foreach (var item in MonthGroup)
+
+                // Set default values for Start and End if they are not provided
+                DateTime startDate = Start ?? new DateTime(1900, 1, 1);
+                DateTime endDate = End ?? new DateTime(2500, 1, 1);
+
+                //  Retrieve all budget items within the given date range and category filter
+                // If FilterFlag is false, CategoryID is ignored
+                List<BudgetItem> items = GetBudgetItems(startDate, endDate, FilterFlag, CategoryID);
+
+                // -----------------------------------------------------------------------
+                // Group by year/month
+                // -----------------------------------------------------------------------
+                var GroupedByMonth = items.GroupBy(c => c.Date.Year.ToString("D4") + "/" + c.Date.Month.ToString("D2"));
+
+                // Initialize a list to store the final summary of grouped expenses
+                List<BudgetItemsByMonth> summary = new List<BudgetItemsByMonth>();
+
+                // Go through each group of expenses (one group per month)
+                foreach (var MonthGroup in GroupedByMonth)
                 {
-                    total = total + item.Amount;
-                    details.Add(item);
+                    // Initialize total amount for the current month
+                    double total = 0;
+
+                    // Create a new list to hold budget items for this month
+                    List<BudgetItem> details = new List<BudgetItem>();
+
+                    // Loop through all budget items in the current month group
+                    // Add each item to the list and update the total amount
+                    foreach (var item in MonthGroup)
+                    {
+                        total += item.Amount; // Accumulate the total for this month
+                        details.Add(item);    // Add item to the monthly list
+                    }
+
+                    // Create a new BudgetItemsByMonth object and add it to the summary list
+                    // This stores the month, total expenses, and list of budget items
+                    summary.Add(new BudgetItemsByMonth
+                    {
+                        Month = MonthGroup.Key, // ex. "2024/01"
+                        Details = details,      // List of budget items for this month
+                        Total = total           // Total expenses for this month
+                    });
+
+
                 }
-
-                // Add new BudgetItemsByMonth to our list
-                summary.Add(new BudgetItemsByMonth
-                {
-                    Month = MonthGroup.Key,
-                    Details = details,
-                    Total = total
-                });
+                // Return the final list of grouped budget items by month
+                return summary;
             }
-
-            return summary;
+            catch (SQLiteException sqlEx)
+            {
+                // Handle SQL errors (e.g., constraints, invalid queries, database connectivity issues)
+                Console.WriteLine($"Database error: {sqlEx.Message}");
+                throw new Exception("A database error occurred while fetching budget items.", sqlEx);
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                throw new Exception("An unexpected error occurred while processing budget data.", ex);
+            }
         }
-
         // ============================================================================
         // Group all expenses by category (ordered by category name)
         // ============================================================================
