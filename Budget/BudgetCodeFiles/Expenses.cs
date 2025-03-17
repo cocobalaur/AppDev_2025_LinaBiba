@@ -224,10 +224,28 @@ namespace Budget
         /// </example>
         public void Delete(int Id)
         {
-            int i = _Expenses.FindIndex(x => x.Id == Id);
-            if (i < 0)
-                return;
-            _Expenses.RemoveAt(i);
+            //int i = _Expenses.FindIndex(x => x.Id == Id);
+            //if (i < 0)
+            //    return;
+            //_Expenses.RemoveAt(i);
+            //Throws exception if not allowed to delete in database(foreign key constraint).
+            try
+            {
+                string query = "DELETE FROM expenses WHERE Id = @id;";
+                using var cmd = new SQLiteCommand(query, Connection);
+                cmd.Parameters.AddWithValue("@id", Id);
+
+                //if the number of row affected is zero, then nothing was deleted.
+                int rowsChanged = cmd.ExecuteNonQuery();
+                if (rowsChanged == 0)
+                {
+                    Console.WriteLine($"Error: No expenses with Id {Id} found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting the expenses with Id {Id}: {ex.Message}");
+            }
 
         }
 
