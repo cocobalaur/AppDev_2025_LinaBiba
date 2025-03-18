@@ -693,41 +693,80 @@ namespace Budget
         /// </example>
         public List<BudgetItemsByCategory> GetBudgetItemsByCategory(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
         {
-            // -----------------------------------------------------------------------
-            // get all items first
-            // -----------------------------------------------------------------------
-            List<BudgetItem> items = GetBudgetItems(Start, End, FilterFlag, CategoryID);
-
-            // -----------------------------------------------------------------------
-            // Group by Category
-            // -----------------------------------------------------------------------
-            var GroupedByCategory = items.GroupBy(c => c.Category);
-
-            // -----------------------------------------------------------------------
-            // create new list
-            // -----------------------------------------------------------------------
-            var summary = new List<BudgetItemsByCategory>();
-            foreach (var CategoryGroup in GroupedByCategory.OrderBy(g => g.Key))
+            try
             {
-                // calculate total for this category, and create list of details
-                double total = 0;
-                var details = new List<BudgetItem>();
-                foreach (var item in CategoryGroup)
+
+                // Set default values for Start and End if they are not provided
+                DateTime startDate = Start ?? new DateTime(1900, 1, 1);
+                DateTime endDate = End ?? new DateTime(2500, 1, 1);
+
+                // -----------------------------------------------------------------------
+                // get all items first
+                // If FilterFlag is false, CategoryID is ignored
+                // -----------------------------------------------------------------------
+                List<BudgetItem> items = GetBudgetItems(startDate, endDate, FilterFlag, CategoryID);
+
+                // -----------------------------------------------------------------------
+                // Group items by Category (Key: Category Description)
+                // -----------------------------------------------------------------------
+                Dictionary<string, List<BudgetItem>> groupedByCategory = new Dictionary<string, List<BudgetItem>>();
+
+
+                foreach (BudgetItem item in items)
                 {
-                    total = total + item.Amount;
-                    details.Add(item);
+                    string categoryName = item.Category; // Category description
+
+                    // Check if category already exists in the dictionary, if not, initialize it
+                    if (!groupedByCategory.ContainsKey(categoryName))
+                    {
+                        groupedByCategory[categoryName] = new List<BudgetItem>();
+                    }
+
+                    // Add item to the corresponding category group
+                    groupedByCategory[categoryName].Add(item);
                 }
 
-                // Add new BudgetItemsByCategory to our list
-                summary.Add(new BudgetItemsByCategory
+                // Initialize a list to store the final summary of grouped expenses
+                List<BudgetItemsByCategory> summary = new List<BudgetItemsByCategory>();
+
+                // Go through each category group, sort, and calculate totals
+                foreach (KeyValuePair<string, List<BudgetItem>> categoryGroup in groupedByCategory.OrderBy(g => g.Key))
                 {
-                    Category = CategoryGroup.Key,
-                    Details = details,
-                    Total = total
-                });
+                    // Sort items within each category by Date (ascending order)
+                    List<BudgetItem> sortedDetails = categoryGroup.Value.OrderBy(i => i.Date).ToList();
+
+                    // Calculate total amount for the current category
+                    double total = sortedDetails.Sum(i => i.Amount);
+
+                    // Create a BudgetItemsByCategory object
+                    BudgetItemsByCategory budgetCategorySummary = new BudgetItemsByCategory
+                    {
+                        Category = categoryGroup.Key, // Category description (ex Food)
+                        Details = sortedDetails,      // List of budget items for this category
+                        Total = total                 // Total expenses for this category
+                    };
+
+                    // Add to summary list
+                    summary.Add(budgetCategorySummary);
+                }
+
+                // Return the final sorted list of grouped budget items by category
+                return summary;
+
+            }
+            catch (SQLiteException sqlEx)
+            {
+                // Handle SQL errors (e.g., constraints, invalid queries, database connectivity issues)
+                Console.WriteLine($"Database error: {sqlEx.Message}");
+                throw new Exception("A database error occurred while fetching budget items by category.", sqlEx);
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                throw new Exception("An unexpected error occurred while processing budget data by category.", ex);
             }
 
-            return summary;
         }
 
 
