@@ -72,6 +72,7 @@ namespace Budget
         public Categories()
         {
             SetCategoriesToDefaults();
+
         }
 
         public Categories(SQLiteConnection conn, bool useDefaults)

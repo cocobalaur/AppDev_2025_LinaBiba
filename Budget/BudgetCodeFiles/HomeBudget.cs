@@ -6,6 +6,7 @@
 using System.Reflection.Metadata;
 using System;
 using System.Data.Entity;
+using System.Data.SQLite;
 
 namespace Budget
 {
@@ -108,7 +109,9 @@ namespace Budget
         /// <param name="budgetFileName">The name of the budget file.</param>
         public HomeBudget(String budgetFileName)
         {
+            Database.newDatabase(budgetFileName);
             _categories = new Categories();
+            //_categories = new Categories(Database.dbConnection, false);
             _expenses = new Expenses();
             ReadFromFile(budgetFileName);
         }
@@ -136,6 +139,7 @@ namespace Budget
             _expenses = new Expenses();
             _expenses.ReadFromFile(expensesXMLFile);
         }
+
         #region OpenNewAndSave
         // ---------------------------------------------------------------
         // Read
@@ -426,47 +430,103 @@ namespace Budget
 
         public List<BudgetItem> GetBudgetItems(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
         {
-            // ------------------------------------------------------------------------
-            // return joined list within time frame
-            // ------------------------------------------------------------------------
-            Start = Start ?? new DateTime(1900, 1, 1);
-            End = End ?? new DateTime(2500, 1, 1);
+            List<BudgetItem> items = new List<BudgetItem>(); // Initialize the list of budget items
+            double totalBalance = 0; // Initialize the balance variable to keep track of the running total
 
-            var query = from c in _categories.List()
-                        join e in _expenses.List() on c.Id equals e.Category
-                        where e.Date >= Start && e.Date <= End
-                        select new { CatId = c.Id, ExpId = e.Id, e.Date, Category = c.Description, e.Description, e.Amount };
-
-            // ------------------------------------------------------------------------
-            // create a BudgetItem list with totals,
-            // ------------------------------------------------------------------------
-            List<BudgetItem> items = new List<BudgetItem>();
-            Double total = 0;
-
-            foreach (var e in query.OrderBy(q => q.Date))
+            if (Database.dbConnection == null)
             {
-                // filter out unwanted categories if filter flag is on
-                if (FilterFlag && CategoryID != e.CatId)
+                throw new Exception("Database connection is not initialized. Call newDatabase() or existingDatabase() first.");
+            }
+
+            if (Database.dbConnection.State != System.Data.ConnectionState.Open)
+            {
+                throw new Exception("Database connection is closed. Ensure the database is opened before running queries.");
+            }
+
+            try
+            {
+                // Default start and end dates if they are not provided
+                Start = Start ?? new DateTime(1900, 1, 1);
+                End = End ?? new DateTime(2500, 1, 1);
+
+                // Build the SQL query to fetch data from the database
+                string query = @"
+                                SELECT e.Id AS ExpenseId, e.Date, e.Description AS ExpenseDescription, 
+                                       e.Amount, c.Id AS CategoryId, c.Description AS CategoryDescription
+                                FROM expenses e
+                                JOIN categories c ON e.CategoryId = c.Id
+                                WHERE e.Date >= @StartDate AND e.Date <= @EndDate";
+
+                // Modify query if filter flag is set
+                if (FilterFlag)
                 {
-                    continue;
+                    query += " AND e.CategoryId = @CategoryId";
                 }
 
-                // keep track of running totals
-                total = total - e.Amount;
-                items.Add(new BudgetItem
+                // Execute the query
+                using (SQLiteCommand cmd = new SQLiteCommand(query, Database.dbConnection))
                 {
-                    CategoryID = e.CatId,
-                    ExpenseID = e.ExpId,
-                    ShortDescription = e.Description,
-                    Date = e.Date,
-                    Amount = -e.Amount,
-                    Category = e.Category,
-                    Balance = total
-                });
+                    // Adding parameters to prevent SQL injection
+                    cmd.Parameters.AddWithValue("@StartDate", Start.Value.ToString("yyyy-MM-dd"));
+                    cmd.Parameters.AddWithValue("@EndDate", End.Value.ToString("yyyy-MM-dd"));
+
+                    if (FilterFlag)
+                    {
+                        cmd.Parameters.AddWithValue("@CategoryId", CategoryID);
+                    }
+
+                    using (SQLiteDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            try
+                            {
+                                // Get data from the reader by column index
+                                int expenseId = reader.GetInt32(reader.GetOrdinal("ExpenseId"));
+                                DateTime date = reader.GetDateTime(reader.GetOrdinal("Date"));
+                                string expenseDescription = reader.GetString(reader.GetOrdinal("ExpenseDescription"));
+                                double amount = reader.GetDouble(reader.GetOrdinal("Amount"));
+                                int categoryId = reader.GetInt32(reader.GetOrdinal("CategoryId"));
+                                string categoryDescription = reader.GetString(reader.GetOrdinal("CategoryDescription"));
+
+                                
+                                totalBalance += amount;
+
+                                // Add the item to the list
+                                items.Add(new BudgetItem
+                                {
+                                        ExpenseID = expenseId,
+                                        Date = date,
+                                        ShortDescription = expenseDescription,
+                                        Amount = amount, // Make the amount negative as per business logic
+                                        CategoryID = categoryId,
+                                        Category = categoryDescription,
+                                        Balance = totalBalance
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                // Log or handle individual row errors (e.g., data conversion issues)
+                                Console.WriteLine($"Error processing row: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (SQLiteException sqlEx)
+            {
+                // Handle errors related to database operations
+                Console.WriteLine($"Database error: {sqlEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Handle any other unexpected errors
+                Console.WriteLine($"Unexpected error: {ex.Message}");
             }
 
             return items;
         }
+
 
         // ============================================================================
         // Group all expenses month by month (sorted by year/month)
@@ -521,43 +581,69 @@ namespace Budget
         /// </example>
         public List<BudgetItemsByMonth> GetBudgetItemsByMonth(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
         {
-            // -----------------------------------------------------------------------
-            // get all items first
-            // -----------------------------------------------------------------------
-            List<BudgetItem> items = GetBudgetItems(Start, End, FilterFlag, CategoryID);
-
-            // -----------------------------------------------------------------------
-            // Group by year/month
-            // -----------------------------------------------------------------------
-            var GroupedByMonth = items.GroupBy(c => c.Date.Year.ToString("D4") + "/" + c.Date.Month.ToString("D2"));
-
-            // -----------------------------------------------------------------------
-            // create new list
-            // -----------------------------------------------------------------------
-            var summary = new List<BudgetItemsByMonth>();
-            foreach (var MonthGroup in GroupedByMonth)
+            try
             {
-                // calculate total for this month, and create list of details
-                double total = 0;
-                var details = new List<BudgetItem>();
-                foreach (var item in MonthGroup)
+
+                // Set default values for Start and End if they are not provided
+                DateTime startDate = Start ?? new DateTime(1900, 1, 1);
+                DateTime endDate = End ?? new DateTime(2500, 1, 1);
+
+                //  Retrieve all budget items within the given date range and category filter
+                // If FilterFlag is false, CategoryID is ignored
+                List<BudgetItem> items = GetBudgetItems(startDate, endDate, FilterFlag, CategoryID);
+
+                // -----------------------------------------------------------------------
+                // Group by year/month
+                // -----------------------------------------------------------------------
+                var GroupedByMonth = items.GroupBy(c => c.Date.Year.ToString("D4") + "/" + c.Date.Month.ToString("D2"));
+
+                // Initialize a list to store the final summary of grouped expenses
+                List<BudgetItemsByMonth> summary = new List<BudgetItemsByMonth>();
+
+                // Go through each group of expenses (one group per month)
+                foreach (var MonthGroup in GroupedByMonth)
                 {
-                    total = total + item.Amount;
-                    details.Add(item);
+                    // Initialize total amount for the current month
+                    double total = 0;
+
+                    // Create a new list to hold budget items for this month
+                    List<BudgetItem> details = new List<BudgetItem>();
+
+                    // Loop through all budget items in the current month group
+                    // Add each item to the list and update the total amount
+                    foreach (var item in MonthGroup)
+                    {
+                        total += item.Amount; // Accumulate the total for this month
+                        details.Add(item);    // Add item to the monthly list
+                    }
+
+                    // Create a new BudgetItemsByMonth object and add it to the summary list
+                    // This stores the month, total expenses, and list of budget items
+                    summary.Add(new BudgetItemsByMonth
+                    {
+                        Month = MonthGroup.Key, // ex. "2024/01"
+                        Details = details,      // List of budget items for this month
+                        Total = total           // Total expenses for this month
+                    });
+
+
                 }
-
-                // Add new BudgetItemsByMonth to our list
-                summary.Add(new BudgetItemsByMonth
-                {
-                    Month = MonthGroup.Key,
-                    Details = details,
-                    Total = total
-                });
+                // Return the final list of grouped budget items by month
+                return summary;
             }
-
-            return summary;
+            catch (SQLiteException sqlEx)
+            {
+                // Handle SQL errors (e.g., constraints, invalid queries, database connectivity issues)
+                Console.WriteLine($"Database error: {sqlEx.Message}");
+                throw new Exception("A database error occurred while fetching budget items.", sqlEx);
+            }
+            catch (Exception ex)
+            {
+                // Handle unexpected errors
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                throw new Exception("An unexpected error occurred while processing budget data.", ex);
+            }
         }
-
         // ============================================================================
         // Group all expenses by category (ordered by category name)
         // ============================================================================
