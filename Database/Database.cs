@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Data.SQLite;
 using System.IO;
 using System.Threading;
+using System.Data.Entity;
+using System.Diagnostics;
 
 // ===================================================================
 // Very important notes:
@@ -97,6 +99,7 @@ namespace Budget
         // ===================================================================
         // close existing database, wait for garbage collector to
         // release the lock before continuing
+        // This allows the other processes to access the database file
         // ===================================================================
         static public void CloseDatabaseAndReleaseFile()
         {
@@ -114,6 +117,10 @@ namespace Budget
 
         }
 
+        // ===================================================================
+        // Creates the required tables in the database.
+        // This function is called when creating a new databse
+        // ===================================================================
         private static void CreateTables()
         {
             DropTables();
@@ -152,6 +159,10 @@ namespace Budget
 
         }
 
+        // ===================================================================
+        // Drops all existing tables from the database.
+        // This is used to reset the database when creating a new one.
+        // ===================================================================
         private static void DropTables()
         {
             using var cmd = new SQLiteCommand(_connection);
