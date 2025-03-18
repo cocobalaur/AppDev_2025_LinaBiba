@@ -1,5 +1,7 @@
-﻿using System.Xml;
+﻿using System.Data.Common;
+using System.Data.SqlClient;
 using System.Data.SQLite;
+using System.Xml;
 
 // ============================================================================
 // (c) Sandy Bultena 2018
@@ -19,6 +21,17 @@ namespace Budget
     /// </summary>
     public class Expenses
     {
+
+        //Database connection 
+        private SQLiteConnection _connection;
+        public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
+        public Expenses()
+        {
+        }
+        public Expenses(SQLiteConnection conn)
+        {
+            Connection = conn;
+        }
         private static String DefaultFileName = "budget.txt";
         private List<Expense> _Expenses = new List<Expense>();
         private string _FileName;
@@ -178,19 +191,36 @@ namespace Budget
         /// </example>
         public void Add(DateTime date, Double amount, String description, int category)
         {
-            int new_id = 1;
+            //int new_id = 1;
 
-            // if we already have expenses, set Id to max
-            if (_Expenses.Count > 0)
-            {
-                new_id = (from e in _Expenses select e.Id).Max();
-                new_id++;
-            }
+            //// if we already have expenses, set Id to max
+            //if (_Expenses.Count > 0)
+            //{
+            //    new_id = (from e in _Expenses select e.Id).Max();
+            //    new_id++;
+            //}
 
-            _Expenses.Add(new Expense(new_id, date, category, amount, description));
+            //_Expenses.Add(new Expense(new_id, date, category, amount, description));
 
             //Using System.DataSqlite
+            try
+            {
+                //is the id automatic??
+                string queryInsertNewExpense = "INSERT INTO expenses (date, category, amount, description) VALUES (@date, @idCategory, @amount, @desc)";
 
+                using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
+
+                //Add the parameters
+                cmd.Parameters.AddWithValue("@date", date);
+                cmd.Parameters.AddWithValue("@idCategory", category);
+                cmd.Parameters.AddWithValue("@amount", amount);
+                cmd.Parameters.AddWithValue("@desc", description);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error adding the expense: " + ex.Message);
+            }
         }
 
         // ====================================================================
@@ -211,10 +241,28 @@ namespace Budget
         /// </example>
         public void Delete(int Id)
         {
-            int i = _Expenses.FindIndex(x => x.Id == Id);
-            if (i < 0)
-                return;
-            _Expenses.RemoveAt(i);
+            //int i = _Expenses.FindIndex(x => x.Id == Id);
+            //if (i < 0)
+            //    return;
+            //_Expenses.RemoveAt(i);
+            //Throws exception if not allowed to delete in database(foreign key constraint).
+            try
+            {
+                string query = "DELETE FROM expenses WHERE Id = @id;";
+                using var cmd = new SQLiteCommand(query, Connection);
+                cmd.Parameters.AddWithValue("@id", Id);
+
+                //if the number of row affected is zero, then nothing was deleted.
+                int rowsChanged = cmd.ExecuteNonQuery();
+                if (rowsChanged == 0)
+                {
+                    Console.WriteLine($"Error: No expenses with Id {Id} found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting the expenses with Id {Id}: {ex.Message}");
+            }
 
         }
 
@@ -244,9 +292,33 @@ namespace Budget
         public List<Expense> List()
         {
             List<Expense> newList = new List<Expense>();
-            foreach (Expense expense in _Expenses)
+            string retrieves = "SELECT Id, DateTime, Amount, Category, Description FROM Expense";
+            //foreach (Expense expense in _Expenses)
+            //{
+            //    newList.Add(new Expense(expense));
+            //}
+            //return newList;
+            //
+            try
             {
-                newList.Add(new Expense(expense));
+
+                int colId = 0, colDate = 1, colCategory = 2, colAmount = 3, colDescription = 4;
+
+                using var cmd = new SQLiteCommand(retrieves, Connection);
+                using SQLiteDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    int id = rdr.GetInt32(colId);
+                    DateTime dateTime = DateTime.Parse(rdr.GetString(colDate));
+                    int category = rdr.GetInt32(colCategory);
+                    Double amount = rdr.GetDouble(colAmount);
+                    String description = rdr.GetString(colDescription);
+                    newList.Add(new Expense(id, dateTime, category, amount, description));
+                }
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("Error in retrieve Expense.");
             }
             return newList;
         }
@@ -365,6 +437,36 @@ namespace Budget
             }
         }
 
+
+        //
+        public void RetrieveExpenses()
+        {
+            try
+            {
+                string cs = "...";
+
+                using var connection = new SQLiteConnection(cs);
+                connection.Open();
+
+                string retrieves = "SELECT * FROM Expense";
+                using var cmd = new SQLiteCommand(retrieves, connection);
+                using SQLiteDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    int id = rdr.GetInt32(0);
+                    DateTime dateTime = DateTime.Parse(rdr.GetString(1));
+                    int category = rdr.GetInt32(2);
+                    Double amount = rdr.GetDouble(3);
+                    string description = rdr.GetString(4);
+                    _Expenses.Add(new Expense(id, dateTime, category, amount, description));
+                }
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("Error in retrieve Expense.");
+            }
+
+        }
     }
 }
 
