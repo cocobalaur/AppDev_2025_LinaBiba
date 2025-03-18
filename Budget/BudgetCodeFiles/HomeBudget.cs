@@ -96,7 +96,7 @@ namespace Budget
         /// </summary>
         public HomeBudget()
         {
-            //_categories = new Categories();
+            _categories = new Categories();
             _expenses = new Expenses();
         }
 
@@ -110,7 +110,7 @@ namespace Budget
         public HomeBudget(String budgetFileName)
         {
             Database.newDatabase(budgetFileName);
-           // _categories = new Categories();
+            _categories = new Categories();
             //_categories = new Categories(Database.dbConnection, false);
             _expenses = new Expenses();
             ReadFromFile(budgetFileName);
