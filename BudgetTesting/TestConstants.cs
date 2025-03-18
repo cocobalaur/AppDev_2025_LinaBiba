@@ -72,6 +72,7 @@ namespace BudgetCodeTests
 
         public static int numberOfExpensesInFile = 6;
         public static String testExpensesInputFile = "test_expenses.exps";
+        public static String testDBInputFileExpenses = "testDBInput.db"; //****
         public static int maxIDInExpenseFile = 7;
         public static Expense firstExpenseInFile { get { return expense1; } }
         public static string ExpenseOutputTestFile = "test_output.exps";
