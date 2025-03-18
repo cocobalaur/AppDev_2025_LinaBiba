@@ -845,79 +845,87 @@ namespace Budget
         /// </example>
         public List<Dictionary<string, object>> GetBudgetDictionaryByCategoryAndMonth(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
         {
-            // -----------------------------------------------------------------------
-            // get all items by month 
-            // -----------------------------------------------------------------------
-            List<BudgetItemsByMonth> GroupedByMonth = GetBudgetItemsByMonth(Start, End, FilterFlag, CategoryID);
-
-            // -----------------------------------------------------------------------
-            // loop over each month
-            // -----------------------------------------------------------------------
-            var summary = new List<Dictionary<string, object>>();
-            var totalsPerCategory = new Dictionary<String, Double>();
-
-            foreach (var MonthGroup in GroupedByMonth)
+            try
             {
-                // create record object for this month
-                Dictionary<string, object> record = new Dictionary<string, object>();
-                record["Month"] = MonthGroup.Month;
-                record["Total"] = MonthGroup.Total;
-
-                // break up the month details into categories
-                var GroupedByCategory = MonthGroup.Details.GroupBy(c => c.Category);
+                // -----------------------------------------------------------------------
+                // GET ALL ITEMS BY MONTH
+                // -----------------------------------------------------------------------
+                List<BudgetItemsByMonth> GroupedByMonth = GetBudgetItemsByMonth(Start, End, FilterFlag, CategoryID);
 
                 // -----------------------------------------------------------------------
-                // loop over each category
+                // LOOP OVER EACH MONTH
                 // -----------------------------------------------------------------------
-                foreach (var CategoryGroup in GroupedByCategory.OrderBy(g => g.Key))
+                var summary = new List<Dictionary<string, object>>();
+                var totalsPerCategory = new Dictionary<string, double>();
+
+                foreach (var MonthGroup in GroupedByMonth)
                 {
+                    // CREATE RECORD OBJECT FOR THIS MONTH
+                    Dictionary<string, object> record = new Dictionary<string, object>();
+                    record["Month"] = MonthGroup.Month;
+                    record["Total"] = MonthGroup.Total;
 
-                    // calculate totals for the cat/month, and create list of details
-                    double total = 0;
-                    var details = new List<BudgetItem>();
+                    // BREAK UP THE MONTH DETAILS INTO CATEGORIES
+                    var GroupedByCategory = MonthGroup.Details.GroupBy(c => c.Category);
 
-                    foreach (var item in CategoryGroup)
+                    // -----------------------------------------------------------------------
+                    // LOOP OVER EACH CATEGORY
+                    // -----------------------------------------------------------------------
+                    foreach (var CategoryGroup in GroupedByCategory.OrderBy(g => g.Key))
                     {
-                        total = total + item.Amount;
-                        details.Add(item);
+                        // CALCULATE TOTALS FOR THE CATEGORY IN THIS MONTH AND CREATE LIST OF DETAILS
+                        double total = 0;
+                        var details = new List<BudgetItem>();
+
+                        foreach (var item in CategoryGroup)
+                        {
+                            total += item.Amount;
+                            details.Add(item);
+                        }
+
+                        // ADD NEW PROPERTIES AND VALUES TO OUR RECORD OBJECT
+                        record[$"details:{CategoryGroup.Key}"] = details; // CHANGED TO USE STRING INTERPOLATION FOR CONSISTENCY
+                        record[CategoryGroup.Key] = total;
+
+                        // KEEP TRACK OF TOTALS FOR EACH CATEGORY ACROSS ALL MONTHS
+                        if (totalsPerCategory.TryGetValue(CategoryGroup.Key, out double CurrentCatTotal))
+                        {
+                            totalsPerCategory[CategoryGroup.Key] = CurrentCatTotal + total;
+                        }
+                        else
+                        {
+                            totalsPerCategory[CategoryGroup.Key] = total;
+                        }
                     }
 
-                    // add new properties and values to our record object
-                    record["details:" + CategoryGroup.Key] = details;
-                    record[CategoryGroup.Key] = total;
-
-                    // keep track of totals for each category
-                    if (totalsPerCategory.TryGetValue(CategoryGroup.Key, out Double CurrentCatTotal))
-                    {
-                        totalsPerCategory[CategoryGroup.Key] = CurrentCatTotal + total;
-                    }
-                    else
-                    {
-                        totalsPerCategory[CategoryGroup.Key] = total;
-                    }
+                    // ADD RECORD TO COLLECTION
+                    summary.Add(record);
                 }
 
-                // add record to collection
-                summary.Add(record);
-            }
-            // ---------------------------------------------------------------------------
-            // add final record which is the totals for each category
-            // ---------------------------------------------------------------------------
-            Dictionary<string, object> totalsRecord = new Dictionary<string, object>();
-            totalsRecord["Month"] = "TOTALS";
+                // ---------------------------------------------------------------------------
+                // ADD FINAL RECORD WHICH IS THE TOTALS FOR EACH CATEGORY
+                // ---------------------------------------------------------------------------
+                Dictionary<string, object> totalsRecord = new Dictionary<string, object>();
+                totalsRecord["Month"] = "TOTALS";
 
-            foreach (var cat in categories.List())
+                foreach (var category in totalsPerCategory)
+                {
+                    totalsRecord[category.Key] = category.Value; // ADDED TO ENSURE TOTALS ARE INCLUDED IN FINAL RECORD
+                }
+
+                summary.Add(totalsRecord);
+                return summary;
+            }
+            catch (SQLiteException sqlEx)
             {
-                try
-                {
-                    totalsRecord.Add(cat.Description, totalsPerCategory[cat.Description]);
-                }
-                catch { }
+                Console.WriteLine($"Database error: {sqlEx.Message}");
+                throw new Exception("A database error occurred while fetching budget dictionary by category and month.", sqlEx);
             }
-            summary.Add(totalsRecord);
-
-
-            return summary;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                throw new Exception("An unexpected error occurred while processing budget data by category and month.", ex);
+            }
         }
 
 
