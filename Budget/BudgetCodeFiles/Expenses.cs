@@ -1,5 +1,4 @@
-﻿using System.Data.Common;
-using System.Data.SqlClient;
+﻿using System.Data;
 using System.Data.SQLite;
 using System.Xml;
 
@@ -24,13 +23,27 @@ namespace Budget
 
         //Database connection 
         private SQLiteConnection _connection;
+        private bool _useDefaults;
         public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
+        public bool UseDefaults { get { return _useDefaults; } set { _useDefaults = value; } }
         public Expenses()
         {
+            //default????
+            SetExpensesToDefaults();
+            
         }
-        public Expenses(SQLiteConnection conn)
+        public Expenses(SQLiteConnection conn, bool useDefault)
         {
             Connection = conn;
+            
+            if (useDefault)
+            {
+                SetExpensesToDefaults();
+            }
+            else
+            {
+                List();
+            }
         }
         private static String DefaultFileName = "budget.txt";
         private List<Expense> _Expenses = new List<Expense>();
@@ -164,7 +177,49 @@ namespace Budget
         }
 
 
+        //
+        public void SetExpensesToDefaults()
+        {
+            //heheh
+            DeleteAll();
+            
+            InsertIntoExpenses(new DateTime(2018 - 01 - 10), 12, "hat (on credit)", 10);
+            InsertIntoExpenses(new DateTime(2018 - 01 - 11), -10, "hat (on credit)", 9);
+            InsertIntoExpenses(new DateTime(2019 - 01 - 10), 15, "scarf (on credit)", 10);
+            InsertIntoExpenses(new DateTime(2020 - 01 - 10), -15, "scarf (on credit)", 9);
+            InsertIntoExpenses(new DateTime(2020 - 01 - 11), 45, "McDonalds", 14);
+            InsertIntoExpenses(new DateTime(2020 - 01 - 12), 25, "Wendys", 14);
+        }
 
+        public void InsertIntoExpenses(DateTime date, Double amount, String description, int category)
+        {
+            //is the id automatic??
+            string queryInsertNewExpense = "INSERT INTO expenses (Date, CategoryId, Amount, Description) " +
+                "VALUES (@date, @idCategory, @amount, @desc)";
+
+            using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
+
+            //Add the parameters
+
+            cmd.Parameters.AddWithValue("@date", date);
+            cmd.Parameters.AddWithValue("@idCategory", category);
+            cmd.Parameters.AddWithValue("@amount", amount);
+            cmd.Parameters.AddWithValue("@desc", description);
+            cmd.ExecuteNonQuery();
+        }
+        public void DeleteAll()
+        {
+            try
+            {
+                string deleteQuery = "DELETE FROM expenses;";
+                using var deleteCmd = new SQLiteCommand(deleteQuery, Connection);
+                deleteCmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting all expenses: {ex.Message}");
+            }
+        }
         // ====================================================================
         // Add expense
         // ====================================================================
@@ -191,27 +246,19 @@ namespace Budget
         /// </example>
         public void Add(DateTime date, Double amount, String description, int category)
         {
-            //int new_id = 1;
-
-            //// if we already have expenses, set Id to max
-            //if (_Expenses.Count > 0)
-            //{
-            //    new_id = (from e in _Expenses select e.Id).Max();
-            //    new_id++;
-            //}
-
-            //_Expenses.Add(new Expense(new_id, date, category, amount, description));
 
             //Using System.DataSqlite
             try
             {
                 //is the id automatic??
-                string queryInsertNewExpense = "INSERT INTO expenses (date, category, amount, description) VALUES (@date, @idCategory, @amount, @desc)";
+                string queryInsertNewExpense = "INSERT INTO expenses (Date, CategoryId, Amount, Description) " +
+                    "VALUES (@date, @idCategory, @amount, @desc)";
 
                 using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
 
                 //Add the parameters
-                cmd.Parameters.AddWithValue("@date", date);
+                //cmd.Parameters.AddWithValue("@date", date);
+                cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
                 cmd.Parameters.AddWithValue("@idCategory", category);
                 cmd.Parameters.AddWithValue("@amount", amount);
                 cmd.Parameters.AddWithValue("@desc", description);
@@ -292,26 +339,21 @@ namespace Budget
         public List<Expense> List()
         {
             List<Expense> newList = new List<Expense>();
-            string retrieves = "SELECT Id, DateTime, Amount, Category, Description FROM Expense";
-            //foreach (Expense expense in _Expenses)
-            //{
-            //    newList.Add(new Expense(expense));
-            //}
-            //return newList;
-            //
+            string retrieves = "SELECT Id, Date, Amount, CategoryId, Description FROM expenses ORDER BY Id";
+
             try
             {
-
-                int colId = 0, colDate = 1, colCategory = 2, colAmount = 3, colDescription = 4;
+                int colId = 0, colDate = 1, colAmount = 2, colCategory = 3, colDescription = 4;
 
                 using var cmd = new SQLiteCommand(retrieves, Connection);
                 using SQLiteDataReader rdr = cmd.ExecuteReader();
+
                 while (rdr.Read())
                 {
                     int id = rdr.GetInt32(colId);
                     DateTime dateTime = DateTime.Parse(rdr.GetString(colDate));
+                    double amount = rdr.GetDouble(colAmount);
                     int category = rdr.GetInt32(colCategory);
-                    Double amount = rdr.GetDouble(colAmount);
                     String description = rdr.GetString(colDescription);
                     newList.Add(new Expense(id, dateTime, category, amount, description));
                 }
@@ -322,7 +364,72 @@ namespace Budget
             }
             return newList;
         }
+        //
+        public Expense GetExpenseFromId(int id)
+        {
+            try
+            {
+                string retrieves = "SELECT Id, Date, Amount, CategoryId, Description FROM expenses WHERE Id = @Id";
 
+                using var cmd = new SQLiteCommand(retrieves, Connection);
+
+                if (Connection.State != ConnectionState.Open)
+                {
+                    Connection.Open();
+                }
+
+                cmd.Parameters.AddWithValue("@Id", id);
+
+                using SQLiteDataReader rdr = cmd.ExecuteReader();
+
+                if (rdr.Read())
+                {
+                    int colId = 0, colDate = 1, colAmount = 2, colCategory = 3, colDescription = 4;
+
+                    DateTime dateTime = DateTime.Parse(rdr.GetString(colDate));
+                    double amount = rdr.GetDouble(colAmount);
+                    int category = rdr.GetInt32(colCategory);
+                    string description = rdr.GetString(colDescription);
+
+                    return new Expense(id, dateTime, category, amount, description);
+                }
+                else
+                {
+                    throw new Exception("Cannot find expense with id " + id);
+                }
+            }
+            catch (ArgumentException)
+            {
+                Console.WriteLine("Error in GetExpenseFromId.");
+            }
+            return null;
+        }
+        //
+        public void UpdateExpenses(int id, DateTime date, Double amount, String description, int category)
+        {
+            try
+            {
+                //is the id automatic??
+                string queryInsertNewExpense = "UPDATE expenses SET Date = @date, CategoryId = @idCategory" +
+                    ", Amount = @amount, Description = @desc WHERE Id = @Id";
+
+                using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
+
+                //Add the parameters
+
+                cmd.Parameters.AddWithValue("@Id", id);
+                cmd.Parameters.AddWithValue("@date", date);
+                cmd.Parameters.AddWithValue("@idCategory", category);
+                cmd.Parameters.AddWithValue("@amount", amount);
+                cmd.Parameters.AddWithValue("@desc", description);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error updating the expense: " + ex.Message);
+            }
+
+        }
 
         // ====================================================================
         // read from an XML file and add categories to our categories list
@@ -438,35 +545,6 @@ namespace Budget
         }
 
 
-        //
-        public void RetrieveExpenses()
-        {
-            try
-            {
-                string cs = "...";
-
-                using var connection = new SQLiteConnection(cs);
-                connection.Open();
-
-                string retrieves = "SELECT * FROM Expense";
-                using var cmd = new SQLiteCommand(retrieves, connection);
-                using SQLiteDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    int id = rdr.GetInt32(0);
-                    DateTime dateTime = DateTime.Parse(rdr.GetString(1));
-                    int category = rdr.GetInt32(2);
-                    Double amount = rdr.GetDouble(3);
-                    string description = rdr.GetString(4);
-                    _Expenses.Add(new Expense(id, dateTime, category, amount, description));
-                }
-            }
-            catch (ArgumentException)
-            {
-                Console.WriteLine("Error in retrieve Expense.");
-            }
-
-        }
     }
 }
 

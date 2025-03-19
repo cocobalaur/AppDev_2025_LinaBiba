@@ -45,7 +45,7 @@ namespace BudgetCodeTests
             string descr = "New Sweater";
             int category = 34;
             int id = 42;
-            Expense expense = new Expense(id, now, category, amount, descr);
+            Expense expense = new Expense(id, now, category, amount+ 15, descr);
 
             // Act
             Expense copy = new Expense(expense);
@@ -54,7 +54,7 @@ namespace BudgetCodeTests
             // Assert 
             Assert.Equal(id, expense.Id);
             Assert.NotEqual(amount, copy.Amount);
-            Assert.Equal(expense.Amount + 15, copy.Amount);
+            Assert.Equal(expense.Amount, copy.Amount);
             Assert.Equal(descr, expense.Description);
             Assert.Equal(category, expense.Category);
             Assert.Equal(now, expense.Date);
