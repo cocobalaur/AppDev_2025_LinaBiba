@@ -18,18 +18,13 @@ namespace Budget
     // ====================================================================
     // CLASS: categories
     //        - A collection of category items,
-    //        - Read / write to file
-    //        - etc
+    //        - Use a database to retrive a list of categories
     // ====================================================================
     /// <summary>
-    /// Represents a collection of budget categories with functionality to read from and write to files.
+    /// Represents a collection of budget categories with functionality to retrieve a list of categories and to manipulate that list.
     /// </summary>
     public class Categories
     {
-        //private static String DefaultFileName = "budgetCategories.txt";
-        //private List<Category> _Cats = new List<Category>();
-        //private string _FileName;
-        //private string _DirName;
 
         private SQLiteConnection _connection;
         private bool _useDefaults;
@@ -38,42 +33,31 @@ namespace Budget
         // ====================================================================
 
         /// <summary>
-        /// Gets the filename of the current categories file.
+        /// Gets and sets the SQLiteConnection instance used for database operations.
         /// </summary>
-        /// <value>
-        /// A string representing the filename of the current categories file.
-        /// </value>
-        //public String FileName { get { return _FileName; } }
-
-        /// <summary>
-        ///     Gets the directory name of the current categories file.
-        /// </summary>
-        /// <value>
-        /// A string representing the directory where the current categories file is stored.
-        /// </value>
-        //public String DirName { get { return _DirName; } }
-
         public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
 
+        /// <summary>
+        /// Gets and sets a boolean indicating whether a default categores list should be used.
+        /// </summary>
         public bool UseDefaults { get { return _useDefaults; } set { _useDefaults = value; } }
 
         // ====================================================================
         // Constructor
         // ====================================================================
         /// <summary>
-        /// Initializes a new instance of the Categories class with default values.
+        /// Initializes a new instance of the Categories class with connection value and what categories list do we use.
         /// </summary>
+        /// <param name="conn">The SQLite database connection.</param>
+        /// <param name="useDefaults">The boolean value to determine if we use default categories or not/ the database is empty or not.
+        /// If true it uses defaultCategories which is adding new categories to the empty database. If false is uses list and retrives a list of the categories
+        /// that's in the database.</param>
         /// <example>
         /// To create a new `Categories` object with default categories:
         /// <code>
-        /// Categories categories = new Categories();
+        /// Categories categories = new Categories(conn, True);
         /// </code>
         /// </example>
-        public Categories()
-        {
-            SetCategoriesToDefaults();
-
-        }
 
         public Categories(SQLiteConnection conn, bool useDefaults)
         {
@@ -82,7 +66,14 @@ namespace Budget
 
             if (useDefaults)
             {
-                SetCategoriesToDefaults();
+
+                // Insert category types into the database
+                foreach (CategoryType type in Enum.GetValues(typeof(CategoryType)))
+                {
+                    InsertCategoryType(type);
+                }
+
+                SetCategoriesToDefaults(); // Insert default categories
             }
             else
             {
@@ -95,7 +86,7 @@ namespace Budget
         // ====================================================================
 
         /// <summary>
-        /// Retrieves a category by its ID.
+        /// Retrieves a category by its ID using a query.
         /// </summary>
         /// <param name="i">The ID of the category to retrieve.</param>
         /// <returns>The matching category.</returns>
@@ -107,6 +98,7 @@ namespace Budget
         /// Category cat = categories.GetCategoryFromId(1);
         /// </code>
         /// </example>
+    
         public Category GetCategoryFromId(int id)
         {
             string query = "SELECT Id, Description, TypeId FROM categories WHERE Id = @id;";
@@ -135,148 +127,15 @@ namespace Budget
             }
         }
 
-        // ====================================================================
-        // populate categories from a file
-        // if filepath is not specified, read/save in AppData file
-        // Throws System.IO.FileNotFoundException if file does not exist
-        // Throws System.Exception if cannot read the file correctly (parsing XML)
-        // ====================================================================
-        /// <summary>
-        /// Reads categories from a file.
-        /// </summary>
-        /// <param name="filepath">The path of the file to read from. If null, a default path is used.</param>
-        /// <exception cref="FileNotFoundException">Thrown if the specified file does not exist.</exception>
-        /// <exception cref="Exception">Thrown if there is an error parsing the XML file.</exception>
-        /// <example>
-        /// To read categories from a file:
-        /// <code>
-        /// Categories categories = new Categories();
-        /// categories.ReadFromFile("categories.txt");
-        /// </code>
-        /// </example>
-        //public void ReadFromFile(String filepath = null)
-        //{
-
-        //    // ---------------------------------------------------------------
-        //    // reading from file resets all the current categories,
-        //    // ---------------------------------------------------------------
-        //    _Cats.Clear();
-
-        //    // ---------------------------------------------------------------
-        //    // reset default dir/filename to null 
-        //    // ... filepath may not be valid, 
-        //    // ---------------------------------------------------------------
-        //    _DirName = null;
-        //    _FileName = null;
-
-        //    // ---------------------------------------------------------------
-        //    // get filepath name (throws exception if it doesn't exist)
-        //    // ---------------------------------------------------------------
-        //    filepath = BudgetFiles.VerifyReadFromFileName(filepath, DefaultFileName);
-
-        //    // ---------------------------------------------------------------
-        //    // If file exists, read it
-        //    // ---------------------------------------------------------------
-        //    _ReadXMLFile(filepath);
-        //    _DirName = Path.GetDirectoryName(filepath);
-        //    _FileName = Path.GetFileName(filepath);
-        //}
-
-        //// ====================================================================
-        //// save to a file
-        //// if filepath is not specified, read/save in AppData file
-        //// ====================================================================
-        ///// <summary>
-        ///// Saves categories to a file.
-        ///// </summary>
-        ///// <param name="filepath">The path of the file to write to. If null, the last used file path is used.</param>
-        ///// <example>
-        ///// To save categories to a file:
-        ///// <code>
-        ///// Categories categories = new Categories();
-        ///// categories.SaveToFile("categories.txt");
-        ///// </code>
-        ///// </example>
-        //public void SaveToFile(String filepath = null)
-        //{
-        //    // ---------------------------------------------------------------
-        //    // if file path not specified, set to last read file
-        //    // ---------------------------------------------------------------
-        //    if (filepath == null && DirName != null && FileName != null)
-        //    {
-        //        filepath = DirName + "\\" + FileName;
-        //    }
-
-        //    // ---------------------------------------------------------------
-        //    // just in case filepath doesn't exist, reset path info
-        //    // ---------------------------------------------------------------
-        //    _DirName = null;
-        //    _FileName = null;
-
-        //    // ---------------------------------------------------------------
-        //    // get filepath name (throws exception if it doesn't exist)
-        //    // ---------------------------------------------------------------
-        //    filepath = BudgetFiles.VerifyWriteToFileName(filepath, DefaultFileName);
-
-        //    // ---------------------------------------------------------------
-        //    // save as XML
-        //    // ---------------------------------------------------------------
-        //    _WriteXMLFile(filepath);
-
-        //    // ----------------------------------------------------------------
-        //    // save filename info for later use
-        //    // ----------------------------------------------------------------
-        //    _DirName = Path.GetDirectoryName(filepath);
-        //    _FileName = Path.GetFileName(filepath);
-        //}
-
-        // ====================================================================
-        // set categories to default
-        // ====================================================================
-        /// <summary>
-        /// Resets categories to default values.
-        /// </summary>
-        /// <example>
-        /// To reset categories to the default values:
-        /// <code>
-        /// Categories categories = new Categories();
-        /// categories.SetCategoriesToDefaults();
-        /// </code>
-        /// </example>
-
-
         // ===================================================================
-        // INSERT DATA USING PARAMETERIZED QUERIES TO PREVENT SQL INJECTION
+        // INSERT DATA INTO DATABASE
         // ===================================================================
-        // This method ensures that category types are inserted and then sets the default categories.
-        public void SetCategoriesToDefaults()
-        {
-            DeleteAll();
 
-            foreach (CategoryType type in Enum.GetValues(typeof(CategoryType)))
-            {
-                InsertCategoryType(type);
-            }
-
-            // Insert default categories for each category type
-            InsertIntoCategories("Income", CategoryType.Income);
-            InsertIntoCategories("Utilities", CategoryType.Expense);
-            InsertIntoCategories("Rent", CategoryType.Expense);
-            InsertIntoCategories("Food", CategoryType.Expense);
-            InsertIntoCategories("Entertainment", CategoryType.Expense);
-            InsertIntoCategories("Education", CategoryType.Expense);
-            InsertIntoCategories("Medical Expenses", CategoryType.Expense);
-            InsertIntoCategories("Vacation", CategoryType.Expense);
-            InsertIntoCategories("Credit Card", CategoryType.Credit);
-            InsertIntoCategories("Clothes", CategoryType.Expense);
-            InsertIntoCategories("Gifts", CategoryType.Expense);
-            InsertIntoCategories("Insurance", CategoryType.Expense);
-            InsertIntoCategories("Transportation", CategoryType.Expense);
-            InsertIntoCategories("Eating Out",CategoryType.Expense);
-            InsertIntoCategories("Savings", CategoryType.Savings);
-
-        }
-
+        /// <summary>
+        /// Inserts a category type into the database using parameterized queries to prevent sql injecttion.
+        /// </summary>
+        /// <param name="categoryType">The category type to insert.</param>
+        /// <exception cref="Exception">Thrown if invalid category type to insert.</exception>
         private void InsertCategoryType(CategoryType categoryType)
         {
             try
@@ -300,6 +159,44 @@ namespace Budget
             }
         }
 
+        /// <summary>
+        /// Insert default categories into the database if the database.
+        /// It deletes all previous information before inserting the default categories.
+        /// </summary>
+        public void SetCategoriesToDefaults()
+        {
+            DeleteAll();
+
+            // Insert default categories for each category type
+            InsertIntoCategories("Income", CategoryType.Income);
+            InsertIntoCategories("Utilities", CategoryType.Expense);
+            InsertIntoCategories("Rent", CategoryType.Expense);
+            InsertIntoCategories("Food", CategoryType.Expense);
+            InsertIntoCategories("Entertainment", CategoryType.Expense);
+            InsertIntoCategories("Education", CategoryType.Expense);
+            InsertIntoCategories("Medical Expenses", CategoryType.Expense);
+            InsertIntoCategories("Vacation", CategoryType.Expense);
+            InsertIntoCategories("Credit Card", CategoryType.Credit);
+            InsertIntoCategories("Clothes", CategoryType.Expense);
+            InsertIntoCategories("Gifts", CategoryType.Expense);
+            InsertIntoCategories("Insurance", CategoryType.Expense);
+            InsertIntoCategories("Transportation", CategoryType.Expense);
+            InsertIntoCategories("Eating Out",CategoryType.Expense);
+            InsertIntoCategories("Savings", CategoryType.Savings);
+
+        }
+
+        /// <summary>
+        /// Inserts a new category with category name and category type into the database.
+        /// </summary>
+        /// <param name="description">The description of the category.</param>
+        /// <param name="type">The category type.</param>
+        /// <example>
+        /// To insert default categories into the database:
+        /// <code>
+        /// InsertIntoCategories("Savings", CategoryType.Savings);
+        /// </code>
+        /// </example>
         private void InsertIntoCategories(string description, Category.CategoryType type)
         {
             int id = (int)type;
@@ -313,27 +210,36 @@ namespace Budget
         // ====================================================================
         // Add category
         // ====================================================================
-        //private void Add(Category cat)
-        //{
-        //    _Cats.Add(cat);
-        //}
 
         /// <summary>
         /// Adds a new category with a description and type.
         /// </summary>
         /// <param name="desc">The description of the category.</param>
         /// <param name="type">The type of the category (Income, Expense, Credit, Saving)</param>
+        /// <exception cref="Exception">Thrown if invalid category type or category description to add.</exception>
+        /// <exception cref="ArgumentException">Thrown if invalid category type enum or category description.</exception>
         /// <example>
         /// To add a new category:
         /// <code>
-        /// Categories categories = new Categories();
-        /// categories.Add("Travel", Category.CategoryType.Expense);
+        /// string descr = "New Category";
+        /// Category.CategoryType type = Category.CategoryType.Income;
+        /// categories.Add(descr, type);
         /// </code>
         /// </example>
         public void Add(string desc, Category.CategoryType type)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(desc))
+                {
+                    throw new ArgumentException("Category description cannot be empty.");
+                }
+
+                if (!Enum.IsDefined(typeof(Category.CategoryType), type)) //check if type is a valid enum, isDefined verifies if the value is defined in the enum
+                {
+                    throw new ArgumentException("Invalid category type.");
+                }
+
                 int typeId = (int)type; //explicitily convert enum to int for typeId
                 string queryInsertNewCategory = "INSERT INTO categories (Description, TypeId) VALUES (@desc, @typeId)";
 
@@ -354,9 +260,10 @@ namespace Budget
         // Delete category
         // ====================================================================
         /// <summary>
-        /// Deletes a category by its Id.
+        /// Deletes a category from the database by its id.
         /// </summary>
-        /// <param name="Id">The Id of the category to delete.</param>
+        /// <param name="id">The Id of the category to delete.</param>
+        /// <exception cref="Exception">Thrown if invalid category id to delete.</exception>
         /// <example>
         /// To delete a category by Id:
         /// <code>
@@ -384,6 +291,10 @@ namespace Budget
             }
         }
 
+        /// <summary>
+        /// Deletes all categories from the database.
+        /// </summary>
+        /// <exception cref="Exception">Thrown if it can't delete the tables in the database.</exception>
         public void DeleteAll()
         {
             try
@@ -404,9 +315,10 @@ namespace Budget
         //        this instance
         // ====================================================================
         /// <summary>
-        /// Returns a copy of the list of categories.
+        /// Returns a copy of the list of categories from the database.
         /// </summary>
         /// <returns>A new list of categories.</returns>
+        /// <exception cref="Exception">Thrown if there is no categories in the database to retrieve a list from.</exception>
         /// <example>
         /// To get a list of categories:
         /// <code>
@@ -416,7 +328,6 @@ namespace Budget
         /// ]]>
         /// </code>
         /// </example>
-        /// 
         public List<Category> List()
         {
             List<Category> categoriesList = new List<Category>();
@@ -459,104 +370,42 @@ namespace Budget
             return categoriesList;
         }
 
-
-
         // ====================================================================
-        // read from an XML file and add categories to our categories list
+        // Update Categories
         // ====================================================================
-        //private void _ReadXMLFile(String filepath)
-        //{
-
-        //    // ---------------------------------------------------------------
-        //    // read the categories from the xml file, and add to this instance
-        //    // ---------------------------------------------------------------
-        //    try
-        //    {
-        //        XmlDocument doc = new XmlDocument();
-        //        doc.Load(filepath);
-
-        //        foreach (XmlNode category in doc.DocumentElement.ChildNodes)
-        //        {
-        //            String id = (((XmlElement)category).GetAttributeNode("ID")).InnerText;
-        //            String typestring = (((XmlElement)category).GetAttributeNode("type")).InnerText;
-        //            String desc = ((XmlElement)category).InnerText;
-
-        //            Category.CategoryType type;
-        //            switch (typestring.ToLower())
-        //            {
-        //                case "income":
-        //                    type = Category.CategoryType.Income;
-        //                    break;
-        //                case "expense":
-        //                    type = Category.CategoryType.Expense;
-        //                    break;
-        //                case "credit":
-        //                    type = Category.CategoryType.Credit;
-        //                    break;
-        //                default:
-        //                    type = Category.CategoryType.Savings;
-        //                    break;
-        //            }
-        //            this.Add(new Category(int.Parse(id), desc, type));
-        //        }
-
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new Exception("ReadXMLFile: Reading XML " + e.Message);
-        //    }
-
-        //}
-
-
-        //// ====================================================================
-        //// write all categories in our list to XML file
-        //// ====================================================================
-        //private void _WriteXMLFile(String filepath)
-        //{
-        //    try
-        //    {
-        //        // create top level element of categories
-        //        XmlDocument doc = new XmlDocument();
-        //        doc.LoadXml("<Categories></Categories>");
-
-        //        // foreach Category, create an new xml element
-        //        foreach (Category cat in _Cats)
-        //        {
-        //            XmlElement ele = doc.CreateElement("Category");
-        //            XmlAttribute attr = doc.CreateAttribute("ID");
-        //            attr.Value = cat.Id.ToString();
-        //            ele.SetAttributeNode(attr);
-        //            XmlAttribute type = doc.CreateAttribute("type");
-        //            type.Value = cat.Type.ToString();
-        //            ele.SetAttributeNode(type);
-
-        //            XmlText text = doc.CreateTextNode(cat.Description);
-        //            doc.DocumentElement.AppendChild(ele);
-        //            doc.DocumentElement.LastChild.AppendChild(text);
-
-        //        }
-
-        //        // write the xml to FilePath
-        //        doc.Save(filepath);
-
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new Exception("_WriteXMLFile: Reading XML " + e.Message);
-        //    }
-
-        //}
-
-        // ====================================================================
-        // Method: UpdateCategory
-        // Purpose: Allows API users to update a category's Description and Type 
-        // based on the provided Id.
-        // ====================================================================
+        /// <summary>
+        /// Updates the description and type of a category in the database based on its Id.
+        /// </summary>
+        /// <param name="id">The Id of the category to update.</param>
+        /// <param name="newDescription">The new description for the category.</param>
+        /// <param name="newType">The new category type for the category (from CategoryType enum).</param>
+        /// <exception cref="Exception">Thrown if cannot update the category.</exception>
+        /// <exception cref="ArgumentException">Thrown if invalid category type enum or category description.</exception>
+        /// <example>
+        /// To update a category using an Id:
+        /// <code>
+        /// <![CDATA[
+        /// String newDescr = "Presents";
+        /// int id = 11;
+        /// categories.UpdateProperties(id, newDescr, Category.CategoryType.Income);
+        /// Category category = categories.GetCategoryFromId(id);
+        /// ]]>
+        /// </code>
+        /// </example>
         public void UpdateProperties(int id, string newDescription, Category.CategoryType newType)
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(newDescription))
+                {
+                    throw new ArgumentException("Category description cannot be empty.");
+                }
+
+                if (!Enum.IsDefined(typeof(Category.CategoryType), newType)) //check if type is a valid enum, isDefined verifies if the value is defined in the enum
+                {
+                    throw new ArgumentException("Invalid category type.");
+                }
+
                 // Get the typeId directly from the enum value 
                 Category.CategoryType typeId = newType;
 
