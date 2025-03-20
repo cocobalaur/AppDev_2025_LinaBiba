@@ -25,7 +25,6 @@ namespace Budget
         private SQLiteConnection _connection;
         private bool _useDefaults;
         public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
-        public bool UseDefaults { get { return _useDefaults; } set { _useDefaults = value; } }
         public Expenses()
         {
             //default????
