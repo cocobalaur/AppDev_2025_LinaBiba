@@ -111,6 +111,30 @@ namespace BudgetCodeTests
         }
 
         // ========================================================================
+        [Fact]
+        public void ExpensesMethod_Add_NonExistentCategoryId()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, false);
+
+            int invalidCategoryId = -99;
+            double amount = 98.1;
+
+            // Act
+            List<Expense> expensesList = expenses.List();
+            int initialCount = expenses.List().Count;
+            expenses.Add(DateTime.Now, amount, "expense with category id", invalidCategoryId);
+            int finalCount = expenses.List().Count;
+
+            // Assert
+            Assert.Equal(finalCount, initialCount);
+
+        }
+        // ========================================================================
 
         [Fact]
         public void ExpensesMethod_Delete()
@@ -188,6 +212,27 @@ namespace BudgetCodeTests
             Assert.Equal(expID, expense.Id);
 
         }
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_GetExpenseFromId_InexistantID()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\{TestConstants.testDBInputFileExpenses}";
+            Database.existingDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, false);
+            int expID = -1;
+
+            // Act
+            Expense expense = expenses.GetExpenseFromId(expID);
+
+
+            // Assert
+            Assert.Null(expense);
+            
+        }
 
         // ========================================================================
 
@@ -262,6 +307,38 @@ namespace BudgetCodeTests
             Assert.Equal(date, expense.Date);
             Assert.Equal(amount, expense.Amount);
             Assert.Equal(categoriesId, expense.Category);
+        }
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_UpdateExpense_InvalidCategoryId()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, true);
+            Expenses expenses = new Expenses(conn, true);
+
+            String newDescr = "Presents";
+            int id = 3;
+            DateTime date = new DateTime(2025, 1, 10);
+            double amount = 20.0;
+            int categoriesId = -1;
+
+
+            // Act
+            Expense oldExpense = expenses.GetExpenseFromId(id);
+            expenses.UpdateExpenses(id, date, amount, newDescr, categoriesId); 
+            Expense expense = expenses.GetExpenseFromId(id);
+
+            // Assert 
+            Assert.Equal(oldExpense.Description, expense.Description);
+            Assert.Equal(oldExpense.Id, expense.Id);
+            Assert.Equal(oldExpense.Date, expense.Date);
+            Assert.Equal(oldExpense.Amount, expense.Amount);
+            Assert.Equal(oldExpense.Category, expense.Category);
         }
 
         // ========================================================================

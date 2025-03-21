@@ -166,7 +166,7 @@ namespace Budget
                 int rowsChanged = cmd.ExecuteNonQuery();
                 if (rowsChanged == 0)
                 {
-                    Console.WriteLine($"Error: No expenses with Id {Id} found.");
+                    throw new Exception($"Error: No expenses with Id {Id} found.");
                 }
             }
             catch (Exception ex)
@@ -261,9 +261,9 @@ namespace Budget
                     throw new Exception("Cannot find expense with id " + id);
                 }
             }
-            catch (ArgumentException)
+            catch (Exception ex)
             {
-                Console.WriteLine("Error in GetExpenseFromId.");
+                Console.WriteLine("Error in GetExpenseFromId." + ex.Message);
             }
             return null;
         }
