@@ -221,9 +221,9 @@ namespace Budget
                     newList.Add(new Expense(id, dateTime, category, amount, description));
                 }
             }
-            catch (ArgumentException)
+            catch (Exception ex)
             {
-                Console.WriteLine("Error in retrieve Expense.");
+                Console.WriteLine("Error in retrieve Expense: " + ex.Message);
             }
             return newList;
         }
