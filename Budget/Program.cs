@@ -15,7 +15,7 @@ namespace Budget
         {
             Console.WriteLine("Hello, World!");
 
-            budget = new HomeBudget("..\\..\\..\\..\\BudgetTesting\\test.budget");
+            //budget = new HomeBudget("..\\..\\..\\..\\BudgetTesting\\test.budget");
 
 
             // Menu loop

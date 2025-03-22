@@ -7,6 +7,8 @@ using System.Reflection.Metadata;
 using System;
 using System.Data.Entity;
 using System.Data.SQLite;
+using System.Data.Entity.Core.Mapping;
+using System.IO;
 
 namespace Budget
 {
@@ -21,55 +23,8 @@ namespace Budget
     /// </summary>
     public class HomeBudget
     {
-        private string _FileName;
-        private string _DirName;
         private Categories _categories;
         private Expenses _expenses;
-
-        // ====================================================================
-        // Properties
-        // ===================================================================
-
-        // Properties (location of files etc)
-        /// <summary>
-        /// Gets the budget file name.
-        /// </summary>
-        /// <value>
-        /// A <see cref="string"/> representing the name of the budget file (e.g., "test.budget").
-        /// </value>
-        public String FileName { get { return _FileName; } }
-
-        /// <summary>
-        /// Gets the budget directory name.
-        /// </summary>
-        /// <value>
-        /// A <see cref="string"/> representing the directory where the budget file is located (e.g., "C:\\Users\\Documents\\Budget").
-        /// </value>
-        public String DirName { get { return _DirName; } }
-
-        /// <summary>
-        /// Gets the full path of the budget file.
-        /// </summary>
-        /// <value>
-        /// A <see cref="string"/> representing the full file path for the budget (e.g., "C:\\Users\\Documents\\Budget\\budget2024.txt").
-        /// Returns null if the file name or directory name is not set.
-        /// </value>
-        public String PathName
-        {
-            get
-            {
-                if (_FileName != null && _DirName != null)
-                {
-                    return Path.GetFullPath(_DirName + "\\" + _FileName);
-                }
-                else
-                {
-                    return null;
-                }
-            }
-        }
-
-        // Properties (categories and expenses object)
 
         /// <summary>
         /// Gets the categories related with the budget.
@@ -87,18 +42,6 @@ namespace Budget
         /// </value>
         public Expenses expenses { get { return _expenses; } }
 
-        // -------------------------------------------------------------------
-        // Constructor (new... default categories, no expenses)
-        // -------------------------------------------------------------------
-        /// <summary>
-        /// Initializing the categories and expenses fields using the default constructor of the <cref="Categories"/> class and 
-        /// the <see cref="Expenses"/> class
-        /// </summary>
-        public HomeBudget()
-        {
-            _categories = new Categories();
-            _expenses = new Expenses();
-        }
 
         // -------------------------------------------------------------------
         // Constructor (existing budget ... must specify file)
@@ -107,259 +50,44 @@ namespace Budget
         /// Initializes a new instance of the <see cref="HomeBudget"/> class with an existing budget file.
         /// </summary>
         /// <param name="budgetFileName">The name of the budget file.</param>
-        public HomeBudget(String budgetFileName)
+        
+        public HomeBudget(String databaseFile, bool newDB)
         {
-            Database.newDatabase(budgetFileName);
-            _categories = new Categories();
-            //_categories = new Categories(Database.dbConnection, false);
-            _expenses = new Expenses();
-            ReadFromFile(budgetFileName);
-        }
-
-        //temp homebudget constructor
-        public HomeBudget(String databaseFile, String expensesXMLFile, bool newDB = false)
-        {
-            // if database exists, and user doesn't want a new database, open existing DB
-            if (!newDB && File.Exists(databaseFile))
+         
+            if (string.IsNullOrWhiteSpace(databaseFile))
             {
+                throw new ArgumentException("A valid database file must be specified.");
+            }
+
+            string fileIsGood = VerifyFile(databaseFile);
+
+            bool isNewDB = !File.Exists(databaseFile);
+
+            // file did not exist, or user wants a new database, so open NEW DB
+            if (isNewDB)
+            {
+                Database.newDatabase(databaseFile);
+            }
+            else
+            {
+                // if database exists, and user doesn't want a new database, open existing DB
                 Database.existingDatabase(databaseFile);
             }
 
-            // file did not exist, or user wants a new database, so open NEW DB
-            else
-            {
-                Database.newDatabase(databaseFile);
-                newDB = true;
-            }
-
-            // create the category object
+            // create the category object and expenses object
             _categories = new Categories(Database.dbConnection, newDB);
-
-            // create the _expenses course
-            _expenses = new Expenses();
-            _expenses.ReadFromFile(expensesXMLFile);
+            _expenses = new Expenses(Database.dbConnection, newDB);
         }
 
-        #region OpenNewAndSave
-        // ---------------------------------------------------------------
-        // Read
-        // Throws Exception if any problem reading this file
-        // ---------------------------------------------------------------
-
-        /// <summary>
-        /// Reads budget data from a specified file, which contains references to category and expense files.
-        /// </summary>
-        /// <param name="budgetFileName">The name of the budget file containing references to category and expense files.</param>
-        /// <exception cref="Exception">Thrown if there is an issue reading the file, such as if the file doesn't exist or can't be read.</exception>
-        /// <example>
-        /// Example usage:
-        /// <code>
-        /// HomeBudget budget = new HomeBudget();
-        /// budget.ReadFromFile("budget_data.txt");
-        /// </code>
-        /// <para><b>Expected Budget File Format:</b></para>
-        /// The budget file should contain two lines, each specifying the filename of the category and expense files, respectively.
-        /// 
-        /// <para><b>Example Budget File Content:</b></para>
-        /// <code>
-        /// categories.txt
-        /// expenses.txt
-        /// </code>
-        /// 
-        /// <para><b>Expected Category File Format (categories.xml):</b></para>
-        /// The category file should be an XML file structured as follows:
-        /// <code>
-        /// <![CDATA[
-        /// <Categories>
-        ///   <Category ID="17" type="Expense">Non Standard</Category>
-        ///   <Category ID="1" type="Expense">Utilities</Category>
-        ///   <Category ID="2" type="Expense">Rent</Category>
-        ///   <Category ID="3" type="Expense">Food</Category>
-        ///   <Category ID="4" type="Expense">Entertainment</Category>
-        /// </Categories>
-        /// ]]>
-        /// </code>
-        /// 
-        /// <para><b>Expected Expense File Format (expenses.xml):</b></para>
-        /// The expense file should be an XML file structured as follows:
-        /// <code>
-        /// <![CDATA[
-        /// <Expenses>
-        ///   <Expense ID="1">
-        ///     <Date>1/10/2018 12:00:00 AM</Date>
-        ///     <Description>hat (on credit)</Description>
-        ///     <Amount>12</Amount>
-        ///     <Category>10</Category>
-        ///   </Expense>
-        ///   <Expense ID="2">
-        ///     <Date>1/11/2018 12:00:00 AM</Date>
-        ///     <Description>hat (on credit)</Description>
-        ///     <Amount>-10</Amount>
-        ///     <Category>9</Category>
-        ///   </Expense>
-        /// </Expenses>
-        /// ]]>
-        /// </code>
-        /// </example>
-        public void ReadFromFile(String budgetFileName)
+        public static string VerifyFile(string databaseFile)
         {
-            // ---------------------------------------------------------------
-            // read the budget file and process
-            // ---------------------------------------------------------------
-            try
+            if (string.IsNullOrWhiteSpace(Path.GetExtension(databaseFile)))
             {
-                // get filepath name (throws exception if it doesn't exist)
-                budgetFileName = BudgetFiles.VerifyReadFromFileName(budgetFileName, "");
-
-                // If file exists, read it
-                string[] filenames = System.IO.File.ReadAllLines(budgetFileName);
-
-                // ----------------------------------------------------------------
-                // Save information about budget file
-                // ----------------------------------------------------------------
-                string folder = Path.GetDirectoryName(budgetFileName);
-                _FileName = Path.GetFileName(budgetFileName);
-
-                // read the expenses and categories from their respective files
-                //_categories.ReadFromFile(folder + "\\" + filenames[0]);
-                _expenses.ReadFromFile(folder + "\\" + filenames[1]);
-
-                // Save information about budget file
-                _DirName = Path.GetDirectoryName(budgetFileName);
-                _FileName = Path.GetFileName(budgetFileName);
-
+                databaseFile += ".db"; //has valid extension
             }
 
-            // ----------------------------------------------------------------
-            // throw new exception if we cannot get the info that we need
-            // ----------------------------------------------------------------
-            catch (Exception e)
-            {
-                throw new Exception("Could not read budget info: \n" + e.Message);
-            }
-
+            return databaseFile;
         }
-
-        // ====================================================================
-        // save to a file
-        // saves the following files:
-        //  filepath_expenses.exps  # expenses file
-        //  filepath_categories.cats # categories files
-        //  filepath # a file containing the names of the expenses and categories files.
-        //  Throws exception if we cannot write to that file (ex: invalid dir, wrong permissions)
-        // ====================================================================
-        /// <summary>
-        /// Saves the budget data to a file, creating separate files for expenses and categories.
-        /// </summary>
-        /// <param name="filepath">The base file path where budget data will be saved.</param>
-        /// <exception cref="Exception">Thrown if the file cannot be written (e.g., invalid directory, insufficient permissions).</exception>
-        /// <example>
-        /// <code>
-        /// <![CDATA[
-        /// HomeBudget budget = new HomeBudget();
-        /// try
-        /// {
-        ///     budget.SaveToFile("C:\\Users\\Alaa\\source\\repos\\Budget\\BudgetTesting\\test.budget");
-        ///     Console.WriteLine("Budget saved successfully.");
-        /// }
-        /// catch (Exception ex)
-        /// {
-        ///     Console.WriteLine($"Error saving budget: {ex.Message}");
-        /// }
-        /// ]]>
-        /// </code>
-        /// <para><b>Files Created:</b></para>
-        /// When this method runs, it creates three files:
-        /// <ul>
-        ///   <li><b>Budget file:</b> Contains the names of the category and expense files.</li>
-        ///   <li><b>Category file:</b> Stores all budget categories.</li>
-        ///   <li><b>Expense file:</b> Stores all recorded expenses.</li>
-        /// </ul>
-        ///
-        /// <para><b>Expected Budget File Format (test.budget):</b></para>
-        /// This file lists the filenames of the category and expense files:
-        /// <code>
-        /// test_categories.cats
-        /// test_expenses.exps
-        /// </code>
-        ///
-        /// <para><b>Expected Category File Format (test_categories.cats):</b></para>
-        /// The category file is a serialized format of budget categories:
-        /// <code>
-        /// <![CDATA[
-        /// <Categories>
-        ///   <Category ID="1" type="Expense">Utilities</Category>
-        ///   <Category ID="2" type="Expense">Rent</Category>
-        ///   <Category ID="3" type="Expense">Food</Category>
-        ///   <Category ID="4" type="Expense">Entertainment</Category>
-        /// </Categories>
-        /// ]]>
-        /// </code>
-        ///
-        /// <para><b>Expected Expense File Format (test_expenses.exps):</b></para>
-        /// The expense file contains recorded expenses:
-        /// <code>
-        /// <![CDATA[
-        /// <Expenses>
-        ///   <Expense ID="1">
-        ///     <Date>1/10/2018 12:00:00 AM</Date>
-        ///     <Description>hat (on credit)</Description>
-        ///     <Amount>12</Amount>
-        ///     <Category>10</Category>
-        ///   </Expense>
-        ///   <Expense ID="2">
-        ///     <Date>1/11/2018 12:00:00 AM</Date>
-        ///     <Description>hat (on credit)</Description>
-        ///     <Amount>-10</Amount>
-        ///     <Category>9</Category>
-        ///   </Expense>
-        /// </Expenses>
-        /// ]]>
-        /// </code>
-        /// </example>
-        public void SaveToFile(String filepath)
-        {
-
-            // ---------------------------------------------------------------
-            // just in case filepath doesn't exist, reset path info
-            // ---------------------------------------------------------------
-            _DirName = null;
-            _FileName = null;
-
-            // ---------------------------------------------------------------
-            // get filepath name (throws exception if we can't write to the file)
-            // ---------------------------------------------------------------
-            filepath = BudgetFiles.VerifyWriteToFileName(filepath, "");
-
-            String path = Path.GetDirectoryName(Path.GetFullPath(filepath));
-            String file = Path.GetFileNameWithoutExtension(filepath);
-            String ext = Path.GetExtension(filepath);
-
-            // ---------------------------------------------------------------
-            // construct file names for expenses and categories
-            // ---------------------------------------------------------------
-            String expensepath = path + "\\" + file + "_expenses" + ".exps";
-            String categorypath = path + "\\" + file + "_categories" + ".cats";
-
-            // ---------------------------------------------------------------
-            // save the expenses and categories into their own files
-            // ---------------------------------------------------------------
-            _expenses.SaveToFile(expensepath);
-            //_categories.SaveToFile(categorypath);
-
-            // ---------------------------------------------------------------
-            // save filenames of expenses and categories to budget file
-            // ---------------------------------------------------------------
-            string[] files = { Path.GetFileName(categorypath), Path.GetFileName(expensepath) };
-            System.IO.File.WriteAllLines(filepath, files);
-
-            // ----------------------------------------------------------------
-            // save filename info for later use
-            // ----------------------------------------------------------------
-            _DirName = path;
-            _FileName = Path.GetFileName(filepath);
-        }
-        #endregion OpenNewAndSave
 
         #region GetList
 
