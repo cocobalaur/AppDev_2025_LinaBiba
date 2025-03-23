@@ -83,6 +83,51 @@ namespace BudgetCodeTests
         // ========================================================================
 
         [Fact]
+        public void ExpensesMethod_List_DatabaseClose()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\{TestConstants.testDBInputFileExpenses}";
+            Database.existingDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, false);
+
+            // Act
+            conn.Close();
+            List<Expense> list = expenses.List();
+
+            // Assert
+            Assert.Empty(list);
+
+        }
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_List_WhenDataIsCorrupt()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String corruptDB = $"{folder}\\corruptDB.db";
+            Database.newDatabase(corruptDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, true);
+            Expenses expenses = new Expenses(conn, false);
+
+            // Manually corrupt the database by inserting a non-numeric value in the Amount column
+            using (var command = new SQLiteCommand("INSERT INTO Expenses (Id, Date, Amount, Description, CategoryId) VALUES (1, '2025-01-01', 'INVALID_AMOUNT', 'Corrupt Data', 1)", conn))
+            {
+                command.ExecuteNonQuery();
+            }
+
+            // Act & Assert
+            List<Expense> list = expenses.List();
+            Assert.Empty(list);
+
+        }
+
+        // ========================================================================
+
+        [Fact]
         public void ExpensesMethod_Add()
         {
             // Arrange
@@ -92,7 +137,6 @@ namespace BudgetCodeTests
             System.IO.File.Copy(goodDB, messyDB, true);
             SQLiteConnection conn = new SQLiteConnection($"Data Source={messyDB};Version=3;");
             conn.Open();
-            //SQLiteConnection conn = Database.dbConnection;
             Expenses expenses = new Expenses(conn, false);
 
             int category = 57;
@@ -110,6 +154,30 @@ namespace BudgetCodeTests
 
         }
 
+        // ========================================================================
+        [Fact]
+        public void ExpensesMethod_Add_NonExistentCategoryId()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, false);
+
+            int invalidCategoryId = -99;
+            double amount = 98.1;
+
+            // Act
+            List<Expense> expensesList = expenses.List();
+            int initialCount = expenses.List().Count;
+            expenses.Add(DateTime.Now, amount, "expense with category id", invalidCategoryId);
+            int finalCount = expenses.List().Count;
+
+            // Assert
+            Assert.Equal(finalCount, initialCount);
+
+        }
         // ========================================================================
 
         [Fact]
@@ -167,6 +235,31 @@ namespace BudgetCodeTests
             }
         }
 
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_DeleteAll()
+        {
+            // Arrange
+            String dir = TestConstants.GetSolutionDir();
+            String goodDB = $"{dir}\\{TestConstants.testDBInputFile}";
+            String messyDB = $"{dir}\\messyDB";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            Database.existingDatabase(messyDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, false);
+
+            int IdToDelete = 1006;
+            int startSize = expenses.List().Count;
+
+            // Act
+            expenses.DeleteAll();
+            int endSize = expenses.List().Count;
+
+            // Assert
+            Assert.NotEqual(startSize, endSize);
+            Assert.Equal(endSize, 0);
+        }
 
         // ========================================================================
 
@@ -183,6 +276,49 @@ namespace BudgetCodeTests
 
             // Act
             Expense expense = expenses.GetExpenseFromId(expID);
+
+            // Assert
+            Assert.Equal(expID, expense.Id);
+
+        }
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_GetExpenseFromId_InexistantID()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\{TestConstants.testDBInputFileExpenses}";
+            Database.existingDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, false);
+            int expID = -1;
+
+            // Act
+            Expense expense = expenses.GetExpenseFromId(expID);
+
+
+            // Assert
+            Assert.Null(expense);
+            
+        }
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_GetExpenseFromId_DatabaseClose()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\{TestConstants.testDBInputFileExpenses}";
+            Database.existingDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Expenses expenses = new Expenses(conn, true);
+            int expID = 1;
+
+            // Act
+            conn.Close();
+            Expense expense = expenses.GetExpenseFromId(expID);
+
 
             // Assert
             Assert.Equal(expID, expense.Id);
@@ -263,7 +399,66 @@ namespace BudgetCodeTests
             Assert.Equal(amount, expense.Amount);
             Assert.Equal(categoriesId, expense.Category);
         }
+        // ========================================================================
 
+        [Fact]
+        public void ExpensesMethod_UpdateExpense_InvalidCategoryId()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, true);
+            Expenses expenses = new Expenses(conn, true);
+
+            String newDescr = "Presents";
+            int id = 3;
+            DateTime date = new DateTime(2025, 1, 10);
+            double amount = 20.0;
+            int categoriesId = -1;
+
+
+            // Act
+            Expense oldExpense = expenses.GetExpenseFromId(id);
+            expenses.UpdateExpenses(id, date, amount, newDescr, categoriesId); 
+            Expense expense = expenses.GetExpenseFromId(id);
+
+            // Assert 
+            Assert.Equal(oldExpense.Description, expense.Description);
+            Assert.Equal(oldExpense.Id, expense.Id);
+            Assert.Equal(oldExpense.Date, expense.Date);
+            Assert.Equal(oldExpense.Amount, expense.Amount);
+            Assert.Equal(oldExpense.Category, expense.Category);
+        }
+        // ========================================================================
+
+        [Fact]
+        public void ExpensesMethod_UpdateExpense_InexistantExpense()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String newDB = $"{folder}\\newDB.db";
+            Database.newDatabase(newDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, true);
+            Expenses expenses = new Expenses(conn, true);
+
+            String newDescr = "Presents";
+            int id = 99;
+            DateTime date = new DateTime(2025, 1, 10);
+            double amount = 20.0;
+            int categoriesId = 1;
+
+
+            // Act
+            expenses.UpdateExpenses(id, date, amount, newDescr, categoriesId);
+            Expense expense = expenses.GetExpenseFromId(id);
+
+            // Assert 
+            Assert.Null(expense);
+        }
+        
         // ========================================================================
 
 
