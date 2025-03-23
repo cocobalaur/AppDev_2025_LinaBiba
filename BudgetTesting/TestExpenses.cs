@@ -137,7 +137,6 @@ namespace BudgetCodeTests
             System.IO.File.Copy(goodDB, messyDB, true);
             SQLiteConnection conn = new SQLiteConnection($"Data Source={messyDB};Version=3;");
             conn.Open();
-            //SQLiteConnection conn = Database.dbConnection;
             Expenses expenses = new Expenses(conn, false);
 
             int category = 57;

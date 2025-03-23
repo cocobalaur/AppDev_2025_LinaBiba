@@ -24,12 +24,38 @@ namespace Budget
         //Database connection 
         private SQLiteConnection _connection;
         public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
+        /// <summary>
+        /// Default constructor that initializes expenses with default values.
+        /// </summary>
+        /// <example>
+        /// To create a new Expenses with default expenses.
+        /// <code>
+        /// <![CDATA[
+        /// Expenses expenses = new Expenses();
+        /// ]]>
+        /// </code>
+        /// </example>
         public Expenses()
         {
-            //default????
             SetExpensesToDefaults();
             
         }
+        /// <summary>
+        /// Constructor that inititalizes the expenses list from the database
+        /// or sets default categories.
+        /// </summary>
+        /// <param name="conn"> The SQLite database connection.</param>
+        /// <param name="useDefault"> If true, set default expenses; otherwise, 
+        /// load from the database. </param>
+        /// <example>
+        ///  To create a new Expenses with default expenses.
+        /// <code>
+        /// <![CDATA[
+        /// SQLiteConnection conn = new SQLiteConnection("Data Source=expenses.db");
+        /// Expenses expenses = new Expenses(conn, true);
+        /// ]]>
+        /// </code>
+        /// </example>
         public Expenses(SQLiteConnection conn, bool useDefault)
         {
             Connection = conn;
@@ -45,38 +71,44 @@ namespace Budget
         }
         private List<Expense> _Expenses = new List<Expense>();
 
-
-
-        //
+        /// <summary>
+        /// Resets the expense list and populates it with default expenses.
+        /// </summary>
+        /// <example>
+        /// Set the expense to default values.
+        /// <code>
+        /// <![CDATA[
+        /// Expenses expenses = new Expenses();
+        /// expenses.SetExpensesToDefaults();
+        /// ]]>
+        /// </code>
+        /// </example>
         public void SetExpensesToDefaults()
         {
-            //heheh
+            //Delete everything inside the expenses database.
             DeleteAll();
             
-            InsertIntoExpenses(new DateTime(2018 - 01 - 10), 12, "hat (on credit)", 10);
-            InsertIntoExpenses(new DateTime(2018 - 01 - 11), -10, "hat (on credit)", 9);
-            InsertIntoExpenses(new DateTime(2019 - 01 - 10), 15, "scarf (on credit)", 10);
-            InsertIntoExpenses(new DateTime(2020 - 01 - 10), -15, "scarf (on credit)", 9);
-            InsertIntoExpenses(new DateTime(2020 - 01 - 11), 45, "McDonalds", 14);
-            InsertIntoExpenses(new DateTime(2020 - 01 - 12), 25, "Wendys", 14);
+            //Add default expenses.
+            Add(new DateTime(2018 - 01 - 10), 12, "hat (on credit)", 10);
+            Add(new DateTime(2018 - 01 - 11), -10, "hat (on credit)", 9);
+            Add(new DateTime(2019 - 01 - 10), 15, "scarf (on credit)", 10);
+            Add(new DateTime(2020 - 01 - 10), -15, "scarf (on credit)", 9);
+            Add(new DateTime(2020 - 01 - 11), 45, "McDonalds", 14);
+            Add(new DateTime(2020 - 01 - 12), 25, "Wendys", 14);
         }
 
-        public void InsertIntoExpenses(DateTime date, Double amount, String description, int category)
-        {
-            //is the id automatic??
-            string queryInsertNewExpense = "INSERT INTO expenses (Date, CategoryId, Amount, Description) " +
-                "VALUES (@date, @idCategory, @amount, @desc)";
-
-            using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
-
-            //Add the parameters
-
-            cmd.Parameters.AddWithValue("@date", date);
-            cmd.Parameters.AddWithValue("@idCategory", category);
-            cmd.Parameters.AddWithValue("@amount", amount);
-            cmd.Parameters.AddWithValue("@desc", description);
-            cmd.ExecuteNonQuery();
-        }
+        /// <summary>
+        /// Deletes all expenses from the databse.
+        /// </summary>
+        /// <example>
+        /// To delete all the expenses in the database.
+        /// <code>
+        /// <![CDATA[
+        /// Expenses expenses = new Expenses();
+        /// expenses.DeleteAll(); // Deletes all expenses
+        /// ]]>
+        /// </code>
+        /// </example>
         public void DeleteAll()
         {
             try
@@ -113,14 +145,13 @@ namespace Budget
             //Using System.DataSqlite
             try
             {
-                //is the id automatic??
+                
                 string queryInsertNewExpense = "INSERT INTO expenses (Date, CategoryId, Amount, Description) " +
                     "VALUES (@date, @idCategory, @amount, @desc)";
 
                 using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
 
                 //Add the parameters
-                //cmd.Parameters.AddWithValue("@date", date);
                 cmd.Parameters.AddWithValue("@date", date.ToString("yyyy-MM-dd"));
                 cmd.Parameters.AddWithValue("@idCategory", category);
                 cmd.Parameters.AddWithValue("@amount", amount);
@@ -151,10 +182,6 @@ namespace Budget
         /// </example>
         public void Delete(int Id)
         {
-            //int i = _Expenses.FindIndex(x => x.Id == Id);
-            //if (i < 0)
-            //    return;
-            //_Expenses.RemoveAt(i);
             //Throws exception if not allowed to delete in database(foreign key constraint).
             try
             {
@@ -201,6 +228,7 @@ namespace Budget
         /// </example>
         public List<Expense> List()
         {
+            //Create a new list 
             List<Expense> newList = new List<Expense>();
             string retrieves = "SELECT Id, Date, Amount, CategoryId, Description FROM expenses ORDER BY Id";
 
@@ -211,6 +239,7 @@ namespace Budget
                 using var cmd = new SQLiteCommand(retrieves, Connection);
                 using SQLiteDataReader rdr = cmd.ExecuteReader();
 
+                //As long as there is expenses, add a expense to the list.
                 while (rdr.Read())
                 {
                     int id = rdr.GetInt32(colId);
@@ -225,9 +254,27 @@ namespace Budget
             {
                 Console.WriteLine("Error in retrieve Expense: " + ex.Message);
             }
-            return newList;
+
+            //Return the list of expenses.
+            return newList; 
         }
-        //
+        /// <summary>
+        /// Retrieves an expense from the database based on its unique ID.
+        /// </summary>
+        /// <param name="id">The ID of the expense to retrive</param>
+        /// <returns>The expense object if found, otherwise null.</returns>
+        /// <example>
+        /// How to retrieve an expense with a specific ID
+        /// <code>
+        /// <![CDATA[
+        /// Expenses expenses = new Expenses();
+        /// Expense exp = expenses.GetExpenseFromId(1); // Retrieve expense with ID 1
+        /// if (exp != null)
+        ///     Console.WriteLine(exp.Description);    //if the expense if found, diplay description.
+        /// 
+        /// ]]>
+        /// </code>
+        /// </example>
         public Expense GetExpenseFromId(int id)
         {
             try
@@ -267,12 +314,27 @@ namespace Budget
             }
             return null;
         }
-        //
+        /// <summary>
+        /// Updates an existing expense in the database.
+        /// </summary>
+        /// <param name="id">The ID of the expense to update</param>
+        /// <param name="date">The new date of the expense.</param>
+        /// <param name="amount">The new amount of the expense.</param>
+        /// <param name="description">The description of the expense.</param>
+        /// <param name="category">The new category ID of the expense.</param>
+        /// <example>
+        /// Uupdate a expense.
+        /// <code>
+        /// <![CDATA[
+        /// Expenses expenses = new Expenses();
+        /// expenses.UpdateExpenses(1, new DateTime(2025, 3, 22), 50.00, "Updated expense", 2);
+        /// ]]>
+        /// </code>
+        /// </example>
         public void UpdateExpenses(int id, DateTime date, Double amount, String description, int category)
         {
             try
             {
-                //is the id automatic??
                 string queryInsertNewExpense = "UPDATE expenses SET Date = @date, CategoryId = @idCategory" +
                     ", Amount = @amount, Description = @desc WHERE Id = @Id";
 
