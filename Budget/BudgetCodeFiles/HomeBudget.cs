@@ -100,60 +100,39 @@ namespace Budget
         // Reasoning: an expense of $15 is -$15 from your bank account.
         // ============================================================================
         /// <summary>
-        /// Retrieves a list of budget items based on the provided filters. 
-        /// The amount for expenses is negative (e.g., $15 expense = -$15).
+        /// Retrieves a list of budget items (expenses) within a specified date range, 
+        /// with an optional filter for a specific category.
         /// </summary>
-        /// <param name="Start">The start date for filtering. If not provided, defaults to 1900-01-01.</param>
-        /// <param name="End">The end date for filtering. If not provided, defaults to 2500-01-01.</param>
-        /// <param name="FilterFlag">A boolean indicating whether to apply category filtering. If true, the <paramref name="CategoryID"/> parameter is used to filter by category.</param>
-        /// <param name="CategoryID">The category ID to filter by. Only applied if <paramref name="FilterFlag"/> is true.</param>
-        /// <returns>A list of <see cref="BudgetItem"/> objects, each representing a budget item within the specified date range and filter criteria.</returns>
+        /// <param name="Start">The start date for filtering expenses. If null, defaults to 1900-01-01.</param>
+        /// <param name="End">The end date for filtering expenses. If null, defaults to 2500-01-01.</param>
+        /// <param name="FilterFlag">If true, filters expenses by the given CategoryID.</param>
+        /// <param name="CategoryID">The ID of the category to filter by (if FilterFlag is true).</param>
+        /// <returns>A list of <code>BudgetItem</code> objects representing the filtered expenses.</returns>
+        /// <exception cref="Exception">Thrown if the database connection is not initialized or is closed.</exception>
         /// <example>
-        /// For all examples below, assume the budget file contains the following data:
+        /// Example usage:
         /// <code>
-        /// Cat_ID Expense_ID Date Description Cost
-        /// 10 1 1/10/2018 12:00:00 AM Clothes hat (on credit) 10
-        /// 9 2 1/11/2018 12:00:00 AM Credit Card hat -10
-        /// 10 3 1/10/2019 12:00:00 AM Clothes scarf (on credit) 15
-        /// 9 4 1/10/2020 12:00:00 AM Credit Card scarf -15
-        /// 14 5 1/11/2020 12:00:00 AM Eating Out McDonalds 45
-        /// 14 7 1/12/2020 12:00:00 AM Eating Out Wendys 25
-        /// 14 10 2/1/2020 12:00:00 AM Eating Out Pizza 33.33
-        /// 9 13 2/10/2020 12:00:00 AM Credit Card mittens -15
-        /// 9 12 2/25/2020 12:00:00 AM Credit Card Hat -25
-        /// 14 11 2/27/2020 12:00:00 AM Eating Out Pizza 33.33
-        /// 14 9 7/11/2020 12:00:00 AM Eating Out Cafeteria 11.11
-        /// </code>
-        /// <b>Example: Get all budget items without filtering</b>
-        /// This will retrieve all budget items without applying category filtering.
-        /// <code>
-        /// <![CDATA[
-        /// HomeBudget budget = new HomeBudget();
-        /// budget.ReadFromFile("budget_data.txt");
+        /// HomeBudget budget = new HomeBudget("budget.db", false);
+        /// DateTime startDate = new DateTime(2025, 1, 1);
+        /// DateTime endDate = new DateTime(2025, 1, 31);
+        /// bool filterByCategory = true;
+        /// int categoryID = 3;
         ///
-        /// // Get a list of all budget items
-        /// List<BudgetItem> budgetItems = budget.GetBudgetItems(null, null, false, 0);
+        /// List<BudgetItem> budgetItems = budget.GetBudgetItems(startDate, endDate, filterByCategory, categoryID);
         ///
-        /// // Print results
-        /// foreach (BudgetItem  item in budgetItems)
+        /// foreach (var item in budgetItems)
         /// {
-        ///     Console.WriteLine($"{item.Date:yyyy/MMM/dd} {item.ShortDescription} {item.Amount:C} {item.Balance:C}");
+        ///     Console.WriteLine($"{item.Date:yyyy-MM-dd} | {item.ShortDescription} | {item.Amount:C} | {item.Category} | {item.Balance:C}");
         /// }
-        /// ]]>
         /// </code>
-        /// Sample output:
+        ///
         /// <code>
-        /// 2018/Jan/10 hat (on credit) ($10.00) ($10.00)
-        /// 2018/Jan/11 hat $10.00 $0.00
-        /// 2019/Jan/10 scarf (on credit) ($15.00) ($15.00)
-        /// 2020/Jan/10 scarf $15.00 $0.00
-        /// 2020/Jan/11 McDonalds ($45.00) ($45.00)
-        /// 2020/Jan/12 Wendys ($25.00) ($70.00)
-        /// 2020/Feb/01 Pizza ($33.33) ($103.33)
-        /// 2020/Feb/10 mittens $15.00 ($88.33)
-        /// 2020/Feb/25 Hat $25.00 ($63.33)
-        /// 2020/Feb/27 Pizza ($33.33) ($96.66)
-        /// 2020/Jul/11 Cafeteria ($11.11) ($107.77)
+        /// Sample Output:
+        /// 2025-01-02 | Grocery Shopping | -$45.20 | Food | -$45.20
+        /// 2025-01-05 | Restaurant Dinner | -$30.00 | Food | -$75.20
+        /// 2025-01-12 | Coffee | -$5.50 | Food | -$80.70
+        /// 2025-01-18 | Monthly Groceries | -$120.75 | Food | -$201.45
+        /// 2025-01-25 | Snacks | -$12.30 | Food | -$213.75
         /// </code>
         /// </example>
 
@@ -265,8 +244,8 @@ namespace Budget
         /// <summary>
         /// Groups expenses month by month and returns a list of budget items by month.
         /// </summary>
-        /// <param name="Start">The starting date for filtering (nullable).</param>
-        /// <param name="End">The ending date for filtering (nullable).</param>
+        /// <param name="Start">The starting date for filtering (nullable). Defaults to 1900-01-01 if null.</param>
+        /// <param name="End">The ending date for filtering (nullable). Defaults to 2500-01-01 if null.</param>
         /// <param name="FilterFlag">A flag indicating whether to apply category filtering.</param>
         /// <param name="CategoryID">The category ID to filter by (only applied if <paramref name="FilterFlag"/> is true).</param>
         /// <returns>A list of grouped budget items by month, including year/month, list of items, and monthly total.</returns>
@@ -275,37 +254,42 @@ namespace Budget
         /// 
         /// <code>
         /// Cat_ID Expense_ID Date Description Cost
-        /// 10 1 1/10/2018 12:00:00 AM Clothes hat (on credit) 10
-        /// 9 2 1/11/2018 12:00:00 AM Credit Card hat -10
-        /// 10 3 1/10/2019 12:00:00 AM Clothes scarf(on credit) 15
-        /// 9 4 1/10/2020 12:00:00 AM Credit Card scarf -15
-        /// 14 5 1/11/2020 12:00:00 AM Eating Out McDonalds 45
-        /// 14 7 1/12/2020 12:00:00 AM Eating Out Wendys 25
-        /// 14 10 2/1/2020 12:00:00 AM Eating Out Pizza 33.33
-        /// 9 13 2/10/2020 12:00:00 AM Credit Card mittens -15
-        /// 9 12 2/25/2020 12:00:00 AM Credit Card Hat -25
-        /// 14 11 2/27/2020 12:00:00 AM Eating Out Pizza 33.33
-        /// 14 9 7/11/2020 12:00:00 AM Eating Out Cafeteria 11.11
+        /// 3 1 1/05/2025 12:00:00 AM Groceries Vegetables 30
+        /// 3 2 1/10/2025 12:00:00 AM Groceries Milk 5
+        /// 7 3 1/15/2025 12:00:00 AM Entertainment Concert -50
+        /// 3 4 2/02/2025 12:00:00 AM Groceries Bread 3
+        /// 3 5 2/10/2025 12:00:00 AM Groceries Fruits 10
+        /// 7 6 2/15/2025 12:00:00 AM Entertainment Movie -15
+        /// 5 7 2/25/2025 12:00:00 AM Transportation Gas 40
+        /// 3 8 3/03/2025 12:00:00 AM Groceries Snacks 7
+        /// 7 9 3/10/2025 12:00:00 AM Entertainment Subscription -12
+        /// 5 10 3/20/2025 12:00:00 AM Transportation Train Ticket 25
         /// </code>
-        /// 
+        ///
         /// Example usage for getting monthly budget items:
         /// <code>
         /// <![CDATA[
-        /// DateTime startDate = new DateTime(2024, 1, 1);
-        /// DateTime endDate = new DateTime(2024, 1, 31);
-        /// List<BudgetItemsByMonth> monthlyItems = budget.GetBudgetItemsByMonth(startDate, endDate, true, 1);
+        /// DateTime startDate = new DateTime(2025, 1, 1);
+        /// DateTime endDate = new DateTime(2025, 3, 31);
+        /// bool filterByCategory = false;
+        /// int categoryID = 0;
+        ///
+        /// List<BudgetItemsByMonth> budgetItems = budget.GetBudgetItemsByMonth(startDate, endDate, filterByCategory, categoryID);
         /// ]]>
         /// </code>
-        /// 
+        ///
         /// Sample output:
         /// <code>
-        /// 2020/Jan  McDonalds ($45.00) ($45.00)
-        /// 2020/Jan  Wendys ($25.00) ($70.00)
-        /// 2020/Feb  Pizza ($33.33) ($103.33)
-        /// 2020/Feb  mittens $15.00 ($88.33)
-        /// 2020/Feb  Hat $25.00 ($63.33)
-        /// 2020/Feb  Pizza ($33.33) ($96.66)
-        /// 2020/Jul  Cafeteria ($11.11) ($107.77)
+        /// 2025/Jan  Vegetables ($30.00) ($30.00)
+        /// 2025/Jan  Milk ($5.00) ($35.00)
+        /// 2025/Jan  Concert $50.00 $15.00
+        /// 2025/Feb  Bread ($3.00) ($3.00)
+        /// 2025/Feb  Fruits ($10.00) ($13.00)
+        /// 2025/Feb  Movie $15.00 $2.00
+        /// 2025/Feb  Gas ($40.00) ($38.00)
+        /// 2025/Mar  Snacks ($7.00) ($7.00)
+        /// 2025/Mar  Subscription $12.00 $5.00
+        /// 2025/Mar  Train Ticket ($25.00) ($20.00)
         /// </code>
         /// </example>
         public List<BudgetItemsByMonth> GetBudgetItemsByMonth(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
@@ -349,8 +333,8 @@ namespace Budget
                 using (var cmd = new SQLiteCommand(query, Database.dbConnection))
                 {
                     // Add parameters to the command
-                    cmd.Parameters.AddWithValue("@Start", Start.Value.ToString("yyyy-MM-dd"));
-                    cmd.Parameters.AddWithValue("@End", End.Value.ToString("yyyy-MM-dd"));
+                    cmd.Parameters.AddWithValue("@StartDate", Start.Value.ToString("yyyy-MM-dd"));
+                    cmd.Parameters.AddWithValue("@EndDate", End.Value.ToString("yyyy-MM-dd"));
                     if (FilterFlag)
                     {
                         // If filtering by category, add the categoryID parameter
@@ -440,47 +424,53 @@ namespace Budget
         // Group all expenses by category (ordered by category name)
         // ============================================================================
         /// <summary>
-        /// Groups expenses by category and returns a list of budget items by category.
+        /// Groups expenses by category and returns a list of budget items grouped by category, including total expenses for each category.
         /// </summary>
-        /// <param name="Start">The starting date for filtering (nullable).</param>
-        /// <param name="End">The ending date for filtering (nullable).</param>
+        /// <param name="Start">The starting date for filtering (nullable). Defaults to 1900-01-01 if null.</param>
+        /// <param name="End">The ending date for filtering (nullable). Defaults to 2500-01-01 if null.</param>
         /// <param name="FilterFlag">A flag indicating whether to apply category filtering.</param>
         /// <param name="CategoryID">The category ID to filter by (only applied if <paramref name="FilterFlag"/> is true).</param>
-        /// <returns>A list of grouped budget items by category, including category name, list of items, and total per category.</returns>
+        /// <returns>A list of grouped budget items by category, including category name, list of items, and total for each category.</returns>
         /// <example>
         /// For all examples below, assume the budget file contains the following elements:
         /// 
         /// <code>
         /// Cat_ID Expense_ID Date Description Cost
-        /// 10 1 1/10/2018 12:00:00 AM Clothes hat (on credit) 10
-        /// 9 2 1/11/2018 12:00:00 AM Credit Card hat -10
-        /// 10 3 1/10/2019 12:00:00 AM Clothes scarf(on credit) 15
-        /// 9 4 1/10/2020 12:00:00 AM Credit Card scarf -15
-        /// 14 5 1/11/2020 12:00:00 AM Eating Out McDonalds 45
-        /// 14 7 1/12/2020 12:00:00 AM Eating Out Wendys 25
-        /// 14 10 2/1/2020 12:00:00 AM Eating Out Pizza 33.33
-        /// 9 13 2/10/2020 12:00:00 AM Credit Card mittens -15
-        /// 9 12 2/25/2020 12:00:00 AM Credit Card Hat -25
-        /// 14 11 2/27/2020 12:00:00 AM Eating Out Pizza 33.33
-        /// 14 9 7/11/2020 12:00:00 AM Eating Out Cafeteria 11.11
+        /// 3 1 1/05/2025 12:00:00 AM Groceries Vegetables 30
+        /// 3 2 1/10/2025 12:00:00 AM Groceries Milk 5
+        /// 7 3 1/15/2025 12:00:00 AM Entertainment Concert -50
+        /// 3 4 2/02/2025 12:00:00 AM Groceries Bread 3
+        /// 3 5 2/10/2025 12:00:00 AM Groceries Fruits 10
+        /// 7 6 2/15/2025 12:00:00 AM Entertainment Movie -15
+        /// 5 7 2/25/2025 12:00:00 AM Transportation Gas 40
+        /// 3 8 3/03/2025 12:00:00 AM Groceries Snacks 7
+        /// 7 9 3/10/2025 12:00:00 AM Entertainment Subscription -12
+        /// 5 10 3/20/2025 12:00:00 AM Transportation Train Ticket 25
         /// </code>
         /// 
-        /// Example usage for getting category-wise budget items:
+        /// Example usage for getting budget items by category:
         /// <code>
         /// <![CDATA[
-        /// DateTime startDate = new DateTime(2024, 1, 1);
-        /// DateTime endDate = new DateTime(2024, 1, 31);
-        /// List<BudgetItemsByCategory> categoryItems = budget.GetBudgetItemsByCategory(startDate, endDate, true, 1);
+        /// DateTime startDate = new DateTime(2025, 1, 1);
+        /// DateTime endDate = new DateTime(2025, 3, 31);
+        /// bool filterByCategory = false;
+        /// int categoryID = 0;
+        ///
+        /// List<BudgetItemsByCategory> categoryItems = budget.GetBudgetItemsByCategory(startDate, endDate, filterByCategory, categoryID);
         /// ]]>
         /// </code>
         /// 
         /// Sample output:
         /// <code>
-        /// Credit Card  hat ($10.00) ($10.00)
-        /// Credit Card  scarf $15.00 $5.00
-        /// Eating Out  McDonalds ($45.00) ($45.00)
-        /// Eating Out  Wendys ($25.00) ($70.00)
-        /// Eating Out  Pizza ($33.33) ($103.33)
+        /// Groceries  Vegetables ($30.00) ($30.00)
+        /// Groceries  Milk ($5.00) ($35.00)
+        /// Groceries  Bread ($3.00) ($38.00)
+        /// Groceries  Fruits ($10.00) ($48.00)
+        /// Entertainment Concert $50.00 $50.00
+        /// Entertainment Movie $15.00 $65.00
+        /// Transportation Gas ($40.00) ($40.00)
+        /// Transportation Train Ticket ($25.00) ($65.00)
+        /// Entertainment Subscription $12.00 ($12.00)
         /// </code>
         /// </example>
         public List<BudgetItemsByCategory> GetBudgetItemsByCategory(DateTime? Start, DateTime? End, bool FilterFlag, int CategoryID)
@@ -496,16 +486,14 @@ namespace Budget
 
                 // Define the SQL query to retrieve the grouped expenses by category
                 string query = @"
-            SELECT
-                c.Description AS Category,
-                e.Id AS ExpenseID,
-                e.Date,
-                e.Amount,
-                e.Description AS ExpenseDescription,
-                e.CategoryId
-            FROM expenses e
-            INNER JOIN categories c ON e.CategoryId = c.Id
-            WHERE e.Date BETWEEN @Start AND @End";
+                                SELECT
+                                    c.Description AS Category,e.Id AS ExpenseID,
+                                    e.Date,e.Amount,
+                                    e.Description AS ExpenseDescription,
+                                    e.CategoryId
+                                FROM expenses e
+                                INNER JOIN categories c ON e.CategoryId = c.Id
+                                WHERE e.Date BETWEEN @StartDate AND @EndDate";
 
                 // If filtering by category is enabled, add the category filter to the query
                 if (FilterFlag)
@@ -519,8 +507,8 @@ namespace Budget
                 using (var cmd = new SQLiteCommand(query, Database.dbConnection))
                 {
                     // Add parameters to the command
-                    cmd.Parameters.AddWithValue("@Start", startDate.ToString("yyyy-MM-dd"));
-                    cmd.Parameters.AddWithValue("@End", endDate.ToString("yyyy-MM-dd"));
+                    cmd.Parameters.AddWithValue("@StartDate", startDate.ToString("yyyy-MM-dd"));
+                    cmd.Parameters.AddWithValue("@EndDate", endDate.ToString("yyyy-MM-dd"));
                     if (FilterFlag)
                     {
                         // If filtering by category, add the categoryID parameter
@@ -626,14 +614,13 @@ namespace Budget
         //             "category", the total for that category for all the months
         // ============================================================================
         /// <summary>
-        /// Groups expenses by category and month, and returns a list of dictionaries with detailed records.
+        /// Retrieves a comprehensive list of budget items, grouped by both month and category, within a specified date range.
         /// </summary>
-        /// <param name="Start">The starting date for filtering (nullable). Defaults to 1900-01-01 if not provided.</param>
-        /// <param name="End">The ending date for filtering (nullable). Defaults to 2500-01-01 if not provided.</param>
+        /// <param name="Start">The starting date for filtering (nullable). If null, defaults to January 1, 1900.</param>
+        /// <param name="End">The ending date for filtering (nullable). If null, defaults to January 1, 2500.</param>
         /// <param name="FilterFlag">A flag indicating whether to apply category filtering.</param>
         /// <param name="CategoryID">The category ID to filter by (only applied if <paramref name="FilterFlag"/> is true).</param>
-        /// <returns>A list of dictionaries containing month-wise budget details, including total per category and month, 
-        /// and overall totals for each category.</returns>
+        /// <returns>A list of dictionaries, each representing a month with its associated budget items and totals by category.</returns>
         /// <example>
         /// For all examples below, assume the budget file contains the following elements:
         /// 
@@ -652,12 +639,14 @@ namespace Budget
         /// 14 9 7/11/2020 12:00:00 AM Eating Out Cafeteria 11.11
         /// </code>
         /// 
-        /// Example usage for grouping expenses by category and month:
+        /// Example usage for getting a detailed budget dictionary by category and month:
         /// <code>
         /// <![CDATA[
-        /// DateTime startDate = new DateTime(2024, 1, 1);
-        /// DateTime endDate = new DateTime(2024, 1, 31);
-        /// List<Dictionary<string, object>> budgetData = budget.GetBudgetDictionaryByCategoryAndMonth(startDate, endDate, true, 1);
+        /// DateTime startDate = new DateTime(2020, 1, 1);
+        /// DateTime endDate = new DateTime(2020, 12, 31);
+        /// bool applyCategoryFilter = true;
+        /// int categoryId = 14; // Example category ID
+        /// List<Dictionary<string, object>> budgetSummary = budget.GetBudgetDictionaryByCategoryAndMonth(startDate, endDate, applyCategoryFilter, categoryId);
         /// ]]>
         /// </code>
         /// 
