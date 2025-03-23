@@ -42,6 +42,12 @@ namespace Budget
         // ===================================================================
         // create and open a new database
         // ===================================================================
+        /// <summary>
+        /// Creates a new SQLite database with the specified filename, establishes a connection,
+        /// and initializes the necessary tables.
+        /// </summary>
+        /// <param name="filename">The name of the SQLite database file to be created.</param>
+        /// <exception cref="Exception">Thrown when the database creation or table initialization fails.</exception>
         public static void newDatabase(string filename)
         {
 
@@ -70,6 +76,17 @@ namespace Budget
         // ===================================================================
         // open an existing database
         // ===================================================================
+        /// <summary>
+        /// Establishes a connection to an existing SQLite database specified by the provided filename.
+        /// Verifies the existence of the database file before attempting to open the connection.
+        /// </summary>
+        /// <param name="filename">The name of the SQLite database file to connect to.</param>
+        /// <exception cref="FileNotFoundException">
+        /// Thrown when the specified database file does not exist at the expected location.
+        /// </exception>
+        /// <exception cref="Exception">
+        /// Thrown when an error occurs while attempting to create and open the existing database.
+        /// </exception>
         public static void existingDatabase(string filename)
         {
             try
@@ -96,11 +113,16 @@ namespace Budget
             }
         }
 
-        // ===================================================================
-        // close existing database, wait for garbage collector to
-        // release the lock before continuing
-        // This allows the other processes to access the database file
-        // ===================================================================
+        /// <summary>
+        /// Closes the existing SQLite database connection and attempts to release the file lock,
+        /// allowing other processes to access the database file.
+        /// </summary>
+        /// <remarks>
+        /// This method closes the current database connection and forces garbage collection to
+        /// release any unmanaged resources, including file locks held by the SQLite database.
+        /// This approach helps ensure that other processes can access the database file without
+        /// encountering lock-related issues.
+        /// </remarks>
         static public void CloseDatabaseAndReleaseFile()
         {
             if (Database.dbConnection != null)
@@ -117,10 +139,16 @@ namespace Budget
 
         }
 
-        // ===================================================================
-        // Creates the required tables in the database.
-        // This function is called when creating a new databse
-        // ===================================================================
+        /// <summary>
+        /// Creates the required tables in the database when initializing a new database.
+        /// This method drops any existing tables first and then creates the necessary tables for the application.
+        /// </summary>
+        /// <remarks>
+        /// The method uses SQL commands to create three tables:
+        /// 1. categoryTypes: Stores information about different categories, with a unique ID and description.
+        /// 2. categories: Stores category details, referencing the `categoryTypes` table.
+        /// 3. expenses: Stores expense details, referencing the `categories` table for categorization.
+        /// </remarks>
         private static void CreateTables()
         {
             DropTables();
@@ -159,10 +187,16 @@ namespace Budget
 
         }
 
-        // ===================================================================
-        // Drops all existing tables from the database.
-        // This is used to reset the database when creating a new one.
-        // ===================================================================
+        /// <summary>
+        /// Drops all existing tables from the database to reset its schema.
+        /// This method is typically used during the initialization phase when creating a new database.
+        /// </summary>
+        /// <remarks>
+        /// The method executes a series of SQL statements to remove the following tables:
+        /// 1. expenses: Stores expense records.
+        /// 2. categories: Defines categories for expenses.
+        /// 3. categoryTypes: Specifies types of categories.
+        /// </remarks>
         private static void DropTables()
         {
             using var cmd = new SQLiteCommand(_connection);
