@@ -128,6 +128,30 @@ namespace BudgetCodeTests
         // ========================================================================
 
         [Fact]
+        //public void ExpensesMethod_Add()
+        //{
+        //    // Arrange
+        //    String dir = TestConstants.GetSolutionDir();
+        //    String goodDB = $"{dir}\\{TestConstants.testDBInputFileExpenses}";
+        //    String messyDB = $"{dir}\\messy.db";
+        //    System.IO.File.Copy(goodDB, messyDB, true);
+        //    SQLiteConnection conn = new SQLiteConnection($"Data Source={messyDB};Version=3;");
+        //    conn.Open();
+        //    Expenses expenses = new Expenses(conn, false);
+
+        //    int category = 57;
+        //    double amount = 98.1;
+
+        //    // Act
+        //    expenses.Add(DateTime.Now, amount, "new expense", category);
+        //    List<Expense> expensesList = expenses.List();
+        //    int sizeOfList = expenses.List().Count;
+
+        //    // Assert
+        //    Assert.Equal(numberOfExpensesInFile + 1, sizeOfList);
+        //    Assert.Equal(maxIDInExpenseFile + 1, expensesList[sizeOfList - 1].Id);
+        //    Assert.Equal(amount, expensesList[sizeOfList - 1].Amount);
+        //}
         public void ExpensesMethod_Add()
         {
             // Arrange
@@ -138,6 +162,7 @@ namespace BudgetCodeTests
             SQLiteConnection conn = new SQLiteConnection($"Data Source={messyDB};Version=3;");
             conn.Open();
             Expenses expenses = new Expenses(conn, false);
+            List<Expense> initalExpenses = expenses.List();
 
             int category = 57;
             double amount = 98.1;
@@ -151,7 +176,6 @@ namespace BudgetCodeTests
             Assert.Equal(numberOfExpensesInFile + 1, sizeOfList);
             Assert.Equal(maxIDInExpenseFile + 1, expensesList[sizeOfList - 1].Id);
             Assert.Equal(amount, expensesList[sizeOfList - 1].Amount);
-
         }
 
         // ========================================================================
@@ -249,7 +273,6 @@ namespace BudgetCodeTests
             SQLiteConnection conn = Database.dbConnection;
             Expenses expenses = new Expenses(conn, false);
 
-            int IdToDelete = 1006;
             int startSize = expenses.List().Count;
 
             // Act
@@ -258,7 +281,7 @@ namespace BudgetCodeTests
 
             // Assert
             Assert.NotEqual(startSize, endSize);
-            Assert.Equal(endSize, 0);
+            Assert.Equal(0, endSize);
         }
 
         // ========================================================================
@@ -312,7 +335,7 @@ namespace BudgetCodeTests
             String newDB = $"{folder}\\{TestConstants.testDBInputFileExpenses}";
             Database.existingDatabase(newDB);
             SQLiteConnection conn = Database.dbConnection;
-            Expenses expenses = new Expenses(conn, true);
+            Expenses expenses = new Expenses(conn, false);
             int expID = 1;
 
             // Act
