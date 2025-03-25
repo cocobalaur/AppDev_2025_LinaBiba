@@ -17,6 +17,7 @@ namespace Budget
 
             //budget = new HomeBudget("..\\..\\..\\..\\BudgetTesting\\test.budget");
 
+            budget = new HomeBudget("testtttt.db", true);
 
             // Menu loop
             while (true)

@@ -132,34 +132,6 @@ namespace Budget
         // ===================================================================
 
         /// <summary>
-        /// Inserts a category type into the database using parameterized queries to prevent sql injecttion.
-        /// </summary>
-        /// <param name="categoryType">The category type to insert.</param>
-        /// <exception cref="Exception">Thrown if invalid category type to insert.</exception>
-        private void InsertCategoryType(CategoryType categoryType)
-        {
-            try
-            {
-                int id = (int)categoryType; //Get categoryType enum 
-
-                string description = categoryType.ToString(); //Get description
-
-                string queryInsertCategory = "INSERT INTO categoryTypes (Id, Description) VALUES (@id, @desc);";
-
-                using var insertCmd = new SQLiteCommand(queryInsertCategory, Connection);
-
-                insertCmd.Parameters.AddWithValue("@id", id);
-                insertCmd.Parameters.AddWithValue("@desc", description);
-                insertCmd.ExecuteNonQuery();
-
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error inserting category type: " + ex);
-            }
-        }
-
-        /// <summary>
         /// Insert default categories into the database if the database.
         /// It deletes all previous information before inserting the default categories.
         /// </summary>
@@ -168,22 +140,47 @@ namespace Budget
             DeleteAll();
 
             // Insert default categories for each category type
-            InsertIntoCategories("Income", CategoryType.Income);
-            InsertIntoCategories("Utilities", CategoryType.Expense);
-            InsertIntoCategories("Rent", CategoryType.Expense);
-            InsertIntoCategories("Food", CategoryType.Expense);
-            InsertIntoCategories("Entertainment", CategoryType.Expense);
-            InsertIntoCategories("Education", CategoryType.Expense);
-            InsertIntoCategories("Medical Expenses", CategoryType.Expense);
-            InsertIntoCategories("Vacation", CategoryType.Expense);
-            InsertIntoCategories("Credit Card", CategoryType.Credit);
-            InsertIntoCategories("Clothes", CategoryType.Expense);
-            InsertIntoCategories("Gifts", CategoryType.Expense);
-            InsertIntoCategories("Insurance", CategoryType.Expense);
-            InsertIntoCategories("Transportation", CategoryType.Expense);
-            InsertIntoCategories("Eating Out",CategoryType.Expense);
-            InsertIntoCategories("Savings", CategoryType.Savings);
+            InsertIntoCategories("Income", CategoryType.Income, 1);
+            InsertIntoCategories("Utilities", CategoryType.Expense, 2);
+            InsertIntoCategories("Rent", CategoryType.Expense, 3);
+            InsertIntoCategories("Food", CategoryType.Expense, 4);
+            InsertIntoCategories("Entertainment", CategoryType.Expense, 5);
+            InsertIntoCategories("Education", CategoryType.Expense, 6);
+            InsertIntoCategories("Medical Expenses", CategoryType.Expense, 7);
+            InsertIntoCategories("Vacation", CategoryType.Expense, 8);
+            InsertIntoCategories("Credit Card", CategoryType.Credit, 9);
+            InsertIntoCategories("Clothes", CategoryType.Expense, 10);
+            InsertIntoCategories("Gifts", CategoryType.Expense, 11);
+            InsertIntoCategories("Insurance", CategoryType.Expense, 12);
+            InsertIntoCategories("Transportation", CategoryType.Expense, 13);
+            InsertIntoCategories("Eating Out", CategoryType.Expense, 14);
+            InsertIntoCategories("Savings", CategoryType.Savings, 15);
 
+        }
+
+        /// <summary>
+        /// Inserts a category type into the database using parameterized queries to prevent sql injecttion.
+        /// </summary>
+        /// <param name="categoryType">The category type to insert.</param>
+        /// <exception cref="Exception">Thrown if invalid category type to insert.</exception>
+        private void InsertCategoryType(CategoryType categoryType)
+        {
+            try
+            {
+                string description = categoryType.ToString(); //Get description
+
+                string queryInsertCategory = "INSERT INTO categoryTypes (Description) VALUES (@desc);";
+
+                using var insertCmd = new SQLiteCommand(queryInsertCategory, Connection);
+
+                insertCmd.Parameters.AddWithValue("@desc", description);
+                insertCmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error inserting category type: " + ex);
+            }
         }
 
         /// <summary>
@@ -196,15 +193,37 @@ namespace Budget
         /// <code>
         /// InsertIntoCategories("Savings", CategoryType.Savings);
         /// </code>
-        /// </example>
-        private void InsertIntoCategories(string description, Category.CategoryType type)
+        /// </example
+        private void InsertIntoCategories(string description, Category.CategoryType type, int id)
         {
-            int id = (int)type;
-            string query = "INSERT INTO categories (Description, TypeId) VALUES (@desc, @typeId);";
-            using var cmd = new SQLiteCommand(query, Connection);
-            cmd.Parameters.AddWithValue("@desc", description);
-            cmd.Parameters.AddWithValue("@typeId", id);
-            cmd.ExecuteNonQuery();
+            //verify category types is in database
+            string getIdQuery = "SELECT Id FROM categoryTypes WHERE Description = @desc;";
+            int typeId;
+
+            using (var getIdCmd = new SQLiteCommand(getIdQuery, Connection))
+            {
+                getIdCmd.Parameters.AddWithValue("@desc", type.ToString());
+
+                //execute the query and get the id of the category type
+                using var reader = getIdCmd.ExecuteReader();
+
+                //check if any rows were returned
+                if (!reader.Read())
+                {
+                    Console.WriteLine($"CategoryType " + type + " does not exist in categoryTypes table.");
+                }
+
+                //get the id
+                typeId = reader.GetInt32(0);
+            }
+
+            string insertQuery = "INSERT INTO categories (Id, Description, TypeId) VALUES (@id, @desc, @typeId);";
+
+            using var insertCmd = new SQLiteCommand(insertQuery, Connection);
+            insertCmd.Parameters.AddWithValue("@id", id);  //manually add the id 
+            insertCmd.Parameters.AddWithValue("@desc", description);
+            insertCmd.Parameters.AddWithValue("@typeId", typeId);
+            insertCmd.ExecuteNonQuery();
         }
 
         // ====================================================================
@@ -299,6 +318,8 @@ namespace Budget
         {
             try
             {
+                using var deleteExpenses = new SQLiteCommand("DELETE FROM expenses;", Connection);
+                deleteExpenses.ExecuteNonQuery();
                 string deleteQuery = "DELETE FROM categories;";
                 using var deleteCmd = new SQLiteCommand(deleteQuery, Connection);
                 deleteCmd.ExecuteNonQuery();

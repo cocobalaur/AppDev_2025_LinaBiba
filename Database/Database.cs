@@ -130,7 +130,7 @@ namespace Budget
             //categoryTypes
             cmd.CommandText = @"
                 CREATE TABLE categoryTypes (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    Id INTEGER PRIMARY KEY NOT NULL,
                     Description TEXT NOT NULL
                 );";
             cmd.ExecuteNonQuery();
@@ -138,7 +138,7 @@ namespace Budget
             //categories
             cmd.CommandText = @"
                 CREATE TABLE categories (
-                    Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    Id INTEGER PRIMARY KEY NOT NULL,
                     Description TEXT NOT NULL,
                     TypeId INTEGER NOT NULL,
                     FOREIGN KEY (TypeId) REFERENCES categoryTypes(Id)
