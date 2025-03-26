@@ -20,26 +20,10 @@ namespace Budget
     /// </summary>
     public class Expenses
     {
-
         //Database connection 
         private SQLiteConnection _connection;
         public SQLiteConnection Connection { get { return _connection; } set { _connection = value; } }
-        /// <summary>
-        /// Default constructor that initializes expenses with default values.
-        /// </summary>
-        /// <example>
-        /// To create a new Expenses with default expenses.
-        /// <code>
-        /// <![CDATA[
-        /// Expenses expenses = new Expenses();
-        /// ]]>
-        /// </code>
-        /// </example>
-        public Expenses()
-        {
-            SetExpensesToDefaults();
-            
-        }
+
         /// <summary>
         /// Constructor that inititalizes the expenses list from the database
         /// or sets default categories.
@@ -69,7 +53,6 @@ namespace Budget
                 List();
             }
         }
-        private List<Expense> _Expenses = new List<Expense>();
 
         /// <summary>
         /// Resets the expense list and populates it with default expenses.
@@ -87,14 +70,14 @@ namespace Budget
         {
             //Delete everything inside the expenses database.
             DeleteAll();
-            
+
             //Add default expenses.
-            Add(new DateTime(2018 - 01 - 10), 12, "hat (on credit)", 10);
-            Add(new DateTime(2018 - 01 - 11), -10, "hat (on credit)", 9);
-            Add(new DateTime(2019 - 01 - 10), 15, "scarf (on credit)", 10);
-            Add(new DateTime(2020 - 01 - 10), -15, "scarf (on credit)", 9);
-            Add(new DateTime(2020 - 01 - 11), 45, "McDonalds", 14);
-            Add(new DateTime(2020 - 01 - 12), 25, "Wendys", 14);
+            Add(new DateTime(2018, 1, 10), 12, "hat (on credit)", 10);
+            Add(new DateTime(2018, 1, 11), -10, "hat (on credit)", 9);
+            Add(new DateTime(2019, 1, 10), 15, "scarf (on credit)", 10);
+            Add(new DateTime(2020, 1, 10), -15, "scarf (on credit)", 9);
+            Add(new DateTime(2020, 1, 11), 45, "McDonalds", 14);
+            Add(new DateTime(2020, 1, 12), 25, "Wendys", 14);
         }
 
         /// <summary>
@@ -123,6 +106,22 @@ namespace Budget
             }
         }
 
+        private void CheckCategoriesExists(int categoryId)
+        {
+            //check if the categoryId exists in the 'categories' table
+            string getCategoryQuery = "SELECT Id FROM categories WHERE Id = @categoryId;";
+
+            using var getCategoryCmd = new SQLiteCommand(getCategoryQuery, Connection);
+            getCategoryCmd.Parameters.AddWithValue("@categoryId", categoryId);
+
+            using var reader = getCategoryCmd.ExecuteReader();
+
+            if (!reader.Read())
+            {
+                Console.WriteLine($"Category with ID '{categoryId}' does not exist in categories table.");
+            }
+        }
+
         /// <summary>
         /// Adds a new expense to the list of expenses.
         /// </summary>
@@ -145,9 +144,9 @@ namespace Budget
             //Using System.DataSqlite
             try
             {
-                
-                string queryInsertNewExpense = "INSERT INTO expenses (Date, CategoryId, Amount, Description) " +
-                    "VALUES (@date, @idCategory, @amount, @desc)";
+                CheckCategoriesExists(category);
+
+                string queryInsertNewExpense = "INSERT INTO expenses (Date, CategoryId, Amount, Description) VALUES (@date, @idCategory, @amount, @desc)";
 
                 using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewExpense, Connection);
 
