@@ -12,7 +12,14 @@
 
     <!-- Base styles -->
     <Style TargetType="Window">
-        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FFE6F9FA" Offset="0" />
+                    <GradientStop Color="#FFD6F0F3" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
 

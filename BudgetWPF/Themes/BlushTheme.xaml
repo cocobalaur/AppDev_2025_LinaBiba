@@ -12,9 +12,17 @@
 
     <!-- Window Style -->
     <Style TargetType="Window">
-        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FFFCEFFB" Offset="0" />
+                    <GradientStop Color="#FFFFDDEE" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
+    
 
     <!-- Button Style -->
     <Style TargetType="Button">
@@ -35,4 +43,5 @@
         <Setter Property="Margin" Value="0,4"/>
         <Setter Property="Padding" Value="4"/>
     </Style>
+
 </ResourceDictionary>

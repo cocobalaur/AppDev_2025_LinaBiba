@@ -10,7 +10,14 @@
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 
     <Style TargetType="Window">
-        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#FF122529" Offset="0" />
+                    <GradientStop Color="#FF1B3238" Offset="1" />
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
 
