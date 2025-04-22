@@ -242,7 +242,7 @@ namespace Budget
             foreach (BudgetItemsByCategory categoryItem in categoryItems)
             {
                 // Print category name and total for the category
-                Console.WriteLine($"\n{"Category: " + categoryItem.Category, Width}   Total: {categoryItem.Total:C}");
+                Console.WriteLine($"\n{"Category: " + categoryItem.Category,Width}   Total: {categoryItem.Total:C}");
                 // loop through each BudgetItem for the category and print its details
                 foreach (BudgetItem detail in categoryItem.Details)
                 {
@@ -260,7 +260,7 @@ namespace Budget
                 // Safely print the month and total for the record
                 if (record.TryGetValue("Month", out object month) && record.TryGetValue("Total", out object total))
                 {
-                    Console.WriteLine($"\n{"Month:"+ month,Width} Total: {Convert.ToDecimal(total):C}");
+                    Console.WriteLine($"\n{"Month:" + month,Width} Total: {Convert.ToDecimal(total):C}");
                 }
 
                 // Check for category details (starts with "details:")
