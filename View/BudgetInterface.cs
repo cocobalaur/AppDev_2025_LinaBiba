@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace View
 {
-    public interface IView //2 views
+    internal class BudgetInterface: IPresenter
     {
-        //view for wpf 
+
     }
 }

@@ -8,4 +8,14 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\View\View.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Budget">
+      <HintPath>..\Budget\bin\Debug\net8.0\Budget.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
