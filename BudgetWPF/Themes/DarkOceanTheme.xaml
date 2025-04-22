@@ -1,0 +1,34 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="BackgroundColor">#FF1A2B2E</Color>    <!-- deep ocean -->
+    <Color x:Key="TextColor">#FFEFFBFB</Color>    <!-- light aqua -->
+    <Color x:Key="AccentColor">#FF397D8B</Color>    <!-- soft sea blue -->
+
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+
+    <Style TargetType="Window">
+        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <Style TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Margin" Value="0,4"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="#FF2C4044" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Margin" Value="0,4"/>
+        <Setter Property="Padding" Value="4"/>
+    </Style>
+</ResourceDictionary>
