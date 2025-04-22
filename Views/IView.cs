@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace View
+namespace Views
 {
-    public interface IView //2 views
+    public interface IView
     {
         //view for wpf 
     }
