@@ -10,20 +10,10 @@
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 
-    <!-- Window Style -->
     <Style TargetType="Window">
-        <Setter Property="Background">
-            <Setter.Value>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                    <GradientStop Color="#FFFFFAF3" Offset="0" />
-                    <!-- soft cream -->
-                    <GradientStop Color="#FFFFEDD7" Offset="1" />
-                    <!-- pastel peach -->
-                </LinearGradientBrush>
-            </Setter.Value>
-        </Setter>
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
+
 
 
     <!-- Button Style -->
