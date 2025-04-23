@@ -6,9 +6,16 @@
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <!-- Background color set in code-behind via SetWindowGradient -->
-    <Grid Background="Transparent">
-        <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+
+    <Grid Margin="10">
+        <!-- Root grid with 3 rows: Theme, File Input, Add Expense -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="568,2,0,0" VerticalAlignment="Top" HorizontalAlignment="Left">
 
             <!-- Theme style label -->
             <TextBlock x:Name="ThemeLabel"
@@ -16,7 +23,7 @@
                        FontSize="16"
                        FontWeight="Bold"
                        Margin="0 0 0 10" />
-            
+
             <!-- Theme options dropdown -->
             <ComboBox x:Name="ColorComboBox"
                       Width="200"
@@ -44,6 +51,33 @@
                      Height="30"
                      Text="Try typing here!" />
         </StackPanel>
+
+
+        <!-- File Selection Area -->
+        <Grid Margin="5,8,-5,36">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Enter Database File Name:"/>
+            <TextBox x:Name="FileNameTextBox" Grid.Row="1" Margin="0,5,1000,10"/>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal">
+                <TextBox x:Name="DirectoryTextBox" Width="250"/>
+                <Button Content="Browse..." Margin="5,0,0,0" Click="BrowseDirectory_Click"/>
+            </StackPanel>
+
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="left" Margin="0,15,0,0">
+                <Button Content="OK" Width="80" Click="Ok_Click"/>
+            </StackPanel>
+
+        </Grid>
+
+
     </Grid>
 
 </Window>

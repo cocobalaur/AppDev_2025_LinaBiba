@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Reference Include="Budget">
+      <HintPath>..\Budget\bin\Debug\net8.0\Budget.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
