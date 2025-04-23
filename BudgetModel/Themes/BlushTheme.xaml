@@ -1,40 +1,53 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Color palette -->
-    <Color x:Key="BackgroundColor">#FFFDEFF3</Color>    <!-- soft blush pink -->
+    <!-- Theme color definitions -->
+    <Color x:Key="BackgroundColor">#FFFDEFF3</Color>
+    <!-- Soft blush pink background -->
     <Color x:Key="TextColor">#FF333333</Color>
-    <Color x:Key="AccentColor">#FFFFC0CB</Color>    <!-- pastel pink -->
+    <!-- Neutral dark gray text color -->
+    <Color x:Key="AccentColor">#FFFFC0CB</Color>
+    <!-- Pastel pink accent color -->
 
-    <!-- Brushes -->
+    <!-- SolidColorBrush resources based on defined colors -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 
-    <!-- Window Style -->
+    <!-- Window style applying the default text color -->
     <Style TargetType="Window">
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
 
-
-
-    <!-- Button Style -->
+    <!-- Style applied to all Button controls -->
     <Style TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <!-- Button background uses pastel pink -->
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-        <Setter Property="Padding" Value="8,4"/>
-        <Setter Property="Margin" Value="0,4"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
+        <!-- Text color matches theme -->
+        <Setter Property="Padding" Value="8,4" />
+        <!-- Internal padding for button content -->
+        <Setter Property="Margin" Value="0,4" />
+        <!-- Vertical spacing between buttons -->
+        <Setter Property="BorderThickness" Value="0" />
+        <!-- Borderless buttons -->
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <!-- Slightly bold text for emphasis -->
     </Style>
 
-    <!-- TextBox Style -->
+    <!-- Style applied to all TextBox controls -->
     <Style TargetType="TextBox">
         <Setter Property="Background" Value="White" />
+        <!-- Standard white input field -->
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <!-- Text color matches theme -->
         <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Margin" Value="0,4"/>
-        <Setter Property="Padding" Value="4"/>
+        <!-- Border colored with accent pink -->
+        <Setter Property="BorderThickness" Value="1" />
+        <!-- Thin border for definition -->
+        <Setter Property="Margin" Value="0,4" />
+        <!-- Spacing between form fields -->
+        <Setter Property="Padding" Value="4" />
+        <!-- Internal content spacing -->
     </Style>
 
 </ResourceDictionary>

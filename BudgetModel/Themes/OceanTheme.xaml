@@ -1,29 +1,39 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- Color palette -->
-    <Color x:Key="BackgroundColor">#FFEFFBFB</Color>    <!-- soft aqua -->
+    <!-- Color palette used for theme elements -->
+    <Color x:Key="BackgroundColor">#FFEFFBFB</Color>
+    <!-- Soft aqua background -->
     <Color x:Key="TextColor">#FF1B2A33</Color>
-    <Color x:Key="AccentColor">#FFB2E4E7</Color>    <!-- pastel teal -->
+    <!-- Dark cool gray text -->
+    <Color x:Key="AccentColor">#FFB2E4E7</Color>
+    <!-- Pastel teal accent -->
 
-    <!-- Brushes -->
+    <!-- Brushes derived from the color palette -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
     <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
 
+    <!-- Style for Window elements -->
     <Style TargetType="Window">
+        <!-- Applies the text color to all content within the window -->
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
 
-
+    <!-- Style for Button controls -->
     <Style TargetType="Button">
         <Setter Property="Background" Value="{StaticResource AccentBrush}" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
         <Setter Property="Padding" Value="8,4"/>
+        <!-- Internal spacing -->
         <Setter Property="Margin" Value="0,4"/>
+        <!-- Space between controls -->
         <Setter Property="BorderThickness" Value="0"/>
+        <!-- No border -->
         <Setter Property="FontWeight" Value="SemiBold"/>
+        <!-- Slightly bold font -->
     </Style>
 
+    <!-- Style for TextBox controls -->
     <Style TargetType="TextBox">
         <Setter Property="Background" Value="White" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />

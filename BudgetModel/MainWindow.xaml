@@ -6,23 +6,50 @@
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
+    <!-- Main layout container for the entire window -->
     <Grid>
+
+        <!-- Vertically and horizontally centered stack of controls -->
         <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <TextBlock Text="Select a Theme Style:" FontSize="16" FontWeight="Bold" Margin="0 0 0 10"/>
 
-        <ComboBox x:Name="ColorComboBox" Width="200" Margin="0 0 0 10">
-            <ComboBoxItem Content="Light" />
-            <ComboBoxItem Content="Blush" />
-            <ComboBoxItem Content="Ocean" />
-            <ComboBoxItem Content="Lavender" />
-        </ComboBox>
+            <!-- Title text for theme selection section -->
+            <TextBlock 
+            Text="Select a Theme Style:" 
+            FontSize="16" 
+            FontWeight="Bold" 
+            Margin="0 0 0 10"/>
 
-        <CheckBox x:Name="DarkModeCheckBox" Content="Dark Mode" Margin="0 0 0 20"/>
+            <!-- Dropdown list for selecting a base theme -->
+            <ComboBox 
+            x:Name="ColorComboBox" 
+            Width="200" 
+            Margin="0 0 0 10">
+                <ComboBoxItem Content="Light" />
+                <ComboBoxItem Content="Blush" />
+                <ComboBoxItem Content="Ocean" />
+                <ComboBoxItem Content="Lavender" />
+            </ComboBox>
 
-        <Button Content="Apply Theme" Width="120" Click="ApplyTheme_Click" Margin="0 10 0 10"/>
+            <!-- Checkbox to toggle dark mode on or off -->
+            <CheckBox 
+            x:Name="DarkModeCheckBox" 
+            Content="Dark Mode" 
+            Margin="0 0 0 20"/>
 
-        <TextBox Width="200" Height="30" Text="Try typing here!"/>
+            <!-- Button that applies the selected theme and mode -->
+            <Button 
+            Content="Apply Theme" 
+            Width="120" 
+            Click="ApplyTheme_Click" 
+            Margin="0 10 0 10"/>
+
+            <!-- Sample textbox to demonstrate theme styling in input controls -->
+            <TextBox 
+            Width="200" 
+            Height="30" 
+            Text="Try typing here!"/>
         </StackPanel>
 
     </Grid>
+
 </Window>
