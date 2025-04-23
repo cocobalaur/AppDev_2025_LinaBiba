@@ -6,7 +6,44 @@
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-     
+    <!-- Background color set in code-behind via SetWindowGradient -->
+    <Grid Background="Transparent">
+        <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+
+            <!-- Theme style label -->
+            <TextBlock x:Name="ThemeLabel"
+                       Text="Select a Theme Style:"
+                       FontSize="16"
+                       FontWeight="Bold"
+                       Margin="0 0 0 10" />
+            
+            <!-- Theme options dropdown -->
+            <ComboBox x:Name="ColorComboBox"
+                      Width="200"
+                      Margin="0 0 0 10">
+                <ComboBoxItem Content="Light" />
+                <ComboBoxItem Content="Blush" />
+                <ComboBoxItem Content="Ocean" />
+                <ComboBoxItem Content="Lavender" />
+            </ComboBox>
+
+            <!-- Dark mode checkbox -->
+            <CheckBox x:Name="DarkModeCheckBox"
+                      Content="Dark Mode"
+                      Margin="0 0 0 20"
+                      Foreground="{DynamicResource TextBrush}" />
+
+            <!-- Apply theme button -->
+            <Button Content="Apply Theme"
+                    Width="120"
+                    Click="ApplyTheme_Click"
+                    Margin="0 10 0 10" />
+
+            <!-- Sample input box -->
+            <TextBox Width="200"
+                     Height="30"
+                     Text="Try typing here!" />
+        </StackPanel>
     </Grid>
+
 </Window>

@@ -1,0 +1,27 @@
+﻿<Window x:Class="BudgetWPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BudgetWPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <StackPanel Margin="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <TextBlock Text="Select a Theme Style:" FontSize="16" FontWeight="Bold" Margin="0 0 0 10"/>
+
+        <ComboBox x:Name="ColorComboBox" Width="200" Margin="0 0 0 10">
+            <ComboBoxItem Content="Light" />
+            <ComboBoxItem Content="Blush" />
+            <ComboBoxItem Content="Ocean" />
+            <ComboBoxItem Content="Lavender" />
+        </ComboBox>
+
+        <CheckBox x:Name="DarkModeCheckBox" Content="Dark Mode" Margin="0 0 0 20"/>
+
+        <Button Content="Apply Theme" Width="120" Click="ApplyTheme_Click" Margin="0 10 0 10"/>
+
+        <TextBox Width="200" Height="30" Text="Try typing here!"/>
+    </StackPanel>
+
+</Window>

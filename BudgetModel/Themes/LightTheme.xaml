@@ -1,0 +1,38 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Theme color definitions -->
+    <Color x:Key="BackgroundColor">#FFFDF9F0</Color>    <!-- Soft cream background color -->
+    <Color x:Key="TextColor">#FF2A2A2A</Color>    <!-- Standard dark text color -->
+    <Color x:Key="AccentColor">#FFF4C87C</Color>    <!-- Golden beige accent color -->
+
+    <!-- SolidColorBrush resources based on the defined colors -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+
+    <!-- Window style applying the default text color -->
+    <Style TargetType="Window">
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <!-- Style applied to all Button elements -->
+    <Style TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />        <!-- Uses the accent color -->
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />        <!-- Uses the theme's text color -->
+        <Setter Property="FontWeight" Value="SemiBold" />        <!-- Emphasized button text -->
+        <Setter Property="Padding" Value="8,4" />        <!-- Inner spacing of the button -->
+        <Setter Property="Margin" Value="0,4" />        <!-- Outer spacing between elements -->
+        <Setter Property="BorderThickness" Value="0" />        <!-- No border outline -->
+        <Setter Property="Cursor" Value="Hand" />        <!-- Hand cursor on hover -->
+    </Style>
+
+    <!-- Style applied to all TextBox elements -->
+    <Style TargetType="TextBox">
+        <Setter Property="Background" Value="#FFFFFFFF" />        <!-- White input background -->
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />        <!-- Uses theme text color -->
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />        <!-- Accent color for borders -->
+        <Setter Property="BorderThickness" Value="1" />        <!-- Thin border -->
+        <Setter Property="Padding" Value="4" />        <!-- Inner spacing -->
+        <Setter Property="Margin" Value="0,4" />        <!-- Vertical spacing between elements -->
+    </Style>
+</ResourceDictionary>
