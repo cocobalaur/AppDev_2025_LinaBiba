@@ -1,12 +1,9 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Color definitions -->
-    <Color x:Key="BackgroundColor">#FFF7F1FB</Color>
-    <!-- Light lavender background -->
-    <Color x:Key="TextColor">#FF2D2B3D</Color>
-    <!-- Deep violet-gray text color -->
-    <Color x:Key="AccentColor">#FFD8B4F8</Color>
-    <!-- Pastel violet accent color -->
+    <Color x:Key="BackgroundColor">#FFF7F1FB</Color>    <!-- Light lavender background -->
+    <Color x:Key="TextColor">#FF2D2B3D</Color>    <!-- Deep violet-gray text color -->
+    <Color x:Key="AccentColor">#FFD8B4F8</Color>    <!-- Pastel violet accent color -->
 
     <!-- Brushes created from the above colors -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />
@@ -20,33 +17,21 @@
 
     <!-- Style applied to all Button controls -->
     <Style TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
-        <!-- Background uses accent color -->
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-        <!-- Text uses theme text color -->
-        <Setter Property="Padding" Value="8,4"/>
-        <!-- Internal spacing -->
-        <Setter Property="Margin" Value="0,4"/>
-        <!-- Spacing between buttons -->
-        <Setter Property="BorderThickness" Value="0"/>
-        <!-- No border outline -->
-        <Setter Property="FontWeight" Value="SemiBold"/>
-        <!-- Medium-bold button text -->
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />        <!-- Background uses accent color -->
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />        <!-- Text uses theme text color -->
+        <Setter Property="Padding" Value="8,4"/>        <!-- Internal spacing -->
+        <Setter Property="Margin" Value="0,4"/>        <!-- Spacing between buttons -->
+        <Setter Property="BorderThickness" Value="0"/>        <!-- No border outline -->
+        <Setter Property="FontWeight" Value="SemiBold"/>        <!-- Medium-bold button text -->
     </Style>
 
     <!-- Style applied to all TextBox controls -->
     <Style TargetType="TextBox">
-        <Setter Property="Background" Value="White" />
-        <!-- White background for input -->
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-        <!-- Text color from theme -->
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-        <!-- Border uses accent color -->
-        <Setter Property="BorderThickness" Value="1"/>
-        <!-- Thin border line -->
-        <Setter Property="Margin" Value="0,4"/>
-        <!-- Spacing between fields -->
-        <Setter Property="Padding" Value="4"/>
-        <!-- Padding inside textbox -->
+        <Setter Property="Background" Value="White" />        <!-- White background for input -->
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />        <!-- Text color from theme -->
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />        <!-- Border uses accent color -->
+        <Setter Property="BorderThickness" Value="1"/>        <!-- Thin border line -->
+        <Setter Property="Margin" Value="0,4"/>        <!-- Spacing between fields -->
+        <Setter Property="Padding" Value="4"/>        <!-- Padding inside textbox -->
     </Style>
 </ResourceDictionary>

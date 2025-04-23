@@ -65,11 +65,16 @@ namespace BudgetModel
 
             // Load and apply the selected theme resource dictionary
             var newTheme = new ResourceDictionary { Source = new Uri(themeFile, UriKind.Relative) };
+            
             Application.Current.Resources.MergedDictionaries.Clear();
             Application.Current.Resources.MergedDictionaries.Add(newTheme);
 
             // Manually apply the matching gradient background
             SetWindowGradient(baseTheme, isDark);
+
+            // FORCE update on stubborn controls
+            ThemeLabel.Foreground = (Brush)Application.Current.Resources["TextBrush"];
+            DarkModeCheckBox.Foreground = (Brush)Application.Current.Resources["TextBrush"];
         }
 
         /// <summary>
