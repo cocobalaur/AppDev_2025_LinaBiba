@@ -1,5 +1,4 @@
-﻿using Budget;
-using System.Text;
+﻿using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -9,6 +8,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO;
+using Microsoft.Win32;
 
 namespace BudgetModel
 {
@@ -20,12 +21,14 @@ namespace BudgetModel
     /// </summary>
     public partial class MainWindow : Window
     {
+        private Presenter _presenter;
         /// <summary>
         /// Constructor: Initializes the main window and applies the default Light theme on startup.
         /// </summary>
         public MainWindow()
         {
             InitializeComponent();
+            this.WindowState = WindowState.Maximized; //make the window full screen
 
             // Load default Light theme on startup
             var lightTheme = new ResourceDictionary
@@ -133,5 +136,43 @@ namespace BudgetModel
             this.Background = gradient;
         }
 
+
+        private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
+        {
+            // Set up OpenFileDialog to open files in a folder
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.CheckFileExists = false;
+            openFileDialog.CheckPathExists = true;
+            openFileDialog.ValidateNames = false;
+            openFileDialog.FileName = "Folder Selection.";  // Doesn't matter what we name it
+
+            // Set the dialog filter to only show folders
+            openFileDialog.Filter = "Folders|*.";
+
+            // Show the dialog and check if a folder was selected
+            if (openFileDialog.ShowDialog() == true)
+            {
+                // Folder path will be selected as a file path, so extract it
+                string selectedFolder = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
+                DirectoryTextBox.Text = selectedFolder;
+            }
+        }
+
+        private void Ok_Click(object sender, RoutedEventArgs e)
+        {
+            string filename = FileNameTextBox.Text;
+            string directory = DirectoryTextBox.Text.Trim();
+            string fullPath = System.IO.Path.Combine(directory, filename);
+
+            try
+            {
+                _presenter = new Presenter(fullPath);
+
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}");
+            }
+        }
     }
 }
