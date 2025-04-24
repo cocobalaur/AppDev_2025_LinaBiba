@@ -8,17 +8,12 @@ namespace Views
 {
     public interface IView
     {
-      //  void DisplayMainMenu();
-        //void DisplayAddExpense(string name, string amountStr);
-       // void ShowError(string message, string title);
+        void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName);
+        void ShowError(string message);
 
         //Get input from the user (e.g., enter expense name and amount)
-      //  string GetUserInput(string prompt);
-        //load database
-        //use logic from database referenced
-        //to create for wpf to work
-        //for the database, contract assigned to budget interface 
+        //string GetUserInput(string prompt);
+        void GetDatabase(string databasePath);
 
-        void getDatabase(string databasePath);
     }
 }
