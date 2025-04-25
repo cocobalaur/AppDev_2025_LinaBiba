@@ -69,15 +69,15 @@ namespace Budget
             {
                 Database.newDatabase(fileIsGood);
                 // create the category object and expenses object
-                _categories = new Categories(Database.dbConnection, newDB);
-                _expenses = new Expenses(Database.dbConnection, newDB);
+                
             }
             else
             {
                 // if database exists, and user doesn't want a new database, open existing DB
                 Database.existingDatabase(fileIsGood);
             }
-
+            _categories = new Categories(Database.dbConnection, newDB);
+            _expenses = new Expenses(Database.dbConnection, newDB);
         }
 
         public static string VerifyFile(string databaseFile)

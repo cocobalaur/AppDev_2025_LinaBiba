@@ -10,6 +10,9 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO;
 using Microsoft.Win32;
+using Views;
+using Budget;
+
 
 namespace BudgetModel
 {
@@ -19,15 +22,18 @@ namespace BudgetModel
     /// and toggle between light and dark mode.
     /// The background gradient is set programmatically to match the selected theme.
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IView
     {
         private Presenter _presenter;
+        private bool _isDatabaseReady = false;
+
         /// <summary>
         /// Constructor: Initializes the main window and applies the default Light theme on startup.
         /// </summary>
         public MainWindow()
         {
             InitializeComponent();
+            _presenter = new Presenter(this);
             this.WindowState = WindowState.Maximized; //make the window full screen
 
             // Load default Light theme on startup
@@ -40,6 +46,7 @@ namespace BudgetModel
 
             // Apply light gradient on startup
             SetWindowGradient("Light", false);
+
         }
 
         /// <summary>
@@ -68,7 +75,7 @@ namespace BudgetModel
 
             // Load and apply the selected theme resource dictionary
             var newTheme = new ResourceDictionary { Source = new Uri(themeFile, UriKind.Relative) };
-            
+
             Application.Current.Resources.MergedDictionaries.Clear();
             Application.Current.Resources.MergedDictionaries.Add(newTheme);
 
@@ -139,20 +146,18 @@ namespace BudgetModel
 
         private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
         {
-            // Set up OpenFileDialog to open files in a folder
+            //setting up OpenFileDialog to open files in a folder
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.CheckFileExists = false;
             openFileDialog.CheckPathExists = true;
             openFileDialog.ValidateNames = false;
-            openFileDialog.FileName = "Folder Selection.";  // Doesn't matter what we name it
+            openFileDialog.FileName = "Folder Selection.";
 
-            // Set the dialog filter to only show folders
-            openFileDialog.Filter = "Folders|*.";
+            openFileDialog.Filter = "Folders|*."; //filter to only show folders
 
-            // Show the dialog and check if a folder was selected
+            //check if a folder was selected
             if (openFileDialog.ShowDialog() == true)
             {
-                // Folder path will be selected as a file path, so extract it
                 string selectedFolder = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
                 DirectoryTextBox.Text = selectedFolder;
             }
@@ -160,19 +165,171 @@ namespace BudgetModel
 
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
-            string filename = FileNameTextBox.Text;
-            string directory = DirectoryTextBox.Text.Trim();
-            string fullPath = System.IO.Path.Combine(directory, filename);
+            if (string.IsNullOrWhiteSpace(FileNameTextBox.Text))
+            {
+                ShowError("Please enter a database file name.");
+            }
+
+            // Combine directory and file name to create full path
+            string directory = DirectoryTextBox.Text ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string dbFileName = FileNameTextBox.Text;
+
+            string fullPath = System.IO.Path.Combine(directory, dbFileName);
+
+            // Check if file exists
+            bool fileExists = File.Exists(fullPath);
+
+            _presenter.GetDatabase(fullPath);
+
+            // Enable expense controls
+            _isDatabaseReady = true;
+            SetExpenseControlsState(true);
+
+            LoadCategories(); //load categories into ComboBox
+
+
+            MessageBox.Show(fileExists ?
+                $"Successfully opened existing database: {dbFileName}" :
+                $"Successfully created new database: {dbFileName}");
+
+        }
+
+        private void LoadCategories()
+        {
+            CategoryComboBox.Items.Clear(); //reset
+
+            var categoryList = _presenter.GetCategories();
+
+            foreach (var category in categoryList) //add each category to the combobox
+            {
+                CategoryComboBox.Items.Add(category.Description);
+            }
+        }
+
+        private void OnCancelClick(object sender, RoutedEventArgs e)
+        {
+            //clear all input fields
+            ExpenseNameTextBox.Clear();
+            ExpenseAmountTextBox.Clear();
+            CategoryComboBox.SelectedIndex = -1;
+            CategoryComboBox.Text = string.Empty;
+            ExpenseDatePicker.SelectedDate = DateTime.Today;
+
+            //uncheck all radio buttons
+            foreach (RadioButton categoryType in CategoryTypeRadioPanel.Children)
+            {
+                categoryType.IsChecked = false;
+            }
+        }
+
+        private void AddExpense(object sender, RoutedEventArgs e)
+        {
+            if (!_isDatabaseReady)
+            {
+                ShowError("Please set up a database first.");
+            }
 
             try
             {
-                _presenter = new Presenter(fullPath);
+                //need validation
+                double amount = double.Parse(ExpenseAmountTextBox.Text);
+                string name = ExpenseNameTextBox.Text;
+                DateTime date = ExpenseDatePicker.SelectedDate.Value;
+                string? category;
 
+                if (CategoryComboBox.SelectedItem != null) 
+                {
+                    category = CategoryComboBox.SelectedItem.ToString(); //if category was selected via dropdown we get the content as string
+                }
+                else
+                {
+                    category = CategoryComboBox.Text; //get typed text from comboBox if nothing was selected 
+                }
+
+                AddExpenseToDatabase(date, name, amount, category);
+
+                OnCancelClick(sender, e); //clear
+
+                RefreshCategoryComboBox();
+
+                MessageBox.Show($"Expense '{name}' added successfully.");
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}");
+                ShowError($"Error adding expense: {ex.Message}");
             }
+        }
+
+        private void CategoryComboBox_DropDownClosed(object sender, EventArgs e)
+        {
+            string categoryName = CategoryComboBox.Text;
+
+            if (!string.IsNullOrWhiteSpace(categoryName))
+            {
+                try
+                {
+                    Category category = _presenter.CreateOrGetCategory(categoryName);
+                    RefreshCategoryComboBox(category.Description); 
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to process category: {ex.Message}");
+                }
+            }
+        }
+
+        private void RefreshCategoryComboBox(string selectedCategory = null)
+        {
+            CategoryComboBox.ItemsSource = null;
+            CategoryComboBox.Items.Clear();
+
+            List<string> categories = new List<string>();
+
+            foreach (Category category in _presenter.GetCategories())
+            {
+                categories.Add(category.Description);
+            }
+
+            categories.Sort(); //sort the list
+
+            CategoryComboBox.ItemsSource = categories; //bind to ItemsSource
+
+            if (!string.IsNullOrEmpty(selectedCategory))
+            {
+                CategoryComboBox.SelectedItem = selectedCategory;
+            }
+        }
+
+        private void SetExpenseControlsState(bool isEnabled)
+        {
+            ExpenseNameTextBox.IsEnabled = isEnabled;
+            ExpenseAmountTextBox.IsEnabled = isEnabled;
+            CategoryComboBox.IsEnabled = isEnabled;
+            ExpenseDatePicker.IsEnabled = isEnabled;
+            CategoryTypeRadioPanel.IsEnabled = isEnabled;
+        }
+        private void CategoryTypeRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            if (sender is RadioButton radioButton)
+            {
+                int categoryType = Convert.ToInt32(radioButton.Tag);
+                _presenter.SetCategoryType(categoryType);
+            }
+        }
+
+        public void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName)
+        {
+            _presenter.AddExpense(date, name, amount, categoryName);
+        }
+
+        public void ShowError(string message)
+        {
+            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+
+        public void GetDatabase(string databasePath)
+        {
+            throw new NotImplementedException();
         }
     }
 }

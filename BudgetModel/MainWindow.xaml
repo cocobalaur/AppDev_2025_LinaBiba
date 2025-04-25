@@ -5,29 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="520" Width="800">
 
     <Grid Margin="10">
-        <!-- Root grid with 3 rows: Theme, File Input, Add Expense -->
+
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="2*"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
 
-        <StackPanel Margin="568,2,0,0" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" >
 
             <!-- Theme style label -->
             <TextBlock x:Name="ThemeLabel"
-                       Text="Select a Theme Style:"
-                       FontSize="16"
-                       FontWeight="Bold"
-                       Margin="0 0 0 10" />
+                     Text="Select a Theme Style:"
+                     FontSize="16"
+                     FontWeight="Bold"
+                     Margin="0 0 0 10" Height="31" Width="172" />
 
             <!-- Theme options dropdown -->
             <ComboBox x:Name="ColorComboBox"
-                      Width="200"
-                      Margin="0 0 0 10">
+                    Width="200"
+                    Margin="0 0 0 10">
                 <ComboBoxItem Content="Light" />
                 <ComboBoxItem Content="Blush" />
                 <ComboBoxItem Content="Ocean" />
@@ -36,48 +39,91 @@
 
             <!-- Dark mode checkbox -->
             <CheckBox x:Name="DarkModeCheckBox"
-                      Content="Dark Mode"
-                      Margin="0 0 0 20"
-                      Foreground="{DynamicResource TextBrush}" />
+                    Content="Dark Mode"
+                    Margin="0 0 0 20"
+                    Foreground="{DynamicResource TextBrush}" Height="16" Width="192" />
 
             <!-- Apply theme button -->
             <Button Content="Apply Theme"
-                    Width="120"
-                    Click="ApplyTheme_Click"
-                    Margin="0 10 0 10" />
+                  Width="120"
+                  Click="ApplyTheme_Click"
+                  Margin="0 10 0 10" />
 
             <!-- Sample input box -->
             <TextBox Width="200"
-                     Height="30"
-                     Text="Try typing here!" />
+                   Height="30"
+                   Text="Try typing here!" />
         </StackPanel>
 
+        <!-- File Selection -->
+        <Grid Margin="0,10,0,47">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <!-- File Selection Area -->
-        <Grid Margin="5,8,-5,36">
+            <StackPanel Grid.ColumnSpan="2">
+                <TextBlock Text="Enter Database File Name:" />
+                <TextBox x:Name="FileNameTextBox" Margin="0,5,60,10" />
 
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBox x:Name="DirectoryTextBox" Width="250" />
+                    <Button Content="Browse..." Margin="5,0,0,0" Click="BrowseDirectory_Click" Width="93" Height="28" />
+                </StackPanel>
+
+                <Button Content="OK" Width="80" Click="Ok_Click" HorizontalAlignment="Left" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Add Expense -->
+        <Grid Grid.Row="1" Grid.Column="0" Margin="0,10,10,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="Enter Database File Name:"/>
-            <TextBox x:Name="FileNameTextBox" Grid.Row="1" Margin="0,5,1000,10"/>
+            <!-- name -->
+            <Label Content="Expense Name:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" />
+            <TextBox x:Name="ExpenseNameTextBox" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="120,10,0,0" Width="150" />
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal">
-                <TextBox x:Name="DirectoryTextBox" Width="250"/>
-                <Button Content="Browse..." Margin="5,0,0,0" Click="BrowseDirectory_Click"/>
+            <!-- amount -->
+            <Label Content="Amount:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,50,0,0" />
+            <TextBox x:Name="ExpenseAmountTextBox" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="120,50,0,0" Width="150" />
+
+            <!-- categgory -->
+            <Label Content="Category:" Margin="10,90,0,0" HorizontalAlignment="Left"/>
+            <ComboBox x:Name="CategoryComboBox"
+                IsEditable="True"
+                IsTextSearchEnabled="False"
+                StaysOpenOnEdit="True"
+                Margin="120,94,0,116"
+                Width="150"
+                HorizontalAlignment="Left"
+                DropDownClosed="CategoryComboBox_DropDownClosed"/>
+
+            <Label Content="Category Type:" Margin="10,170,0,0" HorizontalAlignment="Left"/>
+            <StackPanel x:Name="CategoryTypeRadioPanel" Margin="120,170,0,0" HorizontalAlignment="Left">
+                <RadioButton Content="Income" GroupName="CategoryType" Checked="CategoryTypeRadio_Checked" Tag="1" />
+                <RadioButton Content="Expense" GroupName="CategoryType" Checked="CategoryTypeRadio_Checked" Tag="2" />
+                <RadioButton Content="Credit" GroupName="CategoryType" Checked="CategoryTypeRadio_Checked" Tag="3" />
+                <RadioButton Content="Savings" GroupName="CategoryType" Checked="CategoryTypeRadio_Checked" Tag="4" />
             </StackPanel>
 
-            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="left" Margin="0,15,0,0">
-                <Button Content="OK" Width="80" Click="Ok_Click"/>
-            </StackPanel>
+            <!-- date -->
+            <Label Content="Date:" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,130,0,0" />
+            <DatePicker x:Name="ExpenseDatePicker"
+                Margin="120,130,0,0"
+                Width="150"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"/>
 
+            <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+                <Button Content="Add Expense" Width="100" Height="30" Margin="0,0,10,0"
+                     Click="AddExpense" />
+                <Button Content="Cancel" Width="100" Height="30"
+                    Click="OnCancelClick" />
+            </StackPanel>
+            
         </Grid>
-
-
     </Grid>
-
 </Window>
