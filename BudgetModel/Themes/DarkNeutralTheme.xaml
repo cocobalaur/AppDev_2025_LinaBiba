@@ -2,8 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Theme color definitions -->
     <Color x:Key="BackgroundColor">#FF1E1B1A</Color>    <!-- Dark gray-brown background color -->
-    <Color x:Key="TextColor">#FFF9F4F1</Color>    <!-- Soft off-white for high contrast text -->
-    <Color x:Key="AccentColor">#FFC89C5D</Color>    <!-- Muted caramel-gold for accent elements -->
+    <Color x:Key="TextColor">#BF9E91</Color>    <!-- Soft off-white for high contrast text -->
+    <Color x:Key="AccentColor">#4D3126</Color>    <!-- Muted caramel-gold for accent elements -->
 
     <!-- SolidColorBrush resources derived from the above colors -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />

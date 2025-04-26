@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!-- Theme color definitions -->
     <Color x:Key="BackgroundColor">#FF2E2B30</Color>    <!-- Dark mauve background color -->
-    <Color x:Key="TextColor">#FFFDEFF3</Color>    <!-- Soft pinkish-white text color -->
+    <Color x:Key="TextColor">#BC9DA2</Color>    <!-- Soft pinkish-white text color -->
     <Color x:Key="AccentColor">#FFBC6C86</Color>    <!-- Dusty rose accent color -->
 
     <!-- SolidColorBrush resources based on defined theme colors -->
@@ -13,29 +13,69 @@
     <!-- Window style applying default foreground text color -->
     <Style TargetType="Window">
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="Background" Value="{StaticResource BackgroundBrush}" />
     </Style>
 
     <!-- Style applied to all Button elements -->
     <Style TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource AccentBrush}" />        <!-- Button background uses accent color -->
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />        <!-- Button text uses light theme color -->
-        <Setter Property="Padding" Value="8,4" />        <!-- Internal content spacing -->
-        <Setter Property="Margin" Value="0,4" />        <!-- Vertical spacing between buttons -->
-        <Setter Property="BorderThickness" Value="0" />        <!-- No visible border -->
-        <Setter Property="FontWeight" Value="SemiBold" />        <!-- Medium-bold font weight for emphasis -->
+        <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+        <!-- Button background uses accent color -->
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <!-- Button text uses light theme color -->
+        <Setter Property="Padding" Value="8,4" />
+        <!-- Internal content spacing -->
+        <Setter Property="Margin" Value="0,4" />
+        <!-- Vertical spacing between buttons -->
+        <Setter Property="BorderThickness" Value="0" />
+        <!-- No visible border -->
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <!-- Medium-bold font weight for emphasis -->
     </Style>
 
     <!-- Style applied to all TextBox elements -->
     <Style TargetType="TextBox">
-        <Setter Property="Background" Value="#FF3D3842" />        <!-- Dark purple-gray input background -->
-        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />        <!-- Text uses theme's light foreground -->
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />        <!-- Border highlights with accent color -->
-        <Setter Property="BorderThickness" Value="1" />        <!-- Thin border for subtle framing -->
-        <Setter Property="Margin" Value="0,4" />        <!-- Spacing between text fields -->
-        <Setter Property="Padding" Value="4" />        <!-- Internal padding for input content -->
+        <Setter Property="Background" Value="#FF3D3842" />
+        <!-- Dark purple-gray input background -->
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <!-- Text uses theme's light foreground -->
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <!-- Border highlights with accent color -->
+        <Setter Property="BorderThickness" Value="1" />
+        <!-- Thin border for subtle framing -->
+        <Setter Property="Margin" Value="0,4" />
+        <!-- Spacing between text fields -->
+        <Setter Property="Padding" Value="4" />
+        <!-- Internal padding for input content -->
     </Style>
 
+    <!-- TextBlock style -->
+    <Style TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
 
-    
+    <!-- CheckBox style -->
+    <Style TargetType="CheckBox">
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
+    <!-- ComboBox (main dropdown box) style -->
+    <Style TargetType="ComboBox">
+        <Setter Property="Background" Value="White" />
+        <!-- Background white -->
+        <Setter Property="Foreground" Value="Black" />
+        <!-- Text black -->
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Margin" Value="0,4" />
+        <Setter Property="Padding" Value="4" />
+    </Style>
+
+    <!-- ComboBoxItem (each dropdown option) style -->
+    <Style TargetType="ComboBoxItem">
+        <Setter Property="Foreground" Value="Black" />
+        <!-- Dropdown item text black -->
+        <Setter Property="Background" Value="White" />
+        <!-- Dropdown item background white -->
+    </Style>
 
 </ResourceDictionary>
