@@ -49,41 +49,62 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Event handler for the Apply Theme button.
-        /// Applies the selected theme and dark mode preference,
-        /// and manually sets the matching background gradient.
+        /// Applies the selected theme and dark mode preferences.
+        /// Updates the application's resource dictionaries and re-applies background gradients.
         /// </summary>
         private void ApplyTheme_Click(object sender, RoutedEventArgs e)
         {
-            // Get selected theme from ComboBox
-            string baseTheme = ((ComboBoxItem)ColorComboBox.SelectedItem)?.Content?.ToString();
+            // Safely get the selected theme name
+            if (ColorComboBox.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Content == null)
+            {
+                ShowError("Please select a theme style first.");
+                return;
+            }
+
+            string baseTheme = selectedItem.Content.ToString();
 
             // Determine if dark mode is checked
             bool isDark = DarkModeCheckBox.IsChecked == true;
 
-            // Determine correct theme file path
+            // Determine correct theme file path based on selection and dark mode
             string themeFile;
-            if (baseTheme == "Blush")
-                themeFile = isDark ? "Themes/DarkBlushTheme.xaml" : "Themes/BlushTheme.xaml";
-            else if (baseTheme == "Ocean")
-                themeFile = isDark ? "Themes/DarkOceanTheme.xaml" : "Themes/OceanTheme.xaml";
-            else if (baseTheme == "Lavender")
-                themeFile = isDark ? "Themes/DarkLavenderTheme.xaml" : "Themes/LavenderTheme.xaml";
-            else // Default to Light/DarkNeutral if unrecognized
-                themeFile = isDark ? "Themes/DarkNeutralTheme.xaml" : "Themes/LightTheme.xaml";
+            switch (baseTheme)
+            {
+                case "Blush":
+                    themeFile = isDark ? "Themes/DarkBlushTheme.xaml" : "Themes/BlushTheme.xaml";
+                    break;
+                case "Ocean":
+                    themeFile = isDark ? "Themes/DarkOceanTheme.xaml" : "Themes/OceanTheme.xaml";
+                    break;
+                case "Lavender":
+                    themeFile = isDark ? "Themes/DarkLavenderTheme.xaml" : "Themes/LavenderTheme.xaml";
+                    break;
+                case "Light":
+                    themeFile = isDark ? "Themes/DarkNeutralTheme.xaml" : "Themes/LightTheme.xaml";
+                    break;
+                default:
+                    ShowError("Unknown theme selected.");
+                    return;
+            }
 
-            // Load and apply the selected theme resource dictionary
-            var newTheme = new ResourceDictionary { Source = new Uri(themeFile, UriKind.Relative) };
+            try
+            {
+                // Load and apply the selected theme
+                var newTheme = new ResourceDictionary { Source = new Uri(themeFile, UriKind.Relative) };
 
-            Application.Current.Resources.MergedDictionaries.Clear();
-            Application.Current.Resources.MergedDictionaries.Add(newTheme);
+                Application.Current.Resources.MergedDictionaries.Clear();
+                Application.Current.Resources.MergedDictionaries.Add(newTheme);
 
-            // Manually apply the matching gradient background
-            SetWindowGradient(baseTheme, isDark);
+                // Update background gradient based on theme
+                SetWindowGradient(baseTheme, isDark);
 
-            // FORCE update on stubborn controls
-            ThemeLabel.Foreground = (Brush)Application.Current.Resources["TextBrush"];
-            DarkModeCheckBox.Foreground = (Brush)Application.Current.Resources["TextBrush"];
+                // Force update text color on specific controls                
+                DarkModeCheckBox.Foreground = (Brush)Application.Current.Resources["TextBrush"];
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Failed to apply theme: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -142,7 +163,11 @@ namespace BudgetModel
             this.Background = gradient;
         }
 
-
+        /// <summary>
+        /// Opens a folder browser dialog and sets the selected folder path to the DirectoryTextBox.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
         {
             //setting up OpenFileDialog to open files in a folder
@@ -162,11 +187,23 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Event handler for clicking the OK button to load or create a database file.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(FileNameTextBox.Text))
             {
                 ShowError("Please enter a database file name.");
+                return; // STOP here, do not continue
+            }
+
+            if (string.IsNullOrWhiteSpace(DirectoryTextBox.Text))
+            {
+                ShowError("Please select a folder using the Browse button.");
+                return; // STOP if no directory selected
             }
 
             // Combine directory and file name to create full path
@@ -193,6 +230,9 @@ namespace BudgetModel
 
         }
 
+        /// <summary>
+        /// Loads all available categories from the database and updates the CategoryComboBox.
+        /// </summary>
         private void LoadCategories()
         {
             CategoryComboBox.Items.Clear(); //reset
@@ -205,6 +245,11 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Clears all input fields related to adding an expense, resetting the form.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void OnCancelClick(object sender, RoutedEventArgs e)
         {
             //clear all input fields
@@ -220,6 +265,7 @@ namespace BudgetModel
                 categoryType.IsChecked = false;
             }
         }
+        
         /// <summary>
         /// Handles adding a new expense entry after validating user input.
         /// Ensures that all required fields (name, amount, date, category, and category type) are properly filled.
@@ -272,7 +318,7 @@ namespace BudgetModel
                 }
 
                 //Verify that a category type was chosen
-                if (!isCategoryTypeChecked())
+                if (!IsCategoryTypeChecked())
                 {
                     throw new Exception("Please select a category type.");
                 }
@@ -291,6 +337,13 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Event handler triggered when the CategoryComboBox dropdown closes.
+        /// Attempts to create a new category if the entered text does not match an existing category,
+        /// then refreshes the list to immediately reflect any new categories.
+        /// </summary>
+        /// <param name="sender">The source of the event (CategoryComboBox).</param>
+        /// <param name="e">Event arguments associated with the dropdown closing.</param>
         private void CategoryComboBox_DropDownClosed(object sender, EventArgs e)
         {
             string categoryName = CategoryComboBox.Text;
@@ -309,6 +362,10 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Refreshes the CategoryComboBox with the current list of categories.
+        /// </summary>
+        /// <param name="selectedCategory">Optional: Category name to select after refreshing.</param>
         private void RefreshCategoryComboBox(string selectedCategory = null)
         {
             CategoryComboBox.ItemsSource = null;
@@ -331,6 +388,10 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Enables or disables the expense input controls based on whether the database is ready.
+        /// </summary>
+        /// <param name="isEnabled">True to enable controls, false to disable.</param>
         private void SetExpenseControlsState(bool isEnabled)
         {
             ExpenseNameTextBox.IsEnabled = isEnabled;
@@ -339,6 +400,12 @@ namespace BudgetModel
             ExpenseDatePicker.IsEnabled = isEnabled;
             CategoryTypeRadioPanel.IsEnabled = isEnabled;
         }
+
+        /// <summary>
+        /// Event handler for checking a category type radio button (Income, Expense, etc.).
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void CategoryTypeRadio_Checked(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton radioButton)
@@ -348,16 +415,31 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Adds an expense to the database via the presenter layer.
+        /// </summary>
+        /// <param name="date">Date of the expense.</param>
+        /// <param name="name">Name or description of the expense.</param>
+        /// <param name="amount">Amount of the expense.</param>
+        /// <param name="categoryName">Associated category name.</param>
         public void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName)
         {
             _presenter.AddExpense(date, name, amount, categoryName);
         }
 
+        /// <summary>
+        /// Displays an error message to the user using a MessageBox.
+        /// </summary>
+        /// <param name="message">Error message to be shown.</param>
         public void ShowError(string message)
         {
             MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
+        /// <summary>
+        /// Throws a NotImplementedException for the GetDatabase method (not used in this view).
+        /// </summary>
+        /// <param name="databasePath">Path to the database file.</param>
         public void GetDatabase(string databasePath)
         {
             throw new NotImplementedException();
@@ -399,7 +481,7 @@ namespace BudgetModel
         /// <returns>
         /// True if at least one radio button is checked; otherwise, false.
         /// </returns>
-        private bool isCategoryTypeChecked()
+        private bool IsCategoryTypeChecked()
         {
             foreach (var categoryType in CategoryTypeRadioPanel.Children)
             {
@@ -408,6 +490,18 @@ namespace BudgetModel
             }
             return false;
         }
+
+        /// <summary>
+        /// Adds a new category by calling the Presenter's AddCategory method.
+        /// Used by the Presenter to add a category through the View layer.
+        /// </summary>
+        /// <param name="name">The name of the category to add.</param>
+        /// <param name="type">The type of the category ("Income", "Expense", "Credit", "Savings").</param>
+        public void AddCategory(string name, string type)
+        {
+            _presenter.AddCategory(name, type);
+        }
+
 
     }
 }
