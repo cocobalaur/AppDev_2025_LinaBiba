@@ -10,12 +10,18 @@ using static Budget.Category;
 
 namespace BudgetModel
 {
+    /// <summary>
+    /// The Presenter acts as a middle layer between the View (MainWindow) and the Model (Database, Categories, etc.).
+    /// It processes user inputs and delegates actions to the appropriate model classes.
+    /// </summary>
     public class Presenter //need to add implementation catch error if no db file or folder path entered
     {
         private IView _view;
 
         private HomeBudget? _budget;
         private CategoryType _selectedCategoryType = CategoryType.Expense; //default
+        
+        
         public IView View
         {
             get { return _view; }
@@ -106,6 +112,63 @@ namespace BudgetModel
 
             throw new InvalidOperationException("Failed to create or retrieve the category."); //throw error if not found (fix)
         }
+
+        /// <summary>
+        /// Adds a new category based on user input (name and type).
+        /// </summary>
+        /// <param name="name">The name of the new category.</param>
+        /// <param name="typeString">The type selected (e.g., "Income" or "Expense").</param>
+        /// <returns>True if created successfully, false if error.</returns>
+        public bool AddCategory(string name, string typeString)
+        {
+            if (_budget == null)
+            {
+                return false;
+            }
+
+            Category.CategoryType type;
+
+            if (typeString == "Income")
+            {
+                type = Category.CategoryType.Income;
+            }
+            else if (typeString == "Expense")
+            {
+                type = Category.CategoryType.Expense;
+            }
+            else if (typeString == "Credit")
+            {
+                type = Category.CategoryType.Credit;
+            }
+            else if (typeString == "Savings")
+            {
+                type = Category.CategoryType.Savings;
+            }
+            else
+            {
+                // Default fallback
+                type = Category.CategoryType.Expense;
+            }
+
+            try
+            {
+                _budget.categories.Add(name, type);
+                return true;
+            }
+            catch (ArgumentException ex)
+            {
+                // Likely a problem like category already exists or invalid argument
+                System.Diagnostics.Debug.WriteLine($"Error adding category: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                // Unexpected error, log it for debugging
+                System.Diagnostics.Debug.WriteLine($"Unexpected error when adding category: {ex.Message}");
+                return false;
+            }
+        }
+
     }
 }
 
