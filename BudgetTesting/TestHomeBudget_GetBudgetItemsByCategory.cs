@@ -70,7 +70,7 @@ namespace BudgetCodeTests
 
 
             // Act
-            budgetItemsByCategory = homeBudget.GetBudgetItemsByMonth(null, null, true, 20);
+            budgetItemsByCategory = homeBudget.GetBudgetItemsByMonth(null, null, true, 15);
 
             // Assert
             Assert.Equal(maxRecords20, budgetItemsByCategory.Count);
