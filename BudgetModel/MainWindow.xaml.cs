@@ -49,41 +49,62 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Event handler for the Apply Theme button.
-        /// Applies the selected theme and dark mode preference,
-        /// and manually sets the matching background gradient.
+        /// Applies the selected theme and dark mode preferences.
+        /// Updates the application's resource dictionaries and re-applies background gradients.
         /// </summary>
         private void ApplyTheme_Click(object sender, RoutedEventArgs e)
         {
-            // Get selected theme from ComboBox
-            string baseTheme = ((ComboBoxItem)ColorComboBox.SelectedItem)?.Content?.ToString();
+            // Safely get the selected theme name
+            if (ColorComboBox.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Content == null)
+            {
+                ShowError("Please select a theme style first.");
+                return;
+            }
+
+            string baseTheme = selectedItem.Content.ToString();
 
             // Determine if dark mode is checked
             bool isDark = DarkModeCheckBox.IsChecked == true;
 
-            // Determine correct theme file path
+            // Determine correct theme file path based on selection and dark mode
             string themeFile;
-            if (baseTheme == "Blush")
-                themeFile = isDark ? "Themes/DarkBlushTheme.xaml" : "Themes/BlushTheme.xaml";
-            else if (baseTheme == "Ocean")
-                themeFile = isDark ? "Themes/DarkOceanTheme.xaml" : "Themes/OceanTheme.xaml";
-            else if (baseTheme == "Lavender")
-                themeFile = isDark ? "Themes/DarkLavenderTheme.xaml" : "Themes/LavenderTheme.xaml";
-            else // Default to Light/DarkNeutral if unrecognized
-                themeFile = isDark ? "Themes/DarkNeutralTheme.xaml" : "Themes/LightTheme.xaml";
+            switch (baseTheme)
+            {
+                case "Blush":
+                    themeFile = isDark ? "Themes/DarkBlushTheme.xaml" : "Themes/BlushTheme.xaml";
+                    break;
+                case "Ocean":
+                    themeFile = isDark ? "Themes/DarkOceanTheme.xaml" : "Themes/OceanTheme.xaml";
+                    break;
+                case "Lavender":
+                    themeFile = isDark ? "Themes/DarkLavenderTheme.xaml" : "Themes/LavenderTheme.xaml";
+                    break;
+                case "Light":
+                    themeFile = isDark ? "Themes/DarkNeutralTheme.xaml" : "Themes/LightTheme.xaml";
+                    break;
+                default:
+                    ShowError("Unknown theme selected.");
+                    return;
+            }
 
-            // Load and apply the selected theme resource dictionary
-            var newTheme = new ResourceDictionary { Source = new Uri(themeFile, UriKind.Relative) };
+            try
+            {
+                // Load and apply the selected theme
+                var newTheme = new ResourceDictionary { Source = new Uri(themeFile, UriKind.Relative) };
 
-            Application.Current.Resources.MergedDictionaries.Clear();
-            Application.Current.Resources.MergedDictionaries.Add(newTheme);
+                Application.Current.Resources.MergedDictionaries.Clear();
+                Application.Current.Resources.MergedDictionaries.Add(newTheme);
 
-            // Manually apply the matching gradient background
-            SetWindowGradient(baseTheme, isDark);
+                // Update background gradient based on theme
+                SetWindowGradient(baseTheme, isDark);
 
-            // FORCE update on stubborn controls
-            ThemeLabel.Foreground = (Brush)Application.Current.Resources["TextBrush"];
-            DarkModeCheckBox.Foreground = (Brush)Application.Current.Resources["TextBrush"];
+                // Force update text color on specific controls                
+                DarkModeCheckBox.Foreground = (Brush)Application.Current.Resources["TextBrush"];
+            }
+            catch (Exception ex)
+            {
+                ShowError($"Failed to apply theme: {ex.Message}");
+            }
         }
 
         /// <summary>
