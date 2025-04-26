@@ -220,7 +220,14 @@ namespace BudgetModel
                 categoryType.IsChecked = false;
             }
         }
-
+        /// <summary>
+        /// Handles adding a new expense entry after validating user input.
+        /// Ensures that all required fields (name, amount, date, category, and category type) are properly filled.
+        /// Adds the expense to the database and resets the input fields upon success.
+        /// Shows error messages if any validation fails.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void AddExpense(object sender, RoutedEventArgs e)
         {
             if (!_isDatabaseReady)
@@ -230,19 +237,44 @@ namespace BudgetModel
 
             try
             {
-                //need validation
-                double amount = double.Parse(ExpenseAmountTextBox.Text);
+                //Specific validation message
+                //Validate that the user added a name
+                if (string.IsNullOrWhiteSpace(ExpenseNameTextBox.Text))
+                {
+                    throw new Exception("The name value cannot be empty.");
+                }
+                //Validate the amount
+                if (!double.TryParse(ExpenseAmountTextBox.Text, out double amount))
+                {
+                    throw new Exception("The expense amount must be a valid number.");
+                }
+                //Validate the date
+                if (!ExpenseDatePicker.SelectedDate.HasValue)
+                {
+                    throw new Exception("Please select a valid date.");
+                }
                 string name = ExpenseNameTextBox.Text;
                 DateTime date = ExpenseDatePicker.SelectedDate.Value;
                 string? category;
 
-                if (CategoryComboBox.SelectedItem != null) 
+                if (CategoryComboBox.SelectedItem != null)
                 {
                     category = CategoryComboBox.SelectedItem.ToString(); //if category was selected via dropdown we get the content as string
                 }
                 else
                 {
+                    //Validate that a category was entered.
+                    if (string.IsNullOrWhiteSpace(CategoryComboBox.Text))
+                    {
+                        throw new Exception("Please enter a category.");
+                    }
                     category = CategoryComboBox.Text; //get typed text from comboBox if nothing was selected 
+                }
+
+                //Verify that a category type was chosen
+                if (!isCategoryTypeChecked())
+                {
+                    throw new Exception("Please select a category type.");
                 }
 
                 AddExpenseToDatabase(date, name, amount, category);
@@ -359,6 +391,22 @@ namespace BudgetModel
 
             NewCategoryNameBox.Text = "";
             NewCategoryTypeBox.SelectedIndex = -1;
+        }
+
+        /// <summary>
+        /// Checks if any radio button within the CategoryTypeRadioPanel is selected.
+        /// </summary>
+        /// <returns>
+        /// True if at least one radio button is checked; otherwise, false.
+        /// </returns>
+        private bool isCategoryTypeChecked()
+        {
+            foreach (var categoryType in CategoryTypeRadioPanel.Children)
+            {
+                if (categoryType is RadioButton radioButton && radioButton.IsChecked == true)
+                    return true;
+            }
+            return false;
         }
 
     }
