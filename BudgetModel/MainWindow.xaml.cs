@@ -142,7 +142,11 @@ namespace BudgetModel
             this.Background = gradient;
         }
 
-
+        /// <summary>
+        /// Opens a folder browser dialog and sets the selected folder path to the DirectoryTextBox.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
         {
             //setting up OpenFileDialog to open files in a folder
@@ -162,11 +166,23 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Event handler for clicking the OK button to load or create a database file.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(FileNameTextBox.Text))
             {
                 ShowError("Please enter a database file name.");
+                return; // STOP here, do not continue
+            }
+
+            if (string.IsNullOrWhiteSpace(DirectoryTextBox.Text))
+            {
+                ShowError("Please select a folder using the Browse button.");
+                return; // STOP if no directory selected
             }
 
             // Combine directory and file name to create full path
@@ -193,6 +209,9 @@ namespace BudgetModel
 
         }
 
+        /// <summary>
+        /// Loads all available categories from the database and updates the CategoryComboBox.
+        /// </summary>
         private void LoadCategories()
         {
             CategoryComboBox.Items.Clear(); //reset
@@ -205,6 +224,11 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Clears all input fields related to adding an expense, resetting the form.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void OnCancelClick(object sender, RoutedEventArgs e)
         {
             //clear all input fields
@@ -220,6 +244,7 @@ namespace BudgetModel
                 categoryType.IsChecked = false;
             }
         }
+        
         /// <summary>
         /// Handles adding a new expense entry after validating user input.
         /// Ensures that all required fields (name, amount, date, category, and category type) are properly filled.
@@ -272,7 +297,7 @@ namespace BudgetModel
                 }
 
                 //Verify that a category type was chosen
-                if (!isCategoryTypeChecked())
+                if (!IsCategoryTypeChecked())
                 {
                     throw new Exception("Please select a category type.");
                 }
@@ -291,6 +316,13 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Event handler triggered when the CategoryComboBox dropdown closes.
+        /// Attempts to create a new category if the entered text does not match an existing category,
+        /// then refreshes the list to immediately reflect any new categories.
+        /// </summary>
+        /// <param name="sender">The source of the event (CategoryComboBox).</param>
+        /// <param name="e">Event arguments associated with the dropdown closing.</param>
         private void CategoryComboBox_DropDownClosed(object sender, EventArgs e)
         {
             string categoryName = CategoryComboBox.Text;
@@ -309,6 +341,10 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Refreshes the CategoryComboBox with the current list of categories.
+        /// </summary>
+        /// <param name="selectedCategory">Optional: Category name to select after refreshing.</param>
         private void RefreshCategoryComboBox(string selectedCategory = null)
         {
             CategoryComboBox.ItemsSource = null;
@@ -331,6 +367,10 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Enables or disables the expense input controls based on whether the database is ready.
+        /// </summary>
+        /// <param name="isEnabled">True to enable controls, false to disable.</param>
         private void SetExpenseControlsState(bool isEnabled)
         {
             ExpenseNameTextBox.IsEnabled = isEnabled;
@@ -339,6 +379,12 @@ namespace BudgetModel
             ExpenseDatePicker.IsEnabled = isEnabled;
             CategoryTypeRadioPanel.IsEnabled = isEnabled;
         }
+
+        /// <summary>
+        /// Event handler for checking a category type radio button (Income, Expense, etc.).
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event arguments associated with the button click.</param>
         private void CategoryTypeRadio_Checked(object sender, RoutedEventArgs e)
         {
             if (sender is RadioButton radioButton)
@@ -348,16 +394,31 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Adds an expense to the database via the presenter layer.
+        /// </summary>
+        /// <param name="date">Date of the expense.</param>
+        /// <param name="name">Name or description of the expense.</param>
+        /// <param name="amount">Amount of the expense.</param>
+        /// <param name="categoryName">Associated category name.</param>
         public void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName)
         {
             _presenter.AddExpense(date, name, amount, categoryName);
         }
 
+        /// <summary>
+        /// Displays an error message to the user using a MessageBox.
+        /// </summary>
+        /// <param name="message">Error message to be shown.</param>
         public void ShowError(string message)
         {
             MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
+        /// <summary>
+        /// Throws a NotImplementedException for the GetDatabase method (not used in this view).
+        /// </summary>
+        /// <param name="databasePath">Path to the database file.</param>
         public void GetDatabase(string databasePath)
         {
             throw new NotImplementedException();
@@ -399,7 +460,7 @@ namespace BudgetModel
         /// <returns>
         /// True if at least one radio button is checked; otherwise, false.
         /// </returns>
-        private bool isCategoryTypeChecked()
+        private bool IsCategoryTypeChecked()
         {
             foreach (var categoryType in CategoryTypeRadioPanel.Children)
             {
