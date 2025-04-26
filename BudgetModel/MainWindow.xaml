@@ -125,5 +125,25 @@
             </StackPanel>
             
         </Grid>
+        <!-- Bottom Right: Add Category -->
+        <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,10,0,0" VerticalAlignment="Top">
+            <TextBlock Text="Create New Category" FontSize="18" FontWeight="Bold" Margin="0 0 0 10" HorizontalAlignment="Center" />
+
+            <TextBlock Text="Category Name:" Margin="0 5 0 5" />
+            <TextBox x:Name="NewCategoryNameBox" Width="200" Margin="0 0 0 10" />
+
+            <TextBlock Text="Category Type:" Margin="0 5 0 5" />
+            <ComboBox x:Name="NewCategoryTypeBox" Width="200" Margin="0 0 0 10">
+                <ComboBoxItem Content="Expense" />
+                <ComboBoxItem Content="Income" />
+                <ComboBoxItem Content="Credit" />
+                <ComboBoxItem Content="Savings" />
+            </ComboBox>
+
+            <Button Content="Add Category"
+                    Width="150"
+                    Click="AddCategoryButton_Click"
+                    HorizontalAlignment="Center" />
+        </StackPanel>
     </Grid>
 </Window>

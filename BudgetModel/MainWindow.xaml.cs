@@ -34,8 +34,7 @@ namespace BudgetModel
         {
             InitializeComponent();
             _presenter = new Presenter(this);
-            this.WindowState = WindowState.Maximized; //make the window full screen
-
+            
             // Load default Light theme on startup
             var lightTheme = new ResourceDictionary
             {
@@ -331,5 +330,36 @@ namespace BudgetModel
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        /// Add new category (from Create Category area).
+        /// </summary>
+        private void AddCategoryButton_Click(object sender, RoutedEventArgs e)
+        {
+            string name = NewCategoryNameBox.Text.Trim();
+            string selectedType = (NewCategoryTypeBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(selectedType))
+            {
+                MessageBox.Show("Please enter a category name and select a type.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            bool success = _presenter.AddCategory(name, selectedType);
+
+            if (success)
+            {
+                MessageBox.Show($"Category '{name}' created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                RefreshCategoryComboBox();
+            }
+            else
+            {
+                MessageBox.Show("Failed to create category. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
+            NewCategoryNameBox.Text = "";
+            NewCategoryTypeBox.SelectedIndex = -1;
+        }
+
     }
 }
