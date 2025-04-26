@@ -1,9 +1,13 @@
+using System;
 using Xunit;
+using System.IO;
+using System.Collections.Generic;
+using System.Data.SQLite;
 using Views;
 
 namespace PresenterTest
 {
-    public class UnitTest1
+    public class PresenterTest
     {
         [Fact]
         public void Test1()
