@@ -470,5 +470,17 @@ namespace BudgetModel
             return false;
         }
 
+        /// <summary>
+        /// Adds a new category by calling the Presenter's AddCategory method.
+        /// Used by the Presenter to add a category through the View layer.
+        /// </summary>
+        /// <param name="name">The name of the category to add.</param>
+        /// <param name="type">The type of the category ("Income", "Expense", "Credit", "Savings").</param>
+        public void AddCategory(string name, string type)
+        {
+            _presenter.AddCategory(name, type);
+        }
+
+
     }
 }
