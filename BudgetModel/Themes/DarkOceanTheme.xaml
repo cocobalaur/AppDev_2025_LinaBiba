@@ -2,12 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <!-- Theme color definitions -->
-    <Color x:Key="BackgroundColor">#FF1A2B2E</Color>
-    <!-- Deep ocean background -->
-    <Color x:Key="TextColor">#8BC8E3</Color>
-    <!-- Light aqua text color -->
-    <Color x:Key="AccentColor">#FF397D8B</Color>
-    <!-- Soft sea blue accent -->
+    <Color x:Key="BackgroundColor">#FF1A2B2E</Color>    <!-- Deep ocean background -->
+    <Color x:Key="TextColor">#8BC8E3</Color>    <!-- Light aqua text color -->
+    <Color x:Key="AccentColor">#FF397D8B</Color>    <!-- Soft sea blue accent -->
 
     <!-- Brushes derived from the theme colors -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}" />

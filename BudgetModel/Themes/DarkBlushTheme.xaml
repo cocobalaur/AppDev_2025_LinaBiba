@@ -58,24 +58,5 @@
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
 
-    <!-- ComboBox (main dropdown box) style -->
-    <Style TargetType="ComboBox">
-        <Setter Property="Background" Value="White" />
-        <!-- Background white -->
-        <Setter Property="Foreground" Value="Black" />
-        <!-- Text black -->
-        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Margin" Value="0,4" />
-        <Setter Property="Padding" Value="4" />
-    </Style>
-
-    <!-- ComboBoxItem (each dropdown option) style -->
-    <Style TargetType="ComboBoxItem">
-        <Setter Property="Foreground" Value="Black" />
-        <!-- Dropdown item text black -->
-        <Setter Property="Background" Value="White" />
-        <!-- Dropdown item background white -->
-    </Style>
 
 </ResourceDictionary>
