@@ -242,47 +242,6 @@ namespace Budget
         /// </example>
         public void Add(string desc, Category.CategoryType type)
         {
-            /*
-            //try
-            //{
-            //    if (string.IsNullOrWhiteSpace(desc))
-            //    {
-            //        throw new ArgumentException("Category description cannot be empty.");
-            //    }
-
-            //    if (!Enum.IsDefined(typeof(Category.CategoryType), type)) //check if type is a valid enum, isDefined verifies if the value is defined in the enum
-            //    {
-            //        throw new ArgumentException("Invalid category type.");
-            //    }
-
-            //    //Check for duplicate (case-insensitive)
-            //    string queryCheckDuplicate = "SELECT COUNT(*) FROM categories WHERE LOWER(Description) = LOWER(@desc)";
-            //    using (SQLiteCommand checkCmd = new SQLiteCommand(queryCheckDuplicate, Connection))
-            //    {
-            //        checkCmd.Parameters.AddWithValue("@desc", desc);
-            //        long count = (long)checkCmd.ExecuteScalar();
-
-            //        if(count > 0)
-            //        {
-            //            throw new InvalidOperationException("A category with that description already exist.");
-            //        }
-            //    }
-
-            //    //If there is no duplicate, proceed.
-            //    int typeId = (int)type; //explicitily convert enum to int for typeId
-            //    string queryInsertNewCategory = "INSERT INTO categories (Description, TypeId) VALUES (@desc, @typeId)";
-
-            //    using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewCategory, Connection);
-
-            //    // Add parameters to the query to prevent SQL injection
-            //    cmd.Parameters.AddWithValue("@desc", desc);
-            //    cmd.Parameters.AddWithValue("@typeId", typeId);
-            //    cmd.ExecuteNonQuery();
-            //}
-            //catch (Exception ex)
-            //{
-            //    Console.WriteLine("Error adding category: " + ex.Message);
-            //}*/
 
             if (string.IsNullOrWhiteSpace(desc))
             {
