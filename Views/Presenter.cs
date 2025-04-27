@@ -71,6 +71,7 @@ namespace BudgetModel
                 if (_budget == null)
                 {
                     _view.ShowError("Database not initialized.");
+                    return;
     
                 }
 
@@ -95,6 +96,7 @@ namespace BudgetModel
             if (_budget == null)
             {
                 _view.ShowError("Database not initialized.");
+                return new List<Category>();
             }
 
             return _budget.categories.List();
@@ -215,6 +217,15 @@ namespace BudgetModel
             }
         }
 
+        //Method for testing purpose 
+        /// <summary>
+        /// M
+        /// </summary>
+        /// <returns>Return the selected type for the category.</returns>
+        public CategoryType GetSelectedCategoryType()
+        {
+            return _selectedCategoryType;
+        }
     }
 }
 
