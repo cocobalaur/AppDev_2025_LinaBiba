@@ -1,11 +1,4 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
-using System.Data.Entity;
-using System.Data.SqlClient;
-using System.Data.SQLite;
-using System.Reflection.PortableExecutable;
-using System.Xml;
+﻿using System.Data.SQLite;
 using static Budget.Category;
 
 // ============================================================================
@@ -98,7 +91,7 @@ namespace Budget
         /// Category cat = categories.GetCategoryFromId(1);
         /// </code>
         /// </example>
-    
+
         public Category GetCategoryFromId(int id)
         {
             string query = "SELECT Id, Description, TypeId FROM categories WHERE Id = @id;";
@@ -237,6 +230,8 @@ namespace Budget
         /// <param name="type">The type of the category (Income, Expense, Credit, Saving)</param>
         /// <exception cref="Exception">Thrown if invalid category type or category description to add.</exception>
         /// <exception cref="ArgumentException">Thrown if invalid category type enum or category description.</exception>
+        /// <exception cref="InvalidOperationException"> Thrown if a category with the same 
+        /// description (case-insenitive) </exception>
         /// <example>
         /// To add a new category:
         /// <code>
@@ -247,32 +242,41 @@ namespace Budget
         /// </example>
         public void Add(string desc, Category.CategoryType type)
         {
-            try
+
+            if (string.IsNullOrWhiteSpace(desc))
             {
-                if (string.IsNullOrWhiteSpace(desc))
-                {
-                    throw new ArgumentException("Category description cannot be empty.");
-                }
-
-                if (!Enum.IsDefined(typeof(Category.CategoryType), type)) //check if type is a valid enum, isDefined verifies if the value is defined in the enum
-                {
-                    throw new ArgumentException("Invalid category type.");
-                }
-
-                int typeId = (int)type; //explicitily convert enum to int for typeId
-                string queryInsertNewCategory = "INSERT INTO categories (Description, TypeId) VALUES (@desc, @typeId)";
-
-                using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewCategory, Connection);
-
-                // Add parameters to the query to prevent SQL injection
-                cmd.Parameters.AddWithValue("@desc", desc);
-                cmd.Parameters.AddWithValue("@typeId", typeId);
-                cmd.ExecuteNonQuery();
+                throw new ArgumentException("Category description cannot be empty.");
             }
-            catch (Exception ex)
+
+            if (!Enum.IsDefined(typeof(Category.CategoryType), type)) //check if type is a valid enum, isDefined verifies if the value is defined in the enum
             {
-                Console.WriteLine("Error adding category: " + ex.Message);
+                throw new ArgumentException("Invalid category type.");
             }
+
+            //Check for duplicate (case-insensitive)
+            string queryCheckDuplicate = "SELECT COUNT(*) FROM categories WHERE LOWER(Description) = LOWER(@desc)";
+            using (SQLiteCommand checkCmd = new SQLiteCommand(queryCheckDuplicate, Connection))
+            {
+                checkCmd.Parameters.AddWithValue("@desc", desc);
+                long count = (long)checkCmd.ExecuteScalar();
+
+                if (count > 0)
+                {
+                    throw new InvalidOperationException("A category with that description already exist.");
+                }
+            }
+
+            //If there is no duplicate, proceed.
+            int typeId = (int)type; //explicitily convert enum to int for typeId
+            string queryInsertNewCategory = "INSERT INTO categories (Description, TypeId) VALUES (@desc, @typeId)";
+
+            using SQLiteCommand cmd = new SQLiteCommand(queryInsertNewCategory, Connection);
+
+            // Add parameters to the query to prevent SQL injection
+            cmd.Parameters.AddWithValue("@desc", desc);
+            cmd.Parameters.AddWithValue("@typeId", typeId);
+            cmd.ExecuteNonQuery();
+
         }
 
         // ====================================================================
@@ -290,7 +294,7 @@ namespace Budget
         /// categories.Delete(1); // Deletes the category with Id 1
         /// </code>
         /// </example>
-        public void Delete(int id) 
+        public void Delete(int id)
         {
             try
             {
@@ -435,7 +439,7 @@ namespace Budget
                 using SQLiteCommand cmd = new SQLiteCommand(query, Connection);
                 cmd.Parameters.AddWithValue("@desc", newDescription);
                 cmd.Parameters.AddWithValue("@typeId", typeId);
-                cmd.Parameters.AddWithValue("@id", id); 
+                cmd.Parameters.AddWithValue("@id", id);
 
                 int rowsAffected = cmd.ExecuteNonQuery();
 
