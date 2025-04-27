@@ -123,7 +123,32 @@ namespace BudgetCodeTests
             Assert.Equal(descr, categoriesList[sizeOfList - 1].Description);
 
         }
+        // ========================================================================
+        [Fact]
+        public void Add_ShouldThrow_WhenDuplicateDescriptionExists()
+        {
+            // Arrange
+            String folder = TestConstants.GetSolutionDir();
+            String goodDB = $"{folder}\\{TestConstants.testDBInputFile}";
+            String messyDB = $"{folder}\\messy.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            Database.existingDatabase(messyDB);
+            SQLiteConnection conn = Database.dbConnection;
+            Categories categories = new Categories(conn, false);
 
+            
+            string description = "Categories";
+            var type = Category.CategoryType.Expense;
+
+            // Act
+            categories.Add(description, type); // First add should succeed
+
+            // Assert
+            var ex = Assert.Throws<InvalidOperationException>(() =>
+                categories.Add(description.ToLower(), type)); // Second add with different casing
+
+            Assert.Equal("A category with that description already exist.", ex.Message);
+        }
         // ========================================================================
 
         [Fact]
