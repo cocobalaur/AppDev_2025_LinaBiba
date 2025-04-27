@@ -1,11 +1,5 @@
-using System;
-using Xunit;
-using System.IO;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using Views;
-using BudgetModel;
 using Budget;
+using BudgetModel;
 using static Budget.Category;
 
 namespace PresenterTest
@@ -22,6 +16,23 @@ namespace PresenterTest
             _presenter = new Presenter(_mockView);
         }
 
+
+
+        //Testing SetAndGet
+        [Fact]
+        public void SetAndGetView_PropertyWorksAsExpected()
+        {
+            // Arrange
+            var mockView = new MockView(); // Create an instance of MockView
+            var presenter = new Presenter(mockView); // Pass the mockView into the Presenter
+
+            // Act
+            var viewFromPresenter = presenter.View;  // Get the current View (should be the mockView)
+            presenter.View = mockView;  // Set the View to the mockView again
+
+            // Assert
+            Assert.Equal(mockView, viewFromPresenter);  // Check if the View property returns the correct mockView instance
+        }
         //Testing GetDatabase
         [Fact]
         public void GetDatabase_ShouldInitializeBudget_WhenDatabasePathIsValid()
@@ -69,7 +80,24 @@ namespace PresenterTest
             // Assert
             Assert.Equal("", _mockView.LastError);
         }
+        [Fact]
+        public void AddExpense_ShouldThrowError_WhenInformationIsWrong()
+        {
+            // Arrange
+            _presenter.GetDatabase("testDatabase.db");
 
+
+            DateTime date = new DateTime(2025, 4, 26);
+            string name = "Coffee";
+            double amount = 4.50;
+            string categoryName = "";
+
+            // Act
+            _presenter.AddExpense(date, name, amount, categoryName);
+
+            // Assert
+            Assert.Contains("Error adding expense:", _mockView.LastError);
+        }
         [Fact]
         public void AddExpense_ShouldShowExpense_WhenBudgetIsNotInitialized()
         {
@@ -121,10 +149,130 @@ namespace PresenterTest
             // Act
             _presenter.SetCategoryType(categoryTypeInt);
 
-
+            //Assert
+            CategoryType selectedCategoryType = _presenter.GetSelectedCategoryType();
+            Assert.Equal(CategoryType.Income, selectedCategoryType);
         }
         //Testing CreateOrGetCategory
+        [Fact]
+        public void CreateOrGetCategory_CategoryExists_ReturnCategory()
+        {
+            //Arrange
+            _presenter.GetDatabase("testDatabase.db");
+            string cateogryDescription = "Income";
 
-        //Testing AddCategory
+            //Act
+            Category category = _presenter.CreateOrGetCategory(cateogryDescription);
+
+            //Assert
+            Assert.Equal(cateogryDescription, category.Description);
         }
+        [Fact]
+        public void CreateOrGetCategory_CategoryDoesNotExist_CreatesAndReturnNewCategory()
+        {
+            //Arrange
+            string goodDB = "newDB.db";
+
+            string messyDB = "MessDB.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            _presenter.GetDatabase(messyDB);
+            string cateogryDescription = "CategoryToCreate";
+
+            //Act
+            Category category = _presenter.CreateOrGetCategory(cateogryDescription);
+
+            //Assert
+            Assert.Equal(cateogryDescription, category.Description);
+        }
+        [Fact]
+        public void CreateOrGetCategory_WithoutDatabase_ThrowsException()
+        {
+            // Act & Assert
+            Assert.Throws<InvalidOperationException>(() => _presenter.CreateOrGetCategory("Groceries"));
+        }
+        //Testing AddCategory
+        [Fact]
+        public void AddCategory_HomeBudgetNotInitialize_ShouldReturnFalse()
+        {
+
+            //Arrange
+            string categoryName = "WOah";
+            string cateogoryType = "Income";
+
+            //Act
+            bool unsuccessAddCategory = _presenter.AddCategory(categoryName, cateogoryType);
+
+            //Assert
+            Assert.False(unsuccessAddCategory);
+        }
+        [Fact]
+        public void AddCategory_CategoryDescriptionIsEmpty_ShouldReturnFalse()
+        {
+            //Arrange
+            _presenter.GetDatabase("testDatabase.db");
+            string categoryName = "";
+            string cateogoryType = "Expense";
+
+            //Act
+            bool unsuccessAddCategory = _presenter.AddCategory(categoryName, cateogoryType);
+
+            //Assert
+            Assert.False(unsuccessAddCategory);
+        }
+        [Fact]
+        public void AddCategory_CategoryTypeDoesntExist_ShouldReturnTrue()
+        {
+
+            //Arrange
+            string goodDB = "newDB.db";
+            string messyDB = "MessDB.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            _presenter.GetDatabase(messyDB);
+            string categoryName = "ProperName";
+            string cateogoryType = "TypeDoesntExist";
+
+            //Act
+            bool successfullAddCateory = _presenter.AddCategory(categoryName, cateogoryType);
+            Category category = _presenter.GetCategories().FirstOrDefault(c => c.Description == categoryName);
+
+            //Assert
+            Assert.True(successfullAddCateory);
+            Assert.Equal(Category.CategoryType.Expense, category.Type);
+
+        }
+        [Fact]
+        public void AddCategory_CategoryAlreadyExist_ShouldReturnFalse()
+        {
+            //Arrange
+            _presenter.GetDatabase("testDatabase.db");
+            string categoryName = "INCOME";
+            string cateogoryType = "Credit";
+
+            //Act
+            bool unsuccessAddCategory = _presenter.AddCategory(categoryName, cateogoryType);
+
+            //Assert
+            Assert.False(unsuccessAddCategory);
+        }
+        [Fact]
+        public void AddCategory_VerificationTheCategoryIsCreated_ShouldReturnTrue()
+        {
+            //Arrange
+            string goodDB = "newDB.db";
+            string messyDB = "MessDB.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            _presenter.GetDatabase(messyDB);
+            string categoryName = "Emergency Fund";
+            string cateogoryType = "Savings";
+
+            //Act
+            bool successfullAddCateory = _presenter.AddCategory(categoryName, cateogoryType);
+            Category category = _presenter.GetCategories().FirstOrDefault(c => c.Description == categoryName);
+
+            //Assert
+            Assert.True(successfullAddCateory);
+            Assert.Equal(categoryName, category.Description);
+            Assert.Equal(Category.CategoryType.Savings, category.Type);
+        }
+    }
 }

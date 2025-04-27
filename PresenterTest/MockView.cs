@@ -10,6 +10,12 @@ namespace PresenterTest
     class MockView : IView
     {
         public string LastError { get; private set; } = "";
+
+        public void AddCategory(string name, string type)
+        {
+            //Not needed for presenter test
+        }
+
         public void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName)
         {
             // Not needed for Presenter tests

@@ -219,7 +219,7 @@ namespace BudgetModel
 
         //Method for testing purpose 
         /// <summary>
-        /// M
+        /// Method to get the categoryType that was selected by the user.
         /// </summary>
         /// <returns>Return the selected type for the category.</returns>
         public CategoryType GetSelectedCategoryType()
