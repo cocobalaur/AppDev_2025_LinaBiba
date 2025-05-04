@@ -23,18 +23,14 @@
             <TextBlock Text="Before starting, choose your database to be able to add expenses and categories:"
                        FontSize="18" FontWeight="Bold" Margin="0,0,0,10" TextAlignment="Center" />
 
-            <StackPanel Orientation="Vertical" Width="500">
-                <TextBlock Text="Enter Database File Name:" Margin="0,0,0,5" />
-                <TextBox x:Name="FileNameTextBox" Margin="0,0,0,10" Width="400" HorizontalAlignment="Center" />
-
+       
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
                     <TextBox x:Name="DirectoryTextBox" Width="250" />
-                    <Button Content="Browse..." Margin="10,0,0,0" Width="100" Click="BrowseDirectory_Click" />
+                    <Button Content="Browse..." Margin="10,0,0,0" Width="100" Click="Browsefile_Click" />
                 </StackPanel>
 
                 <Button Content="OK" Width="100" Height="30" HorizontalAlignment="Center" Click="Ok_Click" />
             </StackPanel>
-        </StackPanel>
 
         <!-- Left Side: Add Expense Section -->
         <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,20,0">
@@ -64,14 +60,6 @@
             <StackPanel Margin="0,0,0,10">
                 <Label Content="Date:" />
                 <DatePicker x:Name="ExpenseDatePicker" Width="250" />
-            </StackPanel>
-
-            <TextBlock Text="Category Type:" FontWeight="Bold" Margin="0,0,0,5" />
-            <StackPanel x:Name="CategoryTypeRadioPanel" Orientation="Vertical" Margin="0,0,0,10">
-                <RadioButton Content="Income" GroupName="CategoryType" Tag="1" Checked="CategoryTypeRadio_Checked" />
-                <RadioButton Content="Expense" GroupName="CategoryType" Tag="2" Checked="CategoryTypeRadio_Checked" />
-                <RadioButton Content="Credit" GroupName="CategoryType" Tag="3" Checked="CategoryTypeRadio_Checked" />
-                <RadioButton Content="Savings" GroupName="CategoryType" Tag="4" Checked="CategoryTypeRadio_Checked" />
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="0,10,0,0">

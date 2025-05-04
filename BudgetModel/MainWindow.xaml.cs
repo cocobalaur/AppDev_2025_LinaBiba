@@ -12,7 +12,7 @@ using System.IO;
 using Microsoft.Win32;
 using Views;
 using Budget;
-
+using System.Reflection;
 
 namespace BudgetModel
 {
@@ -25,7 +25,6 @@ namespace BudgetModel
     public partial class MainWindow : Window, IView
     {
         private Presenter _presenter;
-        private bool _isDatabaseReady = false;
 
         /// <summary>
         /// Constructor: Initializes the main window and applies the default Light theme on startup.
@@ -34,7 +33,7 @@ namespace BudgetModel
         {
             InitializeComponent();
             _presenter = new Presenter(this);
-            
+
             // Load default Light theme on startup
             var lightTheme = new ResourceDictionary
             {
@@ -57,7 +56,7 @@ namespace BudgetModel
             // Safely get the selected theme name
             if (ColorComboBox.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Content == null)
             {
-                ShowError("Please select a theme style first.");
+                DisplayErrorMessage("Please select a theme style first.");
                 return;
             }
 
@@ -83,7 +82,7 @@ namespace BudgetModel
                     themeFile = isDark ? "Themes/DarkNeutralTheme.xaml" : "Themes/LightTheme.xaml";
                     break;
                 default:
-                    ShowError("Unknown theme selected.");
+                    DisplayErrorMessage("Unknown theme selected.");
                     return;
             }
 
@@ -103,7 +102,7 @@ namespace BudgetModel
             }
             catch (Exception ex)
             {
-                ShowError($"Failed to apply theme: {ex.Message}");
+                DisplayErrorMessage($"Failed to apply theme: {ex.Message}");
             }
         }
 
@@ -168,25 +167,22 @@ namespace BudgetModel
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event arguments associated with the button click.</param>
-        private void BrowseDirectory_Click(object sender, RoutedEventArgs e)
+
+        private void Browsefile_Click(object sender, RoutedEventArgs e)
         {
-            //setting up OpenFileDialog to open files in a folder
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.CheckFileExists = false;
-            openFileDialog.CheckPathExists = true;
-            openFileDialog.ValidateNames = false;
-            openFileDialog.FileName = "Folder Selection.";
 
-            openFileDialog.Filter = "Folders|*."; //filter to only show folders
+            openFileDialog.Title = "Select Budget Database File";
+            openFileDialog.Filter = "Database Files (*.db;*.xml;*.json)|*.db;*.xml;*.json|All Files (*.*)|*.*";
+            openFileDialog.CheckFileExists = true;
+            openFileDialog.Multiselect = false;
 
-            //check if a folder was selected
             if (openFileDialog.ShowDialog() == true)
             {
-                string selectedFolder = System.IO.Path.GetDirectoryName(openFileDialog.FileName);
-                DirectoryTextBox.Text = selectedFolder;
+                string selectedFile = openFileDialog.FileName;
+                DirectoryTextBox.Text = selectedFile;
             }
         }
-
         /// <summary>
         /// Event handler for clicking the OK button to load or create a database file.
         /// </summary>
@@ -194,55 +190,21 @@ namespace BudgetModel
         /// <param name="e">Event arguments associated with the button click.</param>
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(FileNameTextBox.Text))
-            {
-                ShowError("Please enter a database file name.");
-                return; // STOP here, do not continue
-            }
+            FileDatabaseSelection();
+        }
 
-            if (string.IsNullOrWhiteSpace(DirectoryTextBox.Text))
-            {
-                ShowError("Please select a folder using the Browse button.");
-                return; // STOP if no directory selected
-            }
-
+        public void FileDatabaseSelection()
+        {
             // Combine directory and file name to create full path
             string directory = DirectoryTextBox.Text ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string dbFileName = FileNameTextBox.Text;
 
-            string fullPath = System.IO.Path.Combine(directory, dbFileName);
+            string fullPath = System.IO.Path.Combine(directory);
 
             // Check if file exists
             bool fileExists = File.Exists(fullPath);
 
             _presenter.GetDatabase(fullPath);
-
-            // Enable expense controls
-            _isDatabaseReady = true;
-            SetExpenseControlsState(true);
-
-            LoadCategories(); //load categories into ComboBox
-
-
-            MessageBox.Show(fileExists ?
-                $"Successfully opened existing database: {dbFileName}" :
-                $"Successfully created new database: {dbFileName}");
-
-        }
-
-        /// <summary>
-        /// Loads all available categories from the database and updates the CategoryComboBox.
-        /// </summary>
-        private void LoadCategories()
-        {
-            CategoryComboBox.Items.Clear(); //reset
-
-            var categoryList = _presenter.GetCategories();
-
-            foreach (var category in categoryList) //add each category to the combobox
-            {
-                CategoryComboBox.Items.Add(category.Description);
-            }
+            LoadCategories();
         }
 
         /// <summary>
@@ -258,14 +220,8 @@ namespace BudgetModel
             CategoryComboBox.SelectedIndex = -1;
             CategoryComboBox.Text = string.Empty;
             ExpenseDatePicker.SelectedDate = DateTime.Today;
-
-            //uncheck all radio buttons
-            foreach (RadioButton categoryType in CategoryTypeRadioPanel.Children)
-            {
-                categoryType.IsChecked = false;
-            }
         }
-        
+
         /// <summary>
         /// Handles adding a new expense entry after validating user input.
         /// Ensures that all required fields (name, amount, date, category, and category type) are properly filled.
@@ -276,31 +232,30 @@ namespace BudgetModel
         /// <param name="e">Event arguments associated with the button click.</param>
         private void AddExpense(object sender, RoutedEventArgs e)
         {
-            if (!_isDatabaseReady)
-            {
-                ShowError("Please set up a database first.");
-            }
-
             try
             {
-                //Specific validation message
-                //Validate that the user added a name
-                if (string.IsNullOrWhiteSpace(ExpenseNameTextBox.Text))
-                {
-                    throw new Exception("The name value cannot be empty.");
-                }
-                //Validate the amount
+                DisplayAddExpense();
+
+                OnCancelClick(sender, e); //clear
+                LoadCategories();
+            }
+            catch (Exception ex)
+            {
+                DisplayErrorMessage(ex.ToString());
+            }
+        }
+
+        public void DisplayAddExpense()
+        {
+            try
+            {
                 if (!double.TryParse(ExpenseAmountTextBox.Text, out double amount))
                 {
-                    throw new Exception("The expense amount must be a valid number.");
+                    DisplayErrorMessage("The expense amount must be a valid number.");
                 }
-                //Validate the date
-                if (!ExpenseDatePicker.SelectedDate.HasValue)
-                {
-                    throw new Exception("Please select a valid date.");
-                }
+
                 string name = ExpenseNameTextBox.Text;
-                DateTime date = ExpenseDatePicker.SelectedDate.Value;
+                DateTime date = ExpenseDatePicker.SelectedDate.Value; //crashing
                 string? category;
 
                 if (CategoryComboBox.SelectedItem != null)
@@ -309,31 +264,37 @@ namespace BudgetModel
                 }
                 else
                 {
-                    //Validate that a category was entered.
-                    if (string.IsNullOrWhiteSpace(CategoryComboBox.Text))
-                    {
-                        throw new Exception("Please enter a category.");
-                    }
                     category = CategoryComboBox.Text; //get typed text from comboBox if nothing was selected 
+                                                      // If it's a new category, make sure a type is selected
                 }
 
-                //Verify that a category type was chosen
-                if (!IsCategoryTypeChecked())
+                //check if the category is new/ get category type for new category input
+                if (!_presenter.FindCategory(category))
                 {
-                    throw new Exception("Please select a category type.");
+                    var categoryWindow = new SelectingCategoryType(); // This window allows the user to select a category type
+                    categoryWindow.ShowDialog();
+
+                    // Check if the user selected a category type or canceled
+                    if (categoryWindow.DialogResult == true)
+                    {
+                        string categoryType = categoryWindow.SelectedCategoryType;
+                        _presenter.AddCategory(category, categoryType); // Add new category only if confirmed
+                    }
+                    else
+                    {
+                        return; //if user canceled, go back
+                    }
                 }
 
-                AddExpenseToDatabase(date, name, amount, category);
-
-                OnCancelClick(sender, e); //clear
-
-                RefreshCategoryComboBox();
-
-                MessageBox.Show($"Expense '{name}' added successfully.");
+                if (!string.IsNullOrEmpty(category)) //only add expense if category is valid and user didn't cancel
+                {
+                    _presenter.AddExpense(date, name, amount, category);
+                    DisplaySuccessMessage($"Expense '{name}' added successfully.");
+                }
             }
             catch (Exception ex)
             {
-                ShowError($"Error adding expense: {ex.Message}");
+                DisplayErrorMessage(ex.ToString());
             }
         }
 
@@ -350,15 +311,8 @@ namespace BudgetModel
 
             if (!string.IsNullOrWhiteSpace(categoryName))
             {
-                try
-                {
-                    Category category = _presenter.CreateOrGetCategory(categoryName);
-                    RefreshCategoryComboBox(category.Description); 
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Failed to process category: {ex.Message}");
-                }
+                var category = _presenter.CreateOrGetCategory(categoryName);
+                LoadCategories(category.Description);
             }
         }
 
@@ -366,7 +320,7 @@ namespace BudgetModel
         /// Refreshes the CategoryComboBox with the current list of categories.
         /// </summary>
         /// <param name="selectedCategory">Optional: Category name to select after refreshing.</param>
-        private void RefreshCategoryComboBox(string selectedCategory = null)
+        private void LoadCategories(string selectedCategory = null)
         {
             CategoryComboBox.ItemsSource = null;
             CategoryComboBox.Items.Clear();
@@ -389,63 +343,6 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Enables or disables the expense input controls based on whether the database is ready.
-        /// </summary>
-        /// <param name="isEnabled">True to enable controls, false to disable.</param>
-        private void SetExpenseControlsState(bool isEnabled)
-        {
-            ExpenseNameTextBox.IsEnabled = isEnabled;
-            ExpenseAmountTextBox.IsEnabled = isEnabled;
-            CategoryComboBox.IsEnabled = isEnabled;
-            ExpenseDatePicker.IsEnabled = isEnabled;
-            CategoryTypeRadioPanel.IsEnabled = isEnabled;
-        }
-
-        /// <summary>
-        /// Event handler for checking a category type radio button (Income, Expense, etc.).
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">Event arguments associated with the button click.</param>
-        private void CategoryTypeRadio_Checked(object sender, RoutedEventArgs e)
-        {
-            if (sender is RadioButton radioButton)
-            {
-                int categoryType = Convert.ToInt32(radioButton.Tag);
-                _presenter.SetCategoryType(categoryType);
-            }
-        }
-
-        /// <summary>
-        /// Adds an expense to the database via the presenter layer.
-        /// </summary>
-        /// <param name="date">Date of the expense.</param>
-        /// <param name="name">Name or description of the expense.</param>
-        /// <param name="amount">Amount of the expense.</param>
-        /// <param name="categoryName">Associated category name.</param>
-        public void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName)
-        {
-            _presenter.AddExpense(date, name, amount, categoryName);
-        }
-
-        /// <summary>
-        /// Displays an error message to the user using a MessageBox.
-        /// </summary>
-        /// <param name="message">Error message to be shown.</param>
-        public void ShowError(string message)
-        {
-            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        /// <summary>
-        /// Throws a NotImplementedException for the GetDatabase method (not used in this view).
-        /// </summary>
-        /// <param name="databasePath">Path to the database file.</param>
-        public void GetDatabase(string databasePath)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Add new category (from Create Category area).
         /// </summary>
         private void AddCategoryButton_Click(object sender, RoutedEventArgs e)
@@ -453,42 +350,10 @@ namespace BudgetModel
             string name = NewCategoryNameBox.Text.Trim();
             string selectedType = (NewCategoryTypeBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
 
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(selectedType))
-            {
-                MessageBox.Show("Please enter a category name and select a type.", "Input Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             bool success = _presenter.AddCategory(name, selectedType);
-
-            if (success)
-            {
-                MessageBox.Show($"Category '{name}' created successfully.", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
-                RefreshCategoryComboBox();
-            }
-            else
-            {
-                MessageBox.Show("Failed to create category. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
 
             NewCategoryNameBox.Text = "";
             NewCategoryTypeBox.SelectedIndex = -1;
-        }
-
-        /// <summary>
-        /// Checks if any radio button within the CategoryTypeRadioPanel is selected.
-        /// </summary>
-        /// <returns>
-        /// True if at least one radio button is checked; otherwise, false.
-        /// </returns>
-        private bool IsCategoryTypeChecked()
-        {
-            foreach (var categoryType in CategoryTypeRadioPanel.Children)
-            {
-                if (categoryType is RadioButton radioButton && radioButton.IsChecked == true)
-                    return true;
-            }
-            return false;
         }
 
         /// <summary>
@@ -497,11 +362,23 @@ namespace BudgetModel
         /// </summary>
         /// <param name="name">The name of the category to add.</param>
         /// <param name="type">The type of the category ("Income", "Expense", "Credit", "Savings").</param>
-        public void AddCategory(string name, string type)
+        public void DisplayAddCategory(string name, string type)
         {
             _presenter.AddCategory(name, type);
         }
 
+        public void DisplaySuccessMessage(string message)
+        {
+            MessageBox.Show(message, "Success", MessageBoxButton.OK);
+        }
 
+        /// <summary>
+        /// Displays an error message to the user using a MessageBox.
+        /// </summary>
+        /// <param name="message">Error message to be shown.</param>
+        public void DisplayErrorMessage(string message)
+        {
+            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }
