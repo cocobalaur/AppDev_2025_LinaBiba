@@ -112,7 +112,7 @@ namespace BudgetModel
             return _budget.categories.List();
         }
 
-        public bool FindCategory(string category)
+        public bool IsCategoryExisting(string category)
         {
             var categories = GetCategories();
 

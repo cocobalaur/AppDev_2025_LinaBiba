@@ -28,11 +28,6 @@ namespace Views
         void DisplayErrorMessage(string message);       
         
         void DisplaySuccessMessage(string message);
-        /// <summary>
-        /// Connects to the specified database file or creates it if it does not exist.
-        /// </summary>
-        /// <param name="databasePath">The full path to the database file.</param>
-        void FileDatabaseSelection();
 
         /// <summary>
         /// Adds a new category entry based on user input.
