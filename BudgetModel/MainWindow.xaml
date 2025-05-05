@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
-        Title="Budget Manager" Height="750" Width="1000" Background="{DynamicResource BackgroundBrush}">
+        Title="Budget Manager" Height="401" Width="742" Background="{DynamicResource BackgroundBrush}">
 
     <Grid Margin="20">
 
@@ -13,118 +13,17 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="1.5*" />
-        </Grid.ColumnDefinitions>
-
-        <!-- Top: Database Section -->
+    
         <StackPanel Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,0,0,20">
             <TextBlock Text="Before starting, choose your database to be able to add expenses and categories:"
                        FontSize="18" FontWeight="Bold" Margin="0,0,0,10" TextAlignment="Center" />
 
-            <StackPanel Orientation="Vertical" Width="500">
-                <TextBlock Text="Enter Database File Name:" Margin="0,0,0,5" />
-                <TextBox x:Name="FileNameTextBox" Margin="0,0,0,10" Width="400" HorizontalAlignment="Center" />
-
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-                    <TextBox x:Name="DirectoryTextBox" Width="250" />
-                    <Button Content="Browse..." Margin="10,0,0,0" Width="100" Click="BrowseDirectory_Click" />
-                </StackPanel>
-
-                <Button Content="OK" Width="100" Height="30" HorizontalAlignment="Center" Click="Ok_Click" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <TextBox x:Name="DirectoryTextBox" Width="250" />
+                <Button Content="Browse..." Margin="10,0,0,0" Width="100" Click="Browsefile_Click" />
             </StackPanel>
+
+            <Button Content="OK" Width="100" Height="30" HorizontalAlignment="Center" Click="Ok_Click" />
         </StackPanel>
-
-        <!-- Left Side: Add Expense Section -->
-        <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,20,0">
-
-            <TextBlock Text="Add Expense" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
-
-            <StackPanel Margin="0,0,0,10">
-                <Label Content="Expense Name:" />
-                <TextBox x:Name="ExpenseNameTextBox" Width="250" />
-            </StackPanel>
-
-            <StackPanel Margin="0,0,0,10">
-                <Label Content="Amount:" />
-                <TextBox x:Name="ExpenseAmountTextBox" Width="250" />
-            </StackPanel>
-
-            <StackPanel Margin="0,0,0,10">
-                <Label Content="Category:" />
-                <ComboBox x:Name="CategoryComboBox"
-                          IsEditable="True"
-                          IsTextSearchEnabled="False"
-                          StaysOpenOnEdit="True"
-                          Width="250"
-                          DropDownClosed="CategoryComboBox_DropDownClosed" />
-            </StackPanel>
-
-            <StackPanel Margin="0,0,0,10">
-                <Label Content="Date:" />
-                <DatePicker x:Name="ExpenseDatePicker" Width="250" />
-            </StackPanel>
-
-            <TextBlock Text="Category Type:" FontWeight="Bold" Margin="0,0,0,5" />
-            <StackPanel x:Name="CategoryTypeRadioPanel" Orientation="Vertical" Margin="0,0,0,10">
-                <RadioButton Content="Income" GroupName="CategoryType" Tag="1" Checked="CategoryTypeRadio_Checked" />
-                <RadioButton Content="Expense" GroupName="CategoryType" Tag="2" Checked="CategoryTypeRadio_Checked" />
-                <RadioButton Content="Credit" GroupName="CategoryType" Tag="3" Checked="CategoryTypeRadio_Checked" />
-                <RadioButton Content="Savings" GroupName="CategoryType" Tag="4" Checked="CategoryTypeRadio_Checked" />
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                <Button Content="Add Expense" Width="120" Height="35" Margin="0,0,10,0" Click="AddExpense" />
-                <Button Content="Cancel" Width="120" Height="35" Click="OnCancelClick" />
-            </StackPanel>
-
-        </StackPanel>
-
-        <!-- Right Side: Theme and Create Category Section -->
-        <StackPanel Grid.Row="1" Grid.Column="1" VerticalAlignment="Top">
-
-            <TextBlock Text="Theme Settings" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
-
-            <TextBlock x:Name="ThemeTitle"
-           Text="Select a Theme Style:" 
-           FontSize="16" 
-           FontWeight="Bold" 
-           Margin="0 0 0 10" 
-           Height="31" 
-           Width="172" />
-
-            <ComboBox x:Name="ColorComboBox" Width="200" Margin="0,0,0,10">
-                <ComboBoxItem Content="Light" />
-                <ComboBoxItem Content="Blush" />
-                <ComboBoxItem Content="Ocean" />
-                <ComboBoxItem Content="Lavender" />
-            </ComboBox>
-
-            <CheckBox x:Name="DarkModeCheckBox" Content="Dark Mode" Margin="0,0,0,20" />
-
-            <Button Content="Apply Theme" Width="150" Height="35" Margin="0,0,0,20" Click="ApplyTheme_Click" />
-
-            <TextBox Width="200" Height="30" Text="Try typing here!" Margin="0,0,0,20" />
-
-            <Separator Margin="0,10,0,10" />
-
-            <TextBlock Text="Create New Category" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
-
-            <TextBlock Text="Category Name:" Margin="0,5,0,5" />
-            <TextBox x:Name="NewCategoryNameBox" Width="200" Margin="0,0,0,10" />
-
-            <TextBlock Text="Category Type:" Margin="0,5,0,5" />
-            <ComboBox x:Name="NewCategoryTypeBox" Width="200" Margin="0,0,0,10">
-                <ComboBoxItem Content="Expense" />
-                <ComboBoxItem Content="Income" />
-                <ComboBoxItem Content="Credit" />
-                <ComboBoxItem Content="Savings" />
-            </ComboBox>
-
-            <Button Content="Add Category" Width="150" Height="35" Click="AddCategoryButton_Click" />
-
-        </StackPanel>
-
     </Grid>
 </Window>

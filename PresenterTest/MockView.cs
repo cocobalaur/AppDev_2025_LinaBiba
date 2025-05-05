@@ -7,7 +7,7 @@ using Views;
 
 namespace PresenterTest
 {
-    class MockView : IView
+    class MockView //: IView
     {
         public string LastError { get; private set; } = "";
 
@@ -28,7 +28,7 @@ namespace PresenterTest
 
         }
 
-        public void ShowError(string message)
+        public void DisplayErrorMessage(string message)
         {
             LastError = message;
         }

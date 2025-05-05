@@ -19,26 +19,26 @@ namespace Views
         /// <param name="name">The name or description of the expense.</param>
         /// <param name="amount">The amount of money for the expense.</param>
         /// <param name="categoryName">The category under which the expense falls.</param>
-        void AddExpenseToDatabase(DateTime date, string name, double amount, string categoryName);
+        void DisplayAddExpense();
 
         /// <summary>
         /// Displays an error message to the user (typically in a message box or alert).
         /// </summary>
         /// <param name="message">The error message text to show.</param>
-        void ShowError(string message);       
-        
+        void DisplayErrorMessage(string message);
+
         /// <summary>
-        /// Connects to the specified database file or creates it if it does not exist.
+        /// Displays a success message to the user
         /// </summary>
-        /// <param name="databasePath">The full path to the database file.</param>
-        void GetDatabase(string databasePath);
+        /// <param name="message">The success message text to show</param>
+        void DisplaySuccessMessage(string message);
 
         /// <summary>
         /// Adds a new category entry based on user input.
         /// </summary>
         /// <param name="name">The name of the new category.</param>
         /// <param name="type">The type of the category (e.g., "Income", "Expense", etc.).</param>
-        void AddCategory(string name, string type);
+        void DisplayCategory (List<string> name, string type);
 
     }
 }
