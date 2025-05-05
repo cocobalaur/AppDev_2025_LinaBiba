@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Budget;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,8 +24,11 @@ namespace BudgetModel
         private Presenter _presenter;
         public Filter(Presenter presenter)
         {
-            InitializeComponent();
             _presenter = presenter;
+            _presenter.View = this;
+            InitializeComponent();
+            _presenter.RefreshCategoryList();
+
             // Load default Light theme on startup
             var lightTheme = new ResourceDictionary
             {
@@ -161,11 +165,6 @@ namespace BudgetModel
             MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
-        private void CategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
         private void AddExpense_Click(object sender, RoutedEventArgs e)
         {
             var addExpenseWindow = new AddExpense(_presenter);
@@ -181,9 +180,27 @@ namespace BudgetModel
         {
             MessageBox.Show(message, "Success", MessageBoxButton.OK);
         }
-        public void DisplayCategory(List<string> name, string type)
+
+        public void DisplayCategory(List<string> categories, string selectedCategory = null)
         {
-            throw new NotImplementedException();
+            CategoryComboBox.ItemsSource = null;
+            CategoryComboBox.Items.Clear();
+            CategoryComboBox.ItemsSource = categories;
+
+            if (!string.IsNullOrEmpty(selectedCategory))
+            {
+                CategoryComboBox.SelectedItem = selectedCategory;
+            }
+        }
+
+        private void CategoryComboBox_SelectionFilter(object sender, SelectionChangedEventArgs e)
+        {
+            string categoryName = CategoryComboBox.Text;
+
+            if (!string.IsNullOrWhiteSpace(categoryName))
+            {
+                _presenter.RefreshCategoryList(categoryName);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -77,7 +77,7 @@ namespace BudgetModel
         {
             if (sender is RadioButton radioButton)
             {
-                int categoryType = Convert.ToInt32(radioButton.Tag);
+                int categoryType = Convert.ToInt32(radioButton.Tag);        
             }
         }
 

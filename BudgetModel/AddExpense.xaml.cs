@@ -59,7 +59,7 @@ namespace BudgetModel
             try
             {
                 DisplayAddExpense();
-                _presenter.ShowAddExpense();
+                //_presenter.ShowAddExpense();
                 OnCancelClick(sender, e); //clear
             }
             catch (Exception ex)
@@ -67,7 +67,6 @@ namespace BudgetModel
                 DisplayErrorMessage(ex.ToString());
             }
         }
-
 
         public void DisplayAddExpense()
         {
