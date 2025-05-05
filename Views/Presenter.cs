@@ -38,9 +38,7 @@ namespace BudgetModel
         public Presenter(IView view)
         {
             _view = view;
-        }
-
-       
+        } 
 
         /// <summary>
         /// Creates a new HomeBudget database connection, or opens an existing one.
@@ -96,7 +94,11 @@ namespace BudgetModel
             }
         }
 
-       
+        public void ShowAddExpense()
+        {
+            _view.DisplayAddExpense(); 
+        }
+
         /// <summary>
         /// Retrieves all categories from the database.
         /// </summary>
@@ -112,11 +114,11 @@ namespace BudgetModel
             return _budget.categories.List();
         }
 
-        public bool IsCategoryExisting(string category)
+        public bool FindCategory(string category)
         {
-            var categories = GetCategories();
+            List<Category> categories = GetCategories();
 
-            foreach (var categoryName in categories) //loop through each category and check if any category matches the given category
+            foreach (Category categoryName in categories) //loop through each category and check if any category matches the given category
             {
                 if (categoryName.Description.ToLower() == category.ToLower())
                 {
@@ -136,6 +138,23 @@ namespace BudgetModel
             _selectedCategoryType = (CategoryType)categoryType;
         }
 
+        public void RefreshCategoryList(string selectedCategory = null)
+        {
+            if (_budget == null)
+            {
+                _view.DisplayErrorMessage("Database not initialized.");
+            }
+
+            List<string> categoryNames = new List<string>();
+
+            foreach (Category category in GetCategories())
+            {
+                categoryNames.Add(category.Description);
+            }
+
+            categoryNames.Sort(); 
+            _view.DisplayCategory(categoryNames, selectedCategory);
+        }
 
         /// <summary>
         /// Searches for a category by description or creates a new one if it doesn't exist.
@@ -147,11 +166,11 @@ namespace BudgetModel
         {
             try
             {
-                string inputName = categoryDescription.ToLower(); // Lowercase for consistent comparison
+                string inputName = categoryDescription.ToLower(); 
 
-                List<Category> categories = _budget.categories.List(); // Get current categories list
+                List<Category> categories = _budget.categories.List(); 
 
-                // Search for an existing category
+                //find existing category
                 for (int i = 0; i < categories.Count; i++)
                 {
                     if (categories[i].Description.ToLower() == inputName)
@@ -160,10 +179,10 @@ namespace BudgetModel
                     }
                 }
 
-                // Not found -> Try to create new category
+                //if not found, try to create new category
                 _budget.categories.Add(categoryDescription, _selectedCategoryType);
 
-                // Refresh and search again
+                //search again
                 categories = _budget.categories.List();
 
                 for (int i = 0; i < categories.Count; i++)
@@ -174,13 +193,10 @@ namespace BudgetModel
                     }
                 }
 
-                // If still not found after adding
                 throw new InvalidOperationException("Failed to create or retrieve the category.");
             }
             catch (Exception ex)
             {
-                // Catch any exception (e.g., database error, null pointer, etc.)
-                System.Diagnostics.Debug.WriteLine($"Error in CreateOrGetCategory: {ex.Message}");
                 throw new InvalidOperationException("An error occurred while creating or retrieving the category.", ex);
             }
         }

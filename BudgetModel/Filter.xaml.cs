@@ -11,17 +11,20 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Views;
 
 namespace BudgetModel
 {
     /// <summary>
     /// Interaction logic for Filter.xaml
     /// </summary>
-    public partial class Filter : Window
+    public partial class Filter : Window, IView
     {
-        public Filter()
+        private Presenter _presenter;
+        public Filter(Presenter presenter)
         {
             InitializeComponent();
+            _presenter = presenter;
             // Load default Light theme on startup
             var lightTheme = new ResourceDictionary
             {
@@ -158,5 +161,29 @@ namespace BudgetModel
             MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
+        private void CategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void AddExpense_Click(object sender, RoutedEventArgs e)
+        {
+            var addExpenseWindow = new AddExpense(_presenter);
+            addExpenseWindow.ShowDialog();
+        }
+
+        public void DisplayAddExpense()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisplaySuccessMessage(string message)
+        {
+            MessageBox.Show(message, "Success", MessageBoxButton.OK);
+        }
+        public void DisplayCategory(List<string> name, string type)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

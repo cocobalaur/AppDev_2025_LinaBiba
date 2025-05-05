@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
-        Title="Budget Manager" Height="750" Width="1000" Background="{DynamicResource BackgroundBrush}">
+        Title="Budget Manager" Height="401" Width="742" Background="{DynamicResource BackgroundBrush}">
 
     <Grid Margin="20">
 
@@ -13,28 +13,17 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
-            <ColumnDefinition Width="1.5*" />
-        </Grid.ColumnDefinitions>
-
-        <!-- Top: Database Section -->
+    
         <StackPanel Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,0,0,20">
             <TextBlock Text="Before starting, choose your database to be able to add expenses and categories:"
                        FontSize="18" FontWeight="Bold" Margin="0,0,0,10" TextAlignment="Center" />
 
-       
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
-                    <TextBox x:Name="DirectoryTextBox" Width="250" />
-                    <Button Content="Browse..." Margin="10,0,0,0" Width="100" Click="Browsefile_Click" />
-                </StackPanel>
-
-                <Button Content="OK" Width="100" Height="30" HorizontalAlignment="Center" Click="Ok_Click" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                <TextBox x:Name="DirectoryTextBox" Width="250" />
+                <Button Content="Browse..." Margin="10,0,0,0" Width="100" Click="Browsefile_Click" />
             </StackPanel>
 
-       
-
- 
-
+            <Button Content="OK" Width="100" Height="30" HorizontalAlignment="Center" Click="Ok_Click" />
+        </StackPanel>
     </Grid>
 </Window>

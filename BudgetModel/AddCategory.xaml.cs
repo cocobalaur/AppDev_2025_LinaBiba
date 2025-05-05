@@ -20,9 +20,10 @@ namespace BudgetModel
     public partial class AddCategory : Window
     {
         private Presenter _presenter;
-        public AddCategory()
+        public AddCategory(Presenter presenter)
         {
             InitializeComponent();
+            _presenter = presenter;
         }
 
         /// <summary>

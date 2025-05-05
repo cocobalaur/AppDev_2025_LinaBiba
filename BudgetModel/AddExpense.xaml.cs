@@ -22,10 +22,12 @@ namespace BudgetModel
     public partial class AddExpense : Window, IView
     {
         Presenter _presenter;
-        public AddExpense()
+        public AddExpense(Presenter presenter)
         {
+            _presenter = presenter;
+            _presenter.View = this; //set as presenter
             InitializeComponent();
-            LoadCategories();
+            _presenter.RefreshCategoryList();
         }
 
         /// <summary>
@@ -41,8 +43,9 @@ namespace BudgetModel
             CategoryComboBox.SelectedIndex = -1;
             CategoryComboBox.Text = string.Empty;
             ExpenseDatePicker.SelectedDate = DateTime.Today;
+            this.Close();
         }
-
+  
         /// <summary>
         /// Handles adding a new expense entry after validating user input.
         /// Ensures that all required fields (name, amount, date, category, and category type) are properly filled.
@@ -51,20 +54,20 @@ namespace BudgetModel
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event arguments associated with the button click.</param>
-        private void AddExpenseClick(object sender, RoutedEventArgs e) // Renamed to avoid conflict with class name
+        private void AddExpenseClick(object sender, RoutedEventArgs e) 
         {
             try
             {
                 DisplayAddExpense();
-
+                _presenter.ShowAddExpense();
                 OnCancelClick(sender, e); //clear
-                LoadCategories();
             }
             catch (Exception ex)
             {
                 DisplayErrorMessage(ex.ToString());
             }
         }
+
 
         public void DisplayAddExpense()
         {
@@ -90,12 +93,12 @@ namespace BudgetModel
                 }
 
                 //check if the category is new/ get category type for new category input
-                if (!_presenter.IsCategoryExisting(category))
+                if (!_presenter.FindCategory(category))
                 {
-                    var categoryWindow = new SelectingCategoryType(); // This window allows the user to select a category type
+                    var categoryWindow = new SelectingCategoryType(); //allows the user to select a category type in new window
                     categoryWindow.ShowDialog();
 
-                    // Check if the user selected a category type or canceled
+                    //check if the user selected a category type or canceled
                     if (categoryWindow.DialogResult == true)
                     {
                         string categoryType = categoryWindow.SelectedCategoryType;
@@ -130,48 +133,43 @@ namespace BudgetModel
         {
             string categoryName = CategoryComboBox.Text;
 
-            if (!string.IsNullOrWhiteSpace(categoryName))
+            if (!string.IsNullOrWhiteSpace(categoryName) && !_presenter.FindCategory(categoryName))
             {
-                var category = _presenter.CreateOrGetCategory(categoryName);
-                LoadCategories(category.Description);
+                string categoryType = PromptForCategoryType(); //if new category get the window to get category type  
+
+                if (!string.IsNullOrEmpty(categoryType))
+                {
+                    if (_presenter.AddCategory(categoryName, categoryType))
+                    {
+                        _presenter.RefreshCategoryList(categoryName);
+                    }
+                }
             }
         }
 
-        /// <summary>
-        /// Refreshes the CategoryComboBox with the current list of categories.
-        /// </summary>
-        /// <param name="selectedCategory">Optional: Category name to select after refreshing.</param>
-        private void LoadCategories(string selectedCategory = null)
+        public string PromptForCategoryType()
+        {
+            var categoryTypeWindow = new SelectingCategoryType();
+            categoryTypeWindow.ShowDialog();
+
+            if (categoryTypeWindow.DialogResult == true)
+            {
+                return categoryTypeWindow.SelectedCategoryType;
+            }
+
+            return null; //canceled
+        }
+
+        public void DisplayCategory(List<string> categories, string selectedCategory = null)
         {
             CategoryComboBox.ItemsSource = null;
             CategoryComboBox.Items.Clear();
-
-            List<string> categories = new List<string>();
-
-            foreach (Category category in _presenter.GetCategories())
-            {
-                categories.Add(category.Description);
-            }
-
-            categories.Sort(); //sort the list
-
-            CategoryComboBox.ItemsSource = categories; //bind to ItemsSource
+            CategoryComboBox.ItemsSource = categories;
 
             if (!string.IsNullOrEmpty(selectedCategory))
             {
                 CategoryComboBox.SelectedItem = selectedCategory;
             }
-        }
-
-        /// <summary>
-        /// Adds a new category by calling the Presenter's AddCategory method.
-        /// Used by the Presenter to add a category through the View layer.
-        /// </summary>
-        /// <param name="name">The name of the category to add.</param>
-        /// <param name="type">The type of the category ("Income", "Expense", "Credit", "Savings").</param>
-        public void DisplayAddCategory(string name, string type)
-        {
-            _presenter.AddCategory(name, type);
         }
 
         public void DisplaySuccessMessage(string message)
@@ -190,7 +188,7 @@ namespace BudgetModel
 
         private void AddCategory_Click(object sender, RoutedEventArgs e)
         {
-            var categoryWindow = new SelectingCategoryType(); // Assuming this is your "Add Category" window
+            var categoryWindow = new AddCategory(_presenter); // Assuming this is your "Add Category" window
             categoryWindow.ShowDialog();
         }
     }

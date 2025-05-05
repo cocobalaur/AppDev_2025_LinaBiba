@@ -33,16 +33,13 @@ namespace BudgetModel
         {
             InitializeComponent();
             _presenter = new Presenter(this);
-
         }
 
-       
         /// <summary>
-        /// Opens a folder browser dialog and sets the selected folder path to the DirectoryTextBox.
+        /// Opens a folder browser dialog and sets the selected fo lder path to the DirectoryTextBox.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event arguments associated with the button click.</param>
-
         private void Browsefile_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -66,7 +63,7 @@ namespace BudgetModel
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
             FileDatabaseSelection();
-            var filterWindow = new Filter(); // Assuming this is your "Add Category" window
+            var filterWindow = new Filter(_presenter); 
             filterWindow.Show();
             this.Close();
         }
@@ -85,18 +82,6 @@ namespace BudgetModel
            
         }
 
-      
-        /// <summary>
-        /// Adds a new category by calling the Presenter's AddCategory method.
-        /// Used by the Presenter to add a category through the View layer.
-        /// </summary>
-        /// <param name="name">The name of the category to add.</param>
-        /// <param name="type">The type of the category ("Income", "Expense", "Credit", "Savings").</param>
-        public void DisplayAddCategory(string name, string type)
-        {
-            _presenter.AddCategory(name, type);
-        }
-
         public void DisplaySuccessMessage(string message)
         {
             MessageBox.Show(message, "Success", MessageBoxButton.OK);
@@ -112,6 +97,11 @@ namespace BudgetModel
         }
 
         public void DisplayAddExpense()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DisplayCategory(List<string> name, string type)
         {
             throw new NotImplementedException();
         }

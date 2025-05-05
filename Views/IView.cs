@@ -25,8 +25,12 @@ namespace Views
         /// Displays an error message to the user (typically in a message box or alert).
         /// </summary>
         /// <param name="message">The error message text to show.</param>
-        void DisplayErrorMessage(string message);       
-        
+        void DisplayErrorMessage(string message);
+
+        /// <summary>
+        /// Displays a success message to the user
+        /// </summary>
+        /// <param name="message">The success message text to show</param>
         void DisplaySuccessMessage(string message);
 
         /// <summary>
@@ -34,7 +38,7 @@ namespace Views
         /// </summary>
         /// <param name="name">The name of the new category.</param>
         /// <param name="type">The type of the category (e.g., "Income", "Expense", etc.).</param>
-        void DisplayAddCategory(string name, string type);
+        void DisplayCategory (List<string> name, string type);
 
     }
 }
