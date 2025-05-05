@@ -7,6 +7,7 @@ using Views;
 using Budget;
 using System.Data.Common;
 using static Budget.Category;
+using System.Xml.Linq;
 
 namespace BudgetModel
 {
@@ -37,7 +38,7 @@ namespace BudgetModel
         public Presenter(IView view)
         {
             _view = view;
-        }
+        } 
 
         /// <summary>
         /// Creates a new HomeBudget database connection, or opens an existing one.
@@ -46,14 +47,22 @@ namespace BudgetModel
         public void GetDatabase(string databasePath)
         {
             try
-            {
+            { 
+                if (string.IsNullOrWhiteSpace(databasePath))
+                {
+                    _view.DisplayErrorMessage("Please select a folder using the Browse button.");
+                    return; // STOP if no directory selected
+                }
+
                 bool IsNewDatabase = !System.IO.File.Exists(databasePath); //does the db file exist -> to set up for homebudget boolean
 
                 _budget = new HomeBudget(databasePath, IsNewDatabase);
+                _view.DisplaySuccessMessage($"Successfully opened database.");
+
             }
             catch (Exception ex)
             {
-                _view.ShowError($"Error setting up database: {ex.Message}");
+                _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
             }
         }
 
@@ -70,9 +79,7 @@ namespace BudgetModel
             {
                 if (_budget == null)
                 {
-                    _view.ShowError("Database not initialized.");
-                    return;
-    
+                    _view.DisplayErrorMessage("Database not initialized.");
                 }
 
                 Category category = CreateOrGetCategory(categoryName);
@@ -83,8 +90,13 @@ namespace BudgetModel
             }
             catch (Exception ex)
             {
-                _view.ShowError($"Error adding expense: {ex.Message}");
+                _view.DisplayErrorMessage($"Error adding expense: {ex.Message}");
             }
+        }
+
+        public void ShowAddExpense()
+        {
+            _view.DisplayAddExpense(); 
         }
 
         /// <summary>
@@ -95,11 +107,26 @@ namespace BudgetModel
         {
             if (_budget == null)
             {
-                _view.ShowError("Database not initialized.");
+                _view.DisplayErrorMessage("Database not initialized.");
                 return new List<Category>();
             }
 
             return _budget.categories.List();
+        }
+
+        public bool FindCategory(string category)
+        {
+            List<Category> categories = GetCategories();
+
+            foreach (Category categoryName in categories) //loop through each category and check if any category matches the given category
+            {
+                if (categoryName.Description.ToLower() == category.ToLower())
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -111,6 +138,23 @@ namespace BudgetModel
             _selectedCategoryType = (CategoryType)categoryType;
         }
 
+        public void RefreshCategoryList(string selectedCategory = null)
+        {
+            if (_budget == null)
+            {
+                _view.DisplayErrorMessage("Database not initialized.");
+            }
+
+            List<string> categoryNames = new List<string>();
+
+            foreach (Category category in GetCategories())
+            {
+                categoryNames.Add(category.Description);
+            }
+
+            categoryNames.Sort(); 
+            _view.DisplayCategory(categoryNames, selectedCategory);
+        }
 
         /// <summary>
         /// Searches for a category by description or creates a new one if it doesn't exist.
@@ -122,11 +166,11 @@ namespace BudgetModel
         {
             try
             {
-                string inputName = categoryDescription.ToLower(); // Lowercase for consistent comparison
+                string inputName = categoryDescription.ToLower(); 
 
-                List<Category> categories = _budget.categories.List(); // Get current categories list
+                List<Category> categories = _budget.categories.List(); 
 
-                // Search for an existing category
+                //find existing category
                 for (int i = 0; i < categories.Count; i++)
                 {
                     if (categories[i].Description.ToLower() == inputName)
@@ -135,10 +179,10 @@ namespace BudgetModel
                     }
                 }
 
-                // Not found -> Try to create new category
+                //if not found, try to create new category
                 _budget.categories.Add(categoryDescription, _selectedCategoryType);
 
-                // Refresh and search again
+                //search again
                 categories = _budget.categories.List();
 
                 for (int i = 0; i < categories.Count; i++)
@@ -149,18 +193,14 @@ namespace BudgetModel
                     }
                 }
 
-                // If still not found after adding
                 throw new InvalidOperationException("Failed to create or retrieve the category.");
             }
             catch (Exception ex)
             {
-                // Catch any exception (e.g., database error, null pointer, etc.)
-                System.Diagnostics.Debug.WriteLine($"Error in CreateOrGetCategory: {ex.Message}");
                 throw new InvalidOperationException("An error occurred while creating or retrieving the category.", ex);
             }
         }
-
-
+      
         // <summary>
         /// Adds a new category based on user input (name and type string).
         /// </summary>
@@ -174,6 +214,11 @@ namespace BudgetModel
                 return false;
             }
 
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(typeString))
+            {
+                _view.DisplayErrorMessage("Please enter a category name and select a type.");
+            }
+             
             Category.CategoryType type;
 
             if (typeString == "Income")
@@ -201,12 +246,13 @@ namespace BudgetModel
             try
             {
                 _budget.categories.Add(name, type);
+                _view.DisplaySuccessMessage($"Category '{name}' created successfully.");
                 return true;
             }
             catch (ArgumentException ex)
             {
                 // Specific handling for already existing categories or bad input
-                System.Diagnostics.Debug.WriteLine($"Error adding category: {ex.Message}");
+                _view.DisplayErrorMessage("Failed to create category. Please try again.");
                 return false;
             }
             catch (Exception ex)
