@@ -1,0 +1,63 @@
+﻿<Window x:Class="BudgetModel.UpdateWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BudgetModel"
+        mc:Ignorable="d"
+        Title="UpdateWindow" WindowStartupLocation="CenterScreen" Height="450" Width="450">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Update Expense" FontWeight="Bold" FontSize="16" 
+                   HorizontalAlignment="Center" Margin="0,0,0,10"/>
+
+        <!-- Description -->
+        <StackPanel Grid.Row="1" Margin="0,5">
+            <TextBlock Text="Name" FontWeight="SemiBold"/>
+            <TextBox x:Name="ExpenseName" Text="{Binding Description}"/>
+        </StackPanel>
+        
+         <!-- Amount -->
+        <StackPanel Grid.Row="2" Margin="0,5">
+            <TextBlock Text="Amount" FontWeight="SemiBold"/>
+            <TextBox x:Name="Amount" Text="{Binding Amount}"/>
+        </StackPanel>
+        
+        <!-- Category -->
+        <StackPanel Grid.Row="3" Margin="0,5">
+            <TextBlock Text="Category" FontWeight="SemiBold"/>
+            <ComboBox x:Name="CategoryComboBox">
+            </ComboBox>
+        </StackPanel>
+        
+        <!-- Date -->
+        <StackPanel Grid.Row="4" Margin="0,5">
+            <TextBlock Text="Date" FontWeight="SemiBold"/>
+            <DatePicker x:Name="ExpenseDatePicker" SelectedDate="{Binding Date}" />
+        </StackPanel>
+
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" 
+                    HorizontalAlignment="Center" Margin="0,10">
+            <Button Content="Update" Width="80" Height="30" Margin="10,0" Click="UpdateExpense_Click"/>
+            <Button Content="Cancel" Width="80" Height="30" Margin="10,0" Click="Cancel_Click"/>
+            <Button Content="Delete" Width="80" Height="30" Margin="10,0" Click="Delete_Click"/>
+        </StackPanel>
+
+        <!-- Last Action
+        <StackPanel Grid.Row="6" Margin="0,10,0,0">
+            <TextBlock Text="Last Action:" FontWeight="Bold"/>
+        </StackPanel> 
+        -->
+    </Grid>
+</Window>
