@@ -19,15 +19,17 @@ namespace BudgetModel
     /// <summary>
     /// Interaction logic for AddExpense.xaml
     /// </summary>
-    public partial class AddExpense : Window, IView
+    public partial class AddExpense : Window
     {
+        private AddCategory _categoryWindow; //for adding new categories
         Presenter _presenter;
-        public AddExpense(Presenter presenter)
+        IView _view;
+        public AddExpense(Presenter presenter, IView view)
         {
-            _presenter = presenter;
-            _presenter.View = this; //set as presenter
+            
             InitializeComponent();
-            _presenter.RefreshCategoryList();
+            _presenter = presenter;
+            _view = view;
         }
 
         /// <summary>
@@ -56,31 +58,16 @@ namespace BudgetModel
         /// <param name="e">Event arguments associated with the button click.</param>
         private void AddExpenseClick(object sender, RoutedEventArgs e) 
         {
-            try
-            {
-                DisplayAddExpense();
-                _presenter.ShowAddExpense();
-                OnCancelClick(sender, e); //clear
-            }
-            catch (Exception ex)
-            {
-                DisplayErrorMessage(ex.ToString());
-            }
+           GetExpense();
+           OnCancelClick(sender, e); //clear
         }
 
-
-        public void DisplayAddExpense()
+        public void GetExpense() //Looks more like PRocessandMaybeAddAnExpense
         {
-            try
-            {
-                if (!double.TryParse(ExpenseAmountTextBox.Text, out double amount))
-                {
-                    DisplayErrorMessage("The expense amount must be a valid number.");
-                }
-
-                string name = ExpenseNameTextBox.Text;
-                DateTime date = ExpenseDatePicker.SelectedDate.Value; //crashing
-                string? category;
+            string name = ExpenseNameTextBox.Text;
+            DateTime date = ExpenseDatePicker.SelectedDate.Value; //crashing
+            double amount = double.Parse(ExpenseAmountTextBox.Text); //parse amount to double
+            string? category;
 
                 if (CategoryComboBox.SelectedItem != null)
                 {
@@ -110,17 +97,9 @@ namespace BudgetModel
                     }
                 }
 
-                if (!string.IsNullOrEmpty(category)) //only add expense if category is valid and user didn't cancel
-                {
-                    _presenter.AddExpense(date, name, amount, category);
-                    DisplaySuccessMessage($"Expense '{name}' added successfully.");
-                }
-            }
-            catch (Exception ex)
-            {
-                DisplayErrorMessage(ex.ToString());
-            }
+            _presenter.ProcessNewAddExpense(date, name, amount, category);
         }
+
 
         /// <summary>
         /// Event handler triggered when the CategoryComboBox dropdown closes.
@@ -133,17 +112,25 @@ namespace BudgetModel
         {
             string categoryName = CategoryComboBox.Text;
 
-            if (!string.IsNullOrWhiteSpace(categoryName) && !_presenter.FindCategory(categoryName))
+            if (string.IsNullOrEmpty(categoryName))
+                return;
+
+            if (!_presenter.FindCategory(categoryName))
             {
-                string categoryType = PromptForCategoryType(); //if new category get the window to get category type  
+                string categoryType = PromptForCategoryType();
 
                 if (!string.IsNullOrEmpty(categoryType))
                 {
                     if (_presenter.AddCategory(categoryName, categoryType))
                     {
                         _presenter.RefreshCategoryList(categoryName);
+                        return;
                     }
                 }
+            }
+            else
+            {
+                _presenter.RefreshCategoryList(categoryName);
             }
         }
 
@@ -160,36 +147,10 @@ namespace BudgetModel
             return null; //canceled
         }
 
-        public void DisplayCategory(List<string> categories, string selectedCategory = null)
-        {
-            CategoryComboBox.ItemsSource = null;
-            CategoryComboBox.Items.Clear();
-            CategoryComboBox.ItemsSource = categories;
-
-            if (!string.IsNullOrEmpty(selectedCategory))
-            {
-                CategoryComboBox.SelectedItem = selectedCategory;
-            }
-        }
-
-        public void DisplaySuccessMessage(string message)
-        {
-            MessageBox.Show(message, "Success", MessageBoxButton.OK);
-        }
-
-        /// <summary>
-        /// Displays an error message to the user using a MessageBox.
-        /// </summary>
-        /// <param name="message">Error message to be shown.</param>
-        public void DisplayErrorMessage(string message)
-        {
-            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
         private void AddCategory_Click(object sender, RoutedEventArgs e)
         {
-            var categoryWindow = new AddCategory(_presenter); // Assuming this is your "Add Category" window
-            categoryWindow.ShowDialog();
+            _categoryWindow = new AddCategory(_presenter, _view);
+            _categoryWindow.Show();
         }
     }
 }

@@ -30,7 +30,7 @@
 
                 <CheckBox x:Name="FilterByCategory" Content="Filter By Category?" Margin="0,10,0,5"/>
                 <ComboBox x:Name="CategoryComboBox" Width="200" Height="25" 
-                          SelectionChanged="CategoryComboBox_SelectionChanged"/>
+                          DropDownClosed="CategoryComboBox_SelectionFilter"/>
 
                 <!-- Summary Options -->
                 <GroupBox Header="Summary" Margin="0,20,0,0">
