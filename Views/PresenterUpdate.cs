@@ -27,7 +27,7 @@ namespace Views
             try
             {
                 double goodAmount = VerificationOfData(name, amount, date, categories);
-                _budget.expenses.UpdateExpenses(0, date, goodAmount, name, categories);
+                //_budget.expenses.UpdateExpenses(0, date, goodAmount, name, categories);
             }
             catch(Exception ex)
             {

@@ -15,14 +15,21 @@ using System.Windows.Shapes;
 using Views;
 
 namespace BudgetModel
+    //Display the old info
+    //Get the new info
+    //get id and categories id
+    //Update the user
+    //Show message
 {
     /// <summary>
     /// Interaction logic for UpdateWindow.xaml
     /// </summary>
-    public partial class UpdateWindow : Window, IViewUpdate
+    public partial class UpdateWindow : Window
     {
         //I need both to call a presenter and a view interface?
         private PresenterUpdate _presenter;
+        private Presenter _presenter2;
+
         private Expense _expense;
         public UpdateWindow(Expense expenseToUpdate)
         {
