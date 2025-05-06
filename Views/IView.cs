@@ -43,6 +43,10 @@ namespace Views
 
         void DisplayCategoryExpense(List<string> categories, string selectedCategory);
 
+        DateTime? GetStartDate();
+        DateTime? GetEndDate();
+        void DisplayItems(List<BudgetItem> items);
+
 
     }
 }
