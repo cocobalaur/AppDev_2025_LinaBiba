@@ -26,17 +26,16 @@ namespace BudgetModel
     /// </summary>
     public partial class UpdateWindow : Window
     {
-        //I need both to call a presenter and a view interface?
-        private PresenterUpdate _presenter;
-        private Presenter _presenter2;
-
+        private Presenter _presenter;
         private Expense _expense;
-        public UpdateWindow(Expense expenseToUpdate)
+        public UpdateWindow(Expense expenseToUpdate, Presenter presenter)
         {
             InitializeComponent();
             //Load the categories inside the combo box
             LoadCategories();
+
             _expense = expenseToUpdate;
+            _presenter = presenter;
 
             //Displayy
             ExpenseDatePicker.SelectedDate = _expense.Date;
@@ -45,16 +44,6 @@ namespace BudgetModel
             Amount.Text = _expense.Amount.ToString("F2");
         }
 
-        public void GetExpenseUserInput()
-        {
-            //I need to add the verification of all the data
-            string expenseName = ExpenseName.Text;
-            string amount = Amount.Text;
-            string? category = CategoryComboBox.SelectedItem.ToString();
-            DateTime date = ExpenseDatePicker.SelectedDate.Value;
-
-            _presenter.UpdateExpense(expenseName, amount, date, category);
-        }
 
         public void ShowErrorMessage(string message)
         {
@@ -83,7 +72,23 @@ namespace BudgetModel
 
         private void UpdateExpense_Click(object sender, RoutedEventArgs e)
         {
-            GetExpenseUserInput();
+            string? expenseName = ExpenseName.Text;
+            string? amount = Amount.Text;
+            string? category = CategoryComboBox.SelectedItem.ToString();
+            DateTime date = ExpenseDatePicker.SelectedDate.Value;
+
+            bool success = _presenter.UpdateExistingExpense(
+            _expense.Id, expenseName, amount, date, category, out string message);
+            
+            if(success)
+            {
+                ShowSucessMessage(message);
+                this.Close();
+            }
+            else
+            {
+                ShowErrorMessage(message);
+            }
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
@@ -97,7 +102,7 @@ namespace BudgetModel
             }
             catch
             {
-                ShowSucessMessage("Failed to cancel the update.");
+                ShowErrorMessage("Failed to cancel the update.");
             }
         }
 
@@ -105,6 +110,17 @@ namespace BudgetModel
         {
             //Call the presenter to delete
             //show success/ failing 
+            bool success = _presenter.DeleteExpense(_expense.Id, out string message);
+
+            if (success)
+            {
+                ShowSucessMessage(message);
+                this.Close();
+            }
+            else
+            {
+                ShowErrorMessage(message);
+            }
         }
     }
 }
