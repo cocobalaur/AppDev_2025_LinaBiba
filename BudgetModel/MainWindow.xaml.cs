@@ -25,6 +25,8 @@ namespace BudgetModel
     public partial class MainWindow : Window, IView
     {
         private Presenter _presenter;
+        private Filter _filterWindow;
+        private AddExpense _expense;
 
         /// <summary>
         /// Constructor: Initializes the main window and applies the default Light theme on startup.
@@ -42,19 +44,20 @@ namespace BudgetModel
         /// <param name="e">Event arguments associated with the button click.</param>
         private void Browsefile_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-
-            openFileDialog.Title = "Select Budget Database File";
-            openFileDialog.Filter = "Database Files (*.db;*.xml;*.json)|*.db;*.xml;*.json|All Files (*.*)|*.*";
-            openFileDialog.CheckFileExists = true;
-            openFileDialog.Multiselect = false;
+            OpenFileDialog openFileDialog = new OpenFileDialog
+            {
+                Title = "Select Budget Database File",
+                Filter = "Database Files (*.db;*.xml;*.json)|*.db;*.xml;*.json|All Files (*.*)|*.*",
+                CheckFileExists = true,
+                Multiselect = false
+            };
 
             if (openFileDialog.ShowDialog() == true)
             {
-                string selectedFile = openFileDialog.FileName;
-                DirectoryTextBox.Text = selectedFile;
+                DirectoryTextBox.Text = openFileDialog.FileName;
             }
         }
+
         /// <summary>
         /// Event handler for clicking the OK button to load or create a database file.
         /// </summary>
@@ -62,29 +65,41 @@ namespace BudgetModel
         /// <param name="e">Event arguments associated with the button click.</param>
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
-            FileDatabaseSelection();
-            var filterWindow = new Filter(_presenter); 
-            filterWindow.Show();
-            this.Close();
+            bool dbInitialized = FileDatabaseSelection();
+
+            if (dbInitialized)
+            {
+                _filterWindow = new Filter(_presenter, this);
+                _filterWindow.Show();
+                _presenter.RefreshCategoryList();
+                this.Hide(); 
+            }
         }
 
-        public void FileDatabaseSelection()
+
+        public bool FileDatabaseSelection()
         {
-            // Combine directory and file name to create full path
-            string directory = DirectoryTextBox.Text ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string path = DirectoryTextBox.Text;
 
-            string fullPath = System.IO.Path.Combine(directory);
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                DisplayErrorMessage("Please select a valid database file.");
+                return false;
+            }
 
-            // Check if file exists
-            bool fileExists = File.Exists(fullPath);
+            bool success = _presenter.GetDatabase(path);
 
-            _presenter.GetDatabase(fullPath);
-           
+            if (!success)
+            {
+                DisplayErrorMessage("Failed to initialize the database.");
+            }
+
+            return success;
         }
 
         public void DisplaySuccessMessage(string message)
         {
-            MessageBox.Show(message, "Success", MessageBoxButton.OK);
+            MessageBox.Show(message, "Success!", MessageBoxButton.OK);
         }
 
         /// <summary>
@@ -98,12 +113,34 @@ namespace BudgetModel
 
         public void DisplayAddExpense()
         {
-            throw new NotImplementedException();
+            _expense = new AddExpense(_presenter, this);
+            _expense.Show();
+            _presenter.RefreshCategoryList();
+           
         }
 
-        public void DisplayCategory(List<string> name, string type)
+        public void DisplayCategoryFilterWindow(List<string> categories, string selectedCategory)
         {
-            throw new NotImplementedException();
+            if (_filterWindow == null) return;
+            _filterWindow.CategoryComboBox.ItemsSource = null;
+            _filterWindow.CategoryComboBox.ItemsSource = categories;
+
+            if (!string.IsNullOrEmpty(selectedCategory))
+            {
+                _filterWindow.CategoryComboBox.SelectedItem = selectedCategory;
+            }
+        }
+
+        public void DisplayCategoryExpense(List<string> categories, string selectedCategory)
+        {
+            if (_expense == null) return;
+            _expense.CategoryComboBox.ItemsSource = null;
+            _expense.CategoryComboBox.ItemsSource = categories;
+
+            if (!string.IsNullOrEmpty(selectedCategory))
+            {
+                _expense.CategoryComboBox.SelectedItem = selectedCategory;
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Budget;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,7 +39,10 @@ namespace Views
         /// </summary>
         /// <param name="name">The name of the new category.</param>
         /// <param name="type">The type of the category (e.g., "Income", "Expense", etc.).</param>
-        void DisplayCategory (List<string> name, string type);
+        void DisplayCategoryFilterWindow (List<string> name, string type);
+
+        void DisplayCategoryExpense(List<string> categories, string selectedCategory);
+
 
     }
 }

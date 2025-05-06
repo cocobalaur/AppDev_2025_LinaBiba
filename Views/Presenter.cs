@@ -7,7 +7,6 @@ using Views;
 using Budget;
 using System.Data.Common;
 using static Budget.Category;
-using System.Xml.Linq;
 
 namespace BudgetModel
 {
@@ -17,9 +16,9 @@ namespace BudgetModel
     /// </summary>
     public class Presenter //need to add implementation catch error if no db file or folder path entered
     {
-        private IView _view; // Reference to the View (UI)
+        private IView _view; 
 
-        private HomeBudget? _budget; // HomeBudget instance representing the database connection
+        private HomeBudget? _budget; 
         private CategoryType _selectedCategoryType = CategoryType.Expense; //default category type
 
         /// <summary>
@@ -38,31 +37,32 @@ namespace BudgetModel
         public Presenter(IView view)
         {
             _view = view;
-        } 
+        }
 
         /// <summary>
         /// Creates a new HomeBudget database connection, or opens an existing one.
         /// </summary>
         /// <param name="databasePath">Full file path of the database.</param>
-        public void GetDatabase(string databasePath)
+        public bool GetDatabase(string databasePath)
         {
             try
-            { 
+            {
                 if (string.IsNullOrWhiteSpace(databasePath))
                 {
                     _view.DisplayErrorMessage("Please select a folder using the Browse button.");
-                    return; // STOP if no directory selected
+                    return false; // STOP if no directory selected
                 }
 
                 bool IsNewDatabase = !System.IO.File.Exists(databasePath); //does the db file exist -> to set up for homebudget boolean
 
                 _budget = new HomeBudget(databasePath, IsNewDatabase);
-                _view.DisplaySuccessMessage($"Successfully opened database.");
-
+                _view.DisplaySuccessMessage("Successfully opened database.");
+                return true;
             }
             catch (Exception ex)
             {
                 _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
+                return false; // Ensure a boolean is returned in all cases
             }
         }
 
@@ -73,7 +73,7 @@ namespace BudgetModel
         /// <param name="name">The name/description of the expense.</param>
         /// <param name="amount">The amount of the expense.</param>
         /// <param name="categoryName">The associated category name.</param>
-        public void AddExpense(DateTime date, string name, double amount, string categoryName)
+        public void ProcessNewAddExpense(DateTime date, string name, double amount, string categoryName)
         {
             try
             {
@@ -82,21 +82,18 @@ namespace BudgetModel
                     _view.DisplayErrorMessage("Database not initialized.");
                 }
 
+                _view.DisplayAddExpense(); //open the add expense window
                 Category category = CreateOrGetCategory(categoryName);
 
                 int categoryId = category.Id; //get category id when adding the expense 
 
                 _budget.expenses.Add(date, amount, name, categoryId);
+                _view.DisplaySuccessMessage($"Expense '{name}' added successfully.");
             }
             catch (Exception ex)
             {
                 _view.DisplayErrorMessage($"Error adding expense: {ex.Message}");
             }
-        }
-
-        public void ShowAddExpense()
-        {
-            _view.DisplayAddExpense(); 
         }
 
         /// <summary>
@@ -152,9 +149,11 @@ namespace BudgetModel
                 categoryNames.Add(category.Description);
             }
 
-            categoryNames.Sort(); 
-            _view.DisplayCategory(categoryNames, selectedCategory);
+            categoryNames.Sort();
+            _view.DisplayCategoryFilterWindow(categoryNames, selectedCategory);
+            _view.DisplayCategoryExpense(categoryNames, selectedCategory);
         }
+
 
         /// <summary>
         /// Searches for a category by description or creates a new one if it doesn't exist.
@@ -246,6 +245,7 @@ namespace BudgetModel
             try
             {
                 _budget.categories.Add(name, type);
+                RefreshCategoryList();
                 _view.DisplaySuccessMessage($"Category '{name}' created successfully.");
                 return true;
             }
