@@ -23,6 +23,9 @@ namespace BudgetModel
     {
         private Presenter _presenter;
         private IView _view;
+
+        public event EventHandler DateRangeChanged;
+
         public Filter(Presenter presenter, IView view)
         {
             
@@ -158,16 +161,68 @@ namespace BudgetModel
             this.Background = gradient;
         }
 
-
+        /// <summary>
+        /// Handles the click event for the "Add Expense" button.
+        /// Delegates to the view to open the AddExpense window.
+        /// </summary>
+        /// <param name="sender">The button that was clicked.</param>
+        /// <param name="e">Event arguments for the button click.</param>
         private void AddExpense_Click(object sender, RoutedEventArgs e)
         {
             _view.DisplayAddExpense();
         }
 
+        /// <summary>
+        /// Handles the event when a category is selected from the ComboBox.
+        /// Refreshes the list of categories in the view.
+        /// </summary>
+        /// <param name="sender">The ComboBox that triggered the event.</param>
+        /// <param name="e">Event arguments associated with the selection.</param>
         private void CategoryComboBox_SelectionFilter(object sender, EventArgs e)
         {
            string categoryName = CategoryComboBox.Text;
             _presenter.RefreshCategoryList(categoryName);
         }
+
+
+        /// <summary>
+        /// Handles changes in either the start or end date picker.
+        /// Validates that both dates are selected and shows an error if not.
+        /// </summary>
+        /// <param name="sender">The DatePicker control that was changed.</param>
+        /// <param name="e">Event arguments related to the selection change.</param>
+        private void DatePicker_SelectedDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+ 
+            if (StartDatePicker.SelectedDate == null || EndDatePicker.SelectedDate == null)
+            {
+                _view.DisplayErrorMessage("Please select both a start and end date.");
+                return;
+            }
+
+           
+        }
+
+        /// <summary>
+        /// Event handler that raises the DateRangeChanged event when either date changes.
+        /// This allows the MainWindow to trigger the Presenter to filter data.
+        /// </summary>
+        /// <param name="sender">The DatePicker that changed.</param>
+        /// <param name="e">Event arguments for the date change.</param>
+        private void OnDateChanged(object sender, SelectionChangedEventArgs e)
+        {
+            DateRangeChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Gets the currently selected start date from the StartDatePicker.
+        /// </summary>
+        public DateTime? StartDate => StartDatePicker?.SelectedDate;
+
+        /// <summary>
+        /// Gets the currently selected end date from the EndDatePicker.
+        /// </summary>
+        public DateTime? EndDate => EndDatePicker?.SelectedDate;
+
     }
 }

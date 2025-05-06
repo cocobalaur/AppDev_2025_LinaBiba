@@ -59,10 +59,12 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Event handler for clicking the OK button to load or create a database file.
+        /// Handles the OK button click to load or create the selected budget database.
+        /// If successful, it initializes and displays the Filter window,
+        /// hooks the date filtering event, refreshes categories, and hides the main window.
         /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">Event arguments associated with the button click.</param>
+        /// <param name="sender">The button that triggered the event.</param>
+        /// <param name="e">Event arguments related to the click.</param>
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
             bool dbInitialized = FileDatabaseSelection();
@@ -70,6 +72,11 @@ namespace BudgetModel
             if (dbInitialized)
             {
                 _filterWindow = new Filter(_presenter, this);
+
+                // Runs every time the user changes either the start or end date.
+                // It calls the Presenter's FilterByDate() method to update the displayed items.
+                _filterWindow.DateRangeChanged += (s, e) => _presenter.FilterByDate();
+
                 _filterWindow.Show();
                 _presenter.RefreshCategoryList();
                 this.Hide(); 
@@ -77,6 +84,11 @@ namespace BudgetModel
         }
 
 
+        /// <summary>
+        /// Validates the file path entered by the user and attempts to initialize the database.
+        /// Displays appropriate error messages if validation fails or initialization is unsuccessful.
+        /// </summary>
+        /// <returns>True if the database was successfully initialized; otherwise, false.</returns>
         public bool FileDatabaseSelection()
         {
             string path = DirectoryTextBox.Text;
@@ -97,6 +109,10 @@ namespace BudgetModel
             return success;
         }
 
+        /// <summary>
+        /// Displays a success message in a MessageBox.
+        /// </summary>
+        /// <param name="message">The success message to display.</param>
         public void DisplaySuccessMessage(string message)
         {
             MessageBox.Show(message, "Success!", MessageBoxButton.OK);
@@ -111,6 +127,9 @@ namespace BudgetModel
             MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
 
+        /// <summary>
+        /// Opens the AddExpense window and refreshes the category list.
+        /// </summary>
         public void DisplayAddExpense()
         {
             _expense = new AddExpense(_presenter, this);
@@ -119,6 +138,12 @@ namespace BudgetModel
            
         }
 
+        /// <summary>
+        /// Updates the category ComboBox in the Filter window with the given list of categories.
+        /// Optionally preselects a given category.
+        /// </summary>
+        /// <param name="categories">List of category names to display.</param>
+        /// <param name="selectedCategory">Optional category to preselect.</param>
         public void DisplayCategoryFilterWindow(List<string> categories, string selectedCategory)
         {
             if (_filterWindow == null) return;
@@ -131,6 +156,12 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Updates the category ComboBox in the AddExpense window with the given list of categories.
+        /// Optionally preselects a given category.
+        /// </summary>
+        /// <param name="categories">List of category names to display.</param>
+        /// <param name="selectedCategory">Optional category to preselect.</param>
         public void DisplayCategoryExpense(List<string> categories, string selectedCategory)
         {
             if (_expense == null) return;
@@ -142,5 +173,30 @@ namespace BudgetModel
                 _expense.CategoryComboBox.SelectedItem = selectedCategory;
             }
         }
+
+        /// <summary>
+        /// Displays a list of budget items in the Filter window's DataGrid.
+        /// </summary>
+        /// <param name="items">List of budget items to display.</param>
+        public void DisplayItems(List<BudgetItem> items)
+        {
+            if (_filterWindow != null)
+            {
+                _filterWindow.ExpenseDataGrid.ItemsSource = items;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the selected start date from the Filter window.
+        /// </summary>
+        /// <returns>The selected start date, or null if not selected.</returns>
+        public DateTime? GetStartDate() => _filterWindow?.StartDate;
+
+        /// <summary>
+        /// Retrieves the selected end date from the Filter window.
+        /// </summary>
+        /// <returns>The selected end date, or null if not selected.</returns>
+        public DateTime? GetEndDate() => _filterWindow?.EndDate;
+
     }
 }

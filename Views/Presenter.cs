@@ -272,6 +272,41 @@ namespace BudgetModel
         {
             return _selectedCategoryType;
         }
+
+        /// <summary>
+        /// Filters the budget items by the selected start and end dates from the view,
+        /// and updates the displayed items in the UI.
+        /// </summary>
+        public void FilterByDate()
+        {
+            // Retrieve the start and end dates from the view
+            DateTime? start = _view.GetStartDate();
+            DateTime? end = _view.GetEndDate();
+
+            // Ensure both dates are selected before proceeding
+            if (start == null || end == null)
+            {
+                _view.DisplayErrorMessage("Both start and end dates must be selected.");
+                return;
+            }
+
+            try
+            {
+                // Query the HomeBudget model for items within the selected date range
+                var items = _budget?.GetBudgetItems(start, end, false, -1);
+
+                // If items are found, pass them to the view to be displayed in the DataGrid
+                if (items != null)
+                    _view.DisplayItems(items);
+            }
+            catch (Exception ex)
+            {
+                // Display any errors encountered during filtering
+                _view.DisplayErrorMessage($"Failed to filter items: {ex.Message}");
+            }
+        }
+
+
     }
 }
 
