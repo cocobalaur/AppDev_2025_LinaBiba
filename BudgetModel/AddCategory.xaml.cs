@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Views;
 
 namespace BudgetModel
 {
@@ -20,10 +21,12 @@ namespace BudgetModel
     public partial class AddCategory : Window
     {
         private Presenter _presenter;
-        public AddCategory(Presenter presenter)
+        IView _view;
+        public AddCategory(Presenter presenter, IView view)
         {
             InitializeComponent();
             _presenter = presenter;
+            _view = view;
         }
 
         /// <summary>

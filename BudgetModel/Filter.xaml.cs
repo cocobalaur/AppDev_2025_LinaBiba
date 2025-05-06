@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Budget;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,13 +19,18 @@ namespace BudgetModel
     /// <summary>
     /// Interaction logic for Filter.xaml
     /// </summary>
-    public partial class Filter : Window, IView
+    public partial class Filter : Window
     {
         private Presenter _presenter;
-        public Filter(Presenter presenter)
+        private IView _view;
+        public Filter(Presenter presenter, IView view)
         {
+            
             InitializeComponent();
             _presenter = presenter;
+            _view = view;
+
+
             // Load default Light theme on startup
             var lightTheme = new ResourceDictionary
             {
@@ -46,7 +52,7 @@ namespace BudgetModel
             // Safely get the selected theme name
             if (ColorComboBox.SelectedItem is not ComboBoxItem selectedItem || selectedItem.Content == null)
             {
-                DisplayErrorMessage("Please select a theme style first.");
+                _view.DisplayErrorMessage("Please select a theme style first.");
                 return;
             }
 
@@ -72,7 +78,7 @@ namespace BudgetModel
                     themeFile = isDark ? "Themes/DarkNeutralTheme.xaml" : "Themes/LightTheme.xaml";
                     break;
                 default:
-                    DisplayErrorMessage("Unknown theme selected.");
+                    _view.DisplayErrorMessage("Unknown theme selected.");
                     return;
             }
 
@@ -92,7 +98,7 @@ namespace BudgetModel
             }
             catch (Exception ex)
             {
-                DisplayErrorMessage($"Failed to apply theme: {ex.Message}");
+                _view.DisplayErrorMessage($"Failed to apply theme: {ex.Message}");
             }
         }
 
@@ -152,38 +158,16 @@ namespace BudgetModel
             this.Background = gradient;
         }
 
-        /// <summary>
-        /// Displays an error message to the user using a MessageBox.
-        /// </summary>
-        /// <param name="message">Error message to be shown.</param>
-        public void DisplayErrorMessage(string message)
-        {
-            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        private void CategoryComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
 
         private void AddExpense_Click(object sender, RoutedEventArgs e)
         {
-            var addExpenseWindow = new AddExpense(_presenter);
-            addExpenseWindow.ShowDialog();
+            _view.DisplayAddExpense();
         }
 
-        public void DisplayAddExpense()
+        private void CategoryComboBox_SelectionFilter(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
-        }
-
-        public void DisplaySuccessMessage(string message)
-        {
-            MessageBox.Show(message, "Success", MessageBoxButton.OK);
-        }
-        public void DisplayCategory(List<string> name, string type)
-        {
-            throw new NotImplementedException();
+           string categoryName = CategoryComboBox.Text;
+            _presenter.RefreshCategoryList(categoryName);
         }
     }
 }
