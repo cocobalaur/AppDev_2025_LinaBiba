@@ -15,6 +15,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Budget\Budget.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Reference Include="Budget">
 			<HintPath>..\Budget\bin\Debug\net8.0\Budget.dll</HintPath>
 		</Reference>
