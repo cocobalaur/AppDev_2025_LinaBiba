@@ -222,7 +222,7 @@ namespace PresenterTest
         {
 
             //Arrange
-            string goodDB = "newDB.db";
+            string goodDB = "newdb.db";
             string messyDB = "MessDB.db";
             System.IO.File.Copy(goodDB, messyDB, true);
             _presenter.GetDatabase(messyDB);
