@@ -80,12 +80,7 @@ jobs:
     # Restore NuGet packages
     - name: Restore NuGet packages
       run: dotnet restore ${{ env.Budget.sln }}
-
-    - name: Copy dependencies
-      run: |
-        mkdir -p ${{ runner.workspace }}/output
-        cp BudgetModel/bin/Debug/net8.0/BudgetModel.dll ${{ runner.workspace }}/output/
-        
+      
     # MSBuild command to ONLY build your solution
     - name: MSBuild to build only our solution
       run: msbuild ${{ env.Budget.sln }} /p:Configuration=${{ matrix.configuration }}
