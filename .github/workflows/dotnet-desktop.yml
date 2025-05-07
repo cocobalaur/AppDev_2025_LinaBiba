@@ -91,7 +91,7 @@ jobs:
 
     #Changes the current directory to the bin directory of the unit test project and runs dir on it to see its contents
     - name: Change directory to the unit test project directory bin subdirectory and run dir
-      run: cd "${{ env.Test_Project_Path }}\bin\${{ matrix.configuration }}" dir
+      run: cd ${{ env.Test_Project_Path }}\bin\${{ matrix.configuration }} dir
 
     # Execute all unit tests in the solution
     - name: Execute unit tests
