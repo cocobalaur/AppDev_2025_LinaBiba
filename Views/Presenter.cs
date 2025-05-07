@@ -80,6 +80,7 @@ namespace BudgetModel
                 if (_budget == null)
                 {
                     _view.DisplayErrorMessage("Database not initialized.");
+                    return;
                 }
 
                 _view.DisplayAddExpense(); //open the add expense window
