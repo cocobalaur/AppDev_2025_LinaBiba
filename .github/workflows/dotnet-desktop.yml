@@ -79,7 +79,7 @@ jobs:
 
     # Restore NuGet packages
     - name: Restore NuGet packages
-      run: dotnet restore ${{ env.Solution_Name }}
+      run: dotnet restore ${{ env.Budget.sln }}
       
     # MSBuild command to ONLY build your solution
     - name: MSBuild to build only our solution
