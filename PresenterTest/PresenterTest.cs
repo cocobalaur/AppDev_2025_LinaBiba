@@ -16,8 +16,6 @@ namespace PresenterTest
             _presenter = new Presenter(_mockView);
         }
 
-
-
         //Testing SetAndGet
         [Fact]
         public void SetAndGetView_PropertyWorksAsExpected()
@@ -33,12 +31,13 @@ namespace PresenterTest
             // Assert
             Assert.Equal(mockView, viewFromPresenter);  // Check if the View property returns the correct mockView instance
         }
+
         //Testing GetDatabase
         [Fact]
         public void GetDatabase_ShouldInitializeBudget_WhenDatabasePathIsValid()
         {
             // Arrange
-            string databasePath = "testDatabase.db";
+            string databasePath = "testingdb.db";
 
             // Act
             _presenter.GetDatabase(databasePath);
@@ -66,8 +65,7 @@ namespace PresenterTest
         public void AddExpense_ShouldAddExpense_WhenBudgetIsInitialized()
         {
             // Arrange
-            _presenter.GetDatabase("testDatabase.db");
-
+            _presenter.GetDatabase("testingdb.db");
 
             DateTime date = new DateTime(2025, 4, 26);
             string name = "Coffee";
@@ -75,7 +73,7 @@ namespace PresenterTest
             string categoryName = "Food";
 
             // Act
-            _presenter.AddExpense(date, name, amount, categoryName);
+            _presenter.ProcessNewAddExpense(date, name, amount, categoryName);
 
             // Assert
             Assert.Equal("", _mockView.LastError);
@@ -93,7 +91,7 @@ namespace PresenterTest
             string categoryName = "";
 
             // Act
-            _presenter.AddExpense(date, name, amount, categoryName);
+            _presenter.ProcessNewAddExpense(date, name, amount, categoryName);
 
             // Assert
             Assert.Contains("Error adding expense:", _mockView.LastError);
@@ -108,7 +106,7 @@ namespace PresenterTest
             string categoryName = "Food";
 
             // Act
-            _presenter.AddExpense(date, name, amount, categoryName);
+            _presenter.ProcessNewAddExpense(date, name, amount, categoryName);
 
             // Assert
             Assert.Equal("Database not initialized.", _mockView.LastError);
@@ -153,12 +151,13 @@ namespace PresenterTest
             CategoryType selectedCategoryType = _presenter.GetSelectedCategoryType();
             Assert.Equal(CategoryType.Income, selectedCategoryType);
         }
+
         //Testing CreateOrGetCategory
         [Fact]
         public void CreateOrGetCategory_CategoryExists_ReturnCategory()
         {
             //Arrange
-            _presenter.GetDatabase("testDatabase.db");
+            _presenter.GetDatabase("testingdb.db");
             string cateogryDescription = "Income";
 
             //Act
@@ -167,15 +166,12 @@ namespace PresenterTest
             //Assert
             Assert.Equal(cateogryDescription, category.Description);
         }
+
         [Fact]
         public void CreateOrGetCategory_CategoryDoesNotExist_CreatesAndReturnNewCategory()
         {
             //Arrange
-            string goodDB = "newDB.db";
-
-            string messyDB = "MessDB.db";
-            System.IO.File.Copy(goodDB, messyDB, true);
-            _presenter.GetDatabase(messyDB);
+            _presenter.GetDatabase("testingdb.db");
             string cateogryDescription = "CategoryToCreate";
 
             //Act
@@ -184,6 +180,7 @@ namespace PresenterTest
             //Assert
             Assert.Equal(cateogryDescription, category.Description);
         }
+
         [Fact]
         public void CreateOrGetCategory_WithoutDatabase_ThrowsException()
         {
@@ -219,8 +216,9 @@ namespace PresenterTest
             //Assert
             Assert.False(unsuccessAddCategory);
         }
+
         [Fact]
-        public void AddCategory_CategoryTypeDoesntExist_ShouldReturnTrue()
+        public void AddCategory_CategoryTypeDoesntExist_ShouldReturnFalse()
         {
 
             //Arrange
@@ -232,14 +230,13 @@ namespace PresenterTest
             string cateogoryType = "TypeDoesntExist";
 
             //Act
-            bool successfullAddCateory = _presenter.AddCategory(categoryName, cateogoryType);
-            Category category = _presenter.GetCategories().FirstOrDefault(c => c.Description == categoryName);
+            bool failfullAddCateory = _presenter.AddCategory(categoryName, cateogoryType);
 
             //Assert
-            Assert.True(successfullAddCateory);
-            Assert.Equal(Category.CategoryType.Expense, category.Type);
+            Assert.False(failfullAddCateory);
 
         }
+
         [Fact]
         public void AddCategory_CategoryAlreadyExist_ShouldReturnFalse()
         {
@@ -258,11 +255,11 @@ namespace PresenterTest
         public void AddCategory_VerificationTheCategoryIsCreated_ShouldReturnTrue()
         {
             //Arrange
-            string goodDB = "newDB.db";
+            string goodDB = "testingdb.db";
             string messyDB = "MessDB.db";
             System.IO.File.Copy(goodDB, messyDB, true);
             _presenter.GetDatabase(messyDB);
-            string categoryName = "Emergency Fund";
+            string categoryName = "Travel";
             string cateogoryType = "Savings";
 
             //Act
@@ -273,6 +270,22 @@ namespace PresenterTest
             Assert.True(successfullAddCateory);
             Assert.Equal(categoryName, category.Description);
             Assert.Equal(Category.CategoryType.Savings, category.Type);
+        }
+
+        [Fact]
+        public void AddCategoryThatAlreadyExists_VerificationTheCategoryShouldNotBeCreated_ShouldReturnFalse()
+        {
+            //Arrange
+            _presenter.GetDatabase("testingdb.db");
+            string categoryName = "Surgery";
+            string cateogoryType = "Savings";
+
+            //Act
+            bool failAddCategory = _presenter.AddCategory(categoryName, cateogoryType);
+            Category category = _presenter.GetCategories().FirstOrDefault(c => c.Description == categoryName);
+
+            //Assert
+            Assert.False(failAddCategory);
         }
     }
 }
