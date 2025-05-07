@@ -79,11 +79,11 @@ jobs:
 
     # Restore NuGet packages
     - name: Restore NuGet packages
-      run: dotnet restore ${{ env.Budget.sln }}
+      run: dotnet restore Budget.sln 
       
     # MSBuild command to ONLY build your solution
     - name: MSBuild to build only our solution
-      run: msbuild Budget.sln
+      run: msbuild Budget.sln restore
       
     #Run property can be used to run commands.
     - name: Show the contents of the current directory
@@ -91,7 +91,7 @@ jobs:
 
     #Changes the current directory to the bin directory of the unit test project and runs dir on it to see its contents
     - name: Change directory to the unit test project directory bin subdirectory and run dir
-      run: cd $env:PresenterTest\bin\${{ matrix.configuration }}; dir
+      run: cd "${{ env.Test_Project_Path }}\bin\${{ matrix.configuration }}" dir
 
     # Execute all unit tests in the solution
     - name: Execute unit tests
