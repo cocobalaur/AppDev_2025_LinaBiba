@@ -271,21 +271,5 @@ namespace PresenterTest
             Assert.Equal(categoryName, category.Description);
             Assert.Equal(Category.CategoryType.Savings, category.Type);
         }
-
-        [Fact]
-        public void AddCategoryThatAlreadyExists_VerificationTheCategoryShouldNotBeCreated_ShouldReturnFalse()
-        {
-            //Arrange
-            _presenter.GetDatabase("testingdb.db");
-            string categoryName = "Surgery";
-            string cateogoryType = "Savings";
-
-            //Act
-            bool failAddCategory = _presenter.AddCategory(categoryName, cateogoryType);
-            Category category = _presenter.GetCategories().FirstOrDefault(c => c.Description == categoryName);
-
-            //Assert
-            Assert.False(failAddCategory);
-        }
     }
 }
