@@ -83,7 +83,7 @@ jobs:
       
     # MSBuild command to ONLY build your solution
     - name: MSBuild to build only our solution
-      run: msbuild ${{ env.Budget.sln }} /p:Configuration=${{ matrix.configuration }}
+      run: msbuild Budget.sln /p:Configuration=Release
       
     #Run property can be used to run commands.
     - name: Show the contents of the current directory
