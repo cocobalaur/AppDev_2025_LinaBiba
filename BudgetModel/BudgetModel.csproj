@@ -1,26 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Data.SQLite" Version="1.0.119" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Views\Views.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Views\Views.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Budget">
-      <HintPath>..\Budget\bin\Debug\net8.0\Budget.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<Reference Include="Budget">
+			<HintPath>..\Budget\bin\Debug\net8.0\Budget.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 
 </Project>
+

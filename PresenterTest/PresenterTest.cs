@@ -233,7 +233,7 @@ namespace PresenterTest
             bool failfullAddCateory = _presenter.AddCategory(categoryName, cateogoryType);
 
             //Assert
-            Assert.True(failfullAddCateory); ////////////////testing
+            Assert.False(failfullAddCateory); 
 
         }
 
