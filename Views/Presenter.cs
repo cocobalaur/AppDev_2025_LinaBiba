@@ -275,38 +275,173 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Filters the budget items by the selected start and end dates from the view,
-        /// and updates the displayed items in the UI.
+        /// Filters and displays budget data based on the selected date range and summary options.
+        /// It supports displaying full entries, summaries by month, summaries by category,
+        /// and a combined summary by both month and category.
         /// </summary>
         public void FilterByDate()
         {
-            // Retrieve the start and end dates from the view
+            // Retrieve selected date range from the UI
             DateTime? start = _view.GetStartDate();
             DateTime? end = _view.GetEndDate();
 
-            // Ensure both dates are selected before proceeding
-            if (start == null || end == null)
+            // Ensure the dates and database are valid before proceeding
+            if (start == null || end == null || _budget == null)
             {
-                _view.DisplayErrorMessage("Both start and end dates must be selected.");
+                _view.DisplayErrorMessage("Please select a valid date range and ensure the database is initialized.");
                 return;
             }
 
             try
             {
-                // Query the HomeBudget model for items within the selected date range
-                var items = _budget?.GetBudgetItems(start, end, false, -1);
+                // Fetch items within the date range
+                var items = _budget.GetBudgetItems(start, end, false, -1);
+                var allCategories = _budget.categories.List().Select(c => c.Description).Distinct().ToList();
 
-                // If items are found, pass them to the view to be displayed in the DataGrid
-                if (items != null)
+                bool byMonth = _view.GetByMonthSummary();
+                bool byCategory = _view.GetByCategorySummary();
+
+                if (byMonth && byCategory)
+                {
+                    var grouped = items
+                        .GroupBy(i => new { i.Date.Year, i.Date.Month })
+                        .SelectMany(g =>
+                        {
+                            var month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("yyyy-MM");
+                            return allCategories.Select(cat => new BudgetItem
+                            {
+                                Date = new DateTime(g.Key.Year, g.Key.Month, 1),
+                                Category = cat,
+                                Amount = g.Where(i => i.Category == cat).Sum(i => i.Amount)
+                            });
+
+                        }).ToList();
+
+                    _view.DisplayItems(grouped);
+                }
+                else if (byMonth)
+                {
+                    var grouped = items
+                        .GroupBy(i => new { i.Date.Year, i.Date.Month })
+                        .Select(g => new BudgetItem
+                        {
+                            Date = new DateTime(g.Key.Year, g.Key.Month, 1),
+                            Amount = g.Sum(i => i.Amount)
+                        }).ToList();
+
+                    _view.DisplayItems(grouped);
+                }
+                else if (byCategory)
+                {
+                    var grouped = allCategories
+                        .Select(cat => new BudgetItem
+                        {
+                            Category = cat,
+                            Amount = items.Where(i => i.Category == cat).Sum(i => i.Amount)
+                        }).ToList();
+
+                    _view.DisplayItems(grouped);
+                }
+                else
+                {
                     _view.DisplayItems(items);
+                }
             }
             catch (Exception ex)
             {
-                // Display any errors encountered during filtering
                 _view.DisplayErrorMessage($"Failed to filter items: {ex.Message}");
             }
         }
 
+        public List<object> GetSummaryTable(bool byMonth, bool byCategory, DateTime? startDate, DateTime? endDate)
+        {
+            if (_budget == null)
+            {
+                _view.DisplayErrorMessage("Database not initialized.");
+                return new List<object>();
+            }
+
+            if (startDate == null || endDate == null)
+            {
+                _view.DisplayErrorMessage("Both start and end dates must be selected.");
+                return new List<object>();
+            }
+
+            var allCategories = _budget.categories.List()
+                .Select(c => c.Description)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToList();
+
+            var items = _budget.GetBudgetItems(startDate, endDate, false, -1);
+
+            if (byMonth && byCategory)
+            {
+                // Group by month and include all categories in each row
+                var grouped = items
+                    .GroupBy(i => new { i.Date.Year, i.Date.Month })
+                    .OrderBy(g => new DateTime(g.Key.Year, g.Key.Month, 1))
+                    .Select(g =>
+                    {
+                        var row = new Dictionary<string, object>();
+                        string month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("yyyy-MM");
+                        row["Month"] = month;
+
+                        foreach (var cat in allCategories)
+                        {
+                            double total = g.Where(i => i.Category == cat).Sum(i => i.Amount);
+                            row[cat] = Math.Round(total, 2); // Ensure double
+                        }
+
+                        return (object)row;
+                    }).ToList();
+
+                // Add TOTAL row
+                var totalRow = new Dictionary<string, object>();
+                totalRow["Month"] = "TOTALS";
+
+                foreach (var cat in allCategories)
+                {
+                    double total = grouped
+                        .Cast<Dictionary<string, object>>()
+                        .Sum(row => row.ContainsKey(cat) ? Convert.ToDouble(row[cat]) : 0);
+
+                    totalRow[cat] = Math.Round(total, 2);
+                }
+
+                grouped.Add(totalRow);
+                return grouped;
+            }
+            else if (byMonth)
+            {
+                return items
+                    .GroupBy(i => new { i.Date.Year, i.Date.Month })
+                    .OrderBy(g => new DateTime(g.Key.Year, g.Key.Month, 1))
+                    .Select(g => new
+                    {
+                        Month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("yyyy-MM"),
+                        Total = Math.Round(g.Sum(i => i.Amount), 2)
+                    })
+                    .Cast<object>()
+                    .ToList();
+            }
+            else if (byCategory)
+            {
+                return allCategories
+                    .Select(cat => new
+                    {
+                        Category = cat,
+                        Total = Math.Round(items.Where(i => i.Category == cat).Sum(i => i.Amount), 2)
+                    })
+                    .Where(entry => entry.Total != 0)
+                    .Cast<object>()
+                    .ToList();
+            }
+            else
+            {
+                return items.Cast<object>().ToList();
+            }
+        }
 
     }
 }

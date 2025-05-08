@@ -182,6 +182,7 @@ namespace BudgetModel
         {
            string categoryName = CategoryComboBox.Text;
             _presenter.RefreshCategoryList(categoryName);
+            UpdateSummaryDisplay();
         }
 
 
@@ -212,6 +213,7 @@ namespace BudgetModel
         private void OnDateChanged(object sender, SelectionChangedEventArgs e)
         {
             DateRangeChanged?.Invoke(this, EventArgs.Empty);
+            UpdateSummaryDisplay();
         }
 
         /// <summary>
@@ -223,6 +225,98 @@ namespace BudgetModel
         /// Gets the currently selected end date from the EndDatePicker.
         /// </summary>
         public DateTime? EndDate => EndDatePicker?.SelectedDate;
+
+        /// <summary>
+        /// Handles changes to any filter-related UI elements (e.g., checkboxes).
+        /// Triggers the date filtering and summary update process by raising the DateRangeChanged event.
+        /// </summary>
+        /// <param name="sender">The checkbox or control that triggered the change.</param>
+        /// <param name="e">Event arguments from the routed event.</param>
+        private void OnFilterChanged(object sender, RoutedEventArgs e)
+        {
+            // Notify MainWindow to refresh data displa
+            DateRangeChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Indicates whether the "By Month" checkbox is selected.
+        /// </summary>
+        public bool ByMonth => ByMonthCheckBox?.IsChecked == true;
+
+        /// <summary>
+        /// Indicates whether the "By Category" checkbox is selected.
+        /// </summary>
+        public bool ByCategory => ByCategoryCheckBox?.IsChecked == true;
+
+
+        /// <summary>
+        /// Event handler for changes to summary checkboxes ("By Month" or "By Category").
+        /// Triggers an update of the DataGrid based on the current summary selections.
+        /// </summary>
+        /// <param name="sender">The checkbox that was checked/unchecked.</param>
+        /// <param name="e">Event arguments associated with the change.</param>
+        private void SummaryCheckbox_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateSummaryDisplay();
+        }
+
+        /// <summary>
+        /// Refreshes the DataGrid columns and rows to show a summary view
+        /// based on the combination of "By Month" and/or "By Category" selections.
+        /// </summary>
+        private void UpdateSummaryDisplay()
+        {
+            if (_presenter == null) 
+                return;
+ 
+            // Determine summary mode
+            bool byMonth = ByMonthCheckBox.IsChecked == true;
+            bool byCategory = ByCategoryCheckBox.IsChecked == true;
+
+            // Clear any existing columns before generating new ones
+            ExpenseDataGrid.Columns.Clear();
+
+            // Get the summary data from the Presenter
+            var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
+
+            // If no data found, clear the table
+            if (summary == null || summary.Count == 0)
+            {
+                ExpenseDataGrid.ItemsSource = null;
+                return;
+            }
+
+            var first = summary[0];
+
+            // Handle dynamic dictionaries (Month + Category table with flexible headers)
+            if (first is Dictionary<string, object> dictRow)
+            {
+                // Build columns from dictionary keys
+                foreach (var key in dictRow.Keys)
+                {
+                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+                    {
+                        Header = key,
+                        Binding = new Binding($"[{key}]") // Bind dictionary key directly
+                    });
+                }
+
+                ExpenseDataGrid.ItemsSource = summary;
+            }
+            else
+            {                
+                foreach (var prop in first.GetType().GetProperties())
+                {
+                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+                    {
+                        Header = prop.Name,
+                        Binding = new Binding(prop.Name)
+                    });
+                }
+
+                ExpenseDataGrid.ItemsSource = summary;
+            }
+        }
 
     }
 }

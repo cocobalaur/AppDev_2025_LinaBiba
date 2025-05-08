@@ -198,5 +198,18 @@ namespace BudgetModel
         /// <returns>The selected end date, or null if not selected.</returns>
         public DateTime? GetEndDate() => _filterWindow?.EndDate;
 
+        /// <summary>
+        /// Gets the current state of the "By Month" summary checkbox from the filter window.
+        /// </summary>
+        /// <returns>True if "By Month" is selected; otherwise, false.</returns>
+        public bool GetByMonthSummary() => _filterWindow?.ByMonthCheckBox.IsChecked == true;
+
+        /// <summary>
+        /// Gets the current state of the "By Category" summary checkbox from the filter window.
+        /// </summary>
+        /// <returns>True if "By Category" is selected; otherwise, false.</returns>
+        public bool GetByCategorySummary() => _filterWindow?.ByCategoryCheckBox.IsChecked == true;
+
+
     }
 }
