@@ -1,25 +1,13 @@
 ﻿using Budget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Views;
 
 namespace BudgetModel
-    //Display the old info
-    //Get the new info
-    //get id and categories id
-    //Update the user
-    //Show message
+//Display the old info
+//Get the new info
+//get id and categories id
+//Update the user
+//Show message
 {
     /// <summary>
     /// Interaction logic for UpdateWindow.xaml
@@ -28,35 +16,40 @@ namespace BudgetModel
     {
         private Presenter _presenter;
         private Expense _expense;
-        public UpdateWindow(Expense expenseToUpdate, Presenter presenter)
+        private IView _view;
+
+        /// <summary>
+        /// Initializes a new instance of the update window class.
+        /// Sets up the UI with the expense data that we want to update. 
+        /// Initializes the presenter and the view, then display the exisiting 
+        /// category and loads all available categories.
+        /// </summary>
+        /// <param name="expenseToUpdate">The expense object to update.</param>
+        /// <param name="presenter">The presenter to talk with the model.</param>
+        /// <param name="view">The view interface to display message to the user.</param>
+        public UpdateWindow(Expense expenseToUpdate, Presenter presenter, IView view)
         {
             InitializeComponent();
-            //Load the categories inside the combo box
-            LoadCategories();
 
+            //Initializes the variables
             _expense = expenseToUpdate;
             _presenter = presenter;
+            _view = view;
 
+            //Get the category name with the category id
+            string category = _presenter.GetCategoryName(_expense.Category);
+            
             //Displayy
-            ExpenseDatePicker.SelectedDate = _expense.Date;
-            CategoryComboBox.SelectedItem = _expense.Category;
-            ExpenseName.Text =_expense.Description;
-            Amount.Text = _expense.Amount.ToString("F2");
-        }
+            DataContext = _expense;
+            CategoryComboBox.SelectedItem = category;
 
-
-        public void ShowErrorMessage(string message)
-        {
-            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        public void ShowSucessMessage(string message)
-        {
-            MessageBox.Show(message, "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            //Load the categories inside the combo box
+            LoadCategories();
         }
 
         /// <summary>
-        /// Loads all available categories from the database and updates the CategoryComboBox.
+        /// Loads all available categories from the database and 
+        /// updates the CategoryComboBox.
         /// </summary>
         private void LoadCategories()
         {
@@ -70,56 +63,77 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Handles the update operation when the user clicks the "Update" button.
+        /// It will retrieves the input value from the form, sends them to the presenter
+        /// and then, depending on what happen, send a success or error message.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event data associated with the click event.</param>
         private void UpdateExpense_Click(object sender, RoutedEventArgs e)
         {
+            //Retrieves the input.
             string? expenseName = ExpenseName.Text;
             string? amount = Amount.Text;
             string? category = CategoryComboBox.SelectedItem.ToString();
             DateTime date = ExpenseDatePicker.SelectedDate.Value;
 
+            //Call the presenter to try and update the expense.
             bool success = _presenter.UpdateExistingExpense(
             _expense.Id, expenseName, amount, date, category, out string message);
-            
-            if(success)
+
+            //If the update is successful, display a success message
+            if (success)
             {
-                ShowSucessMessage(message);
+                _view.DisplaySuccessMessage(message);
                 this.Close();
             }
             else
             {
-                ShowErrorMessage(message);
+                _view.DisplayErrorMessage(message);
             }
         }
 
+        /// <summary>
+        /// Cancels the update operation and close the window.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event data associated with the click event.</param>
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
-            //Close the window and 
-            //show success/ failing 
+            //Try to close the app, if it's successful, then display a success message.
+            //Else, display an errror message
             try
             {
                 this.Close();
-                ShowSucessMessage("Successfully cancel the update.");
+                _view.DisplaySuccessMessage("Successfully cancel the update.");
+
             }
             catch
             {
-                ShowErrorMessage("Failed to cancel the update.");
+                _view.DisplayErrorMessage("Failed to cancel the update.");
             }
         }
 
+        /// <summary>
+        /// Delete the current expense using the presenter. 
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">Event data associated with the click event.</param>
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
-            //Call the presenter to delete
-            //show success/ failing 
+            //Call the presenter to try and delete the expense.
             bool success = _presenter.DeleteExpense(_expense.Id, out string message);
 
+            //If the delete was successfully return a success message; else an Error message
             if (success)
             {
-                ShowSucessMessage(message);
+                _view.DisplaySuccessMessage(message);
                 this.Close();
             }
             else
             {
-                ShowErrorMessage(message);
+                _view.DisplayErrorMessage(message);
             }
         }
     }

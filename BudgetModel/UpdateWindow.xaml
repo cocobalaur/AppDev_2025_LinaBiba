@@ -23,26 +23,26 @@
         <!-- Description -->
         <StackPanel Grid.Row="1" Margin="0,5">
             <TextBlock Text="Name" FontWeight="SemiBold"/>
-            <TextBox x:Name="ExpenseName" Text="{Binding Description}"/>
+            <TextBox x:Name="ExpenseName" Text="{Binding Description, Mode=OneWay}"/>
         </StackPanel>
         
          <!-- Amount -->
         <StackPanel Grid.Row="2" Margin="0,5">
             <TextBlock Text="Amount" FontWeight="SemiBold"/>
-            <TextBox x:Name="Amount" Text="{Binding Amount}"/>
+            <TextBox x:Name="Amount" Text="{Binding Amount, Mode=OneWay}"/>
         </StackPanel>
         
         <!-- Category -->
         <StackPanel Grid.Row="3" Margin="0,5">
             <TextBlock Text="Category" FontWeight="SemiBold"/>
-            <ComboBox x:Name="CategoryComboBox">
+            <ComboBox x:Name="CategoryComboBox" SelectedItem="{Binding Category, Mode=OneWay}">
             </ComboBox>
         </StackPanel>
         
         <!-- Date -->
         <StackPanel Grid.Row="4" Margin="0,5">
             <TextBlock Text="Date" FontWeight="SemiBold"/>
-            <DatePicker x:Name="ExpenseDatePicker" SelectedDate="{Binding Date}" />
+            <DatePicker x:Name="ExpenseDatePicker" SelectedDate="{Binding Date, Mode=OneWay}" />
         </StackPanel>
 
 
