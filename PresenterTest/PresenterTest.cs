@@ -271,5 +271,100 @@ namespace PresenterTest
             Assert.Equal(categoryName, category.Description);
             Assert.Equal(Category.CategoryType.Savings, category.Type);
         }
+
+        [Fact]
+        public void DeleteExpense_ValidId_ReturnsTrueAndSuccessMessage()
+        {
+            // Arrange
+            _presenter.GetDatabase("testingdb.db");
+
+            // Act
+            bool result = _presenter.DeleteExpense(1, out string message);
+
+            // Assert
+            Assert.True(result);
+            Assert.Equal("Expense deleted successfully.", message);
+        }
+
+        [Fact]
+        public void DeleteExpense_InvalidDatabase_ReturnsFalseAndErrorMessage()
+        {
+            // Arrange
+            string message;
+
+            // Act
+            bool result = _presenter.DeleteExpense(1, out message); // no DB initialized
+
+            // Assert
+            Assert.False(result);
+            Assert.Equal("Database not initialized.", message);
+        }
+
+        [Fact]
+        public void UpdateExistingExpense_ValidInputs_ReturnsTrueAndSuccessMessage()
+        {
+            // Arrange
+            _presenter.GetDatabase("newTestingdb.db");
+            int expenseId = 1; 
+            string name = "Updated name";
+            string amount = "99,99";
+            DateTime date = DateTime.Today;
+            string category = "Updated Category";
+            _presenter.ProcessNewAddExpense(date, "woah", 12, "Clothes");
+
+
+            // Act
+            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, category, out string message);
+
+            // Assert
+            Assert.True(result);
+            Assert.Equal("Expense updated successfullly!!", message);
+        }
+        [Fact]
+        public void UpdateExistingExpense_MissingFields_ReturnsFalse()
+        {
+            // Arrange
+            _presenter.GetDatabase("testingdb.db");
+            string name = "Updated name";
+            string amount = "99.99";
+            DateTime date = DateTime.Today;
+            string category = null;
+
+            // Act
+            bool result = _presenter.UpdateExistingExpense(2, name, amount, DateTime.Today, category, out string message);
+
+            // Assert
+            Assert.False(result);
+            Assert.Equal("Please fill in all fields.", message);
+        }
+
+        [Fact]
+        public void UpdateExistingExpense_InvalidAmount_ReturnsFalse()
+        {
+            // Arrange
+            _presenter.GetDatabase("testingdb.db");
+
+            // Act
+            bool result = _presenter.UpdateExistingExpense(1, "Lunch", "notanumber", DateTime.Today, "Food", out string message);
+
+            // Assert
+            Assert.False(result);
+            Assert.Equal("Invalid amount.", message);
+        }
+
+        [Fact]
+        public void GetCategoryName_ValidId_ReturnsCorrectName()
+        {
+            // Arrange
+            _presenter.GetDatabase("testingdb.db");
+            var category = _presenter.CreateOrGetCategory("newCat");
+
+            // Act
+            string name = _presenter.GetCategoryName(category.Id);
+
+            // Assert
+            Assert.Equal("newCat", name);
+        }
+
     }
 }

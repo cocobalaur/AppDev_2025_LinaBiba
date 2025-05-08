@@ -224,5 +224,85 @@ namespace BudgetModel
         /// </summary>
         public DateTime? EndDate => EndDatePicker?.SelectedDate;
 
+        /// <summary>
+        /// Handles a double click event on the ExpenseDataGrid row.
+        /// It will open the updateWindow pre-filled with the selected expense data.
+        /// </summary>
+        /// <param name="sender">The DataGrid control that detected the double-click.</param>
+        /// <param name="e">Provides information about the double-click event, including mouse position and button state.</param>
+        private void ExenseDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e)
+        {
+            //If the selected object is a Budget item, find the expense info and open the update window.
+            if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
+            {
+                Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
+                var updateWindow = new UpdateWindow(theSelectedExpense, _presenter, _view);
+                updateWindow.ShowDialog();
+            }
+        }
+
+        /// <summary>
+        /// Handles the right click event on the expenseDataGrid.
+        /// It ensures the row under the mouse cursor is selected
+        /// and that the content menu to operate on the right items.
+        /// </summary>
+        /// <param name="sender">The ExpenseDataGrid control where the 
+        /// right click occurred.</param>
+        /// <param name="e">Mouse button even data, including the source
+        /// element under the cursor.</param>
+        private void ExpenseDataGrid_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var depObj = (DependencyObject)e.OriginalSource;
+            while (depObj != null && !(depObj is DataGridRow))
+            {
+                depObj = VisualTreeHelper.GetParent(depObj);
+            }
+            if (depObj is DataGridRow row)
+            {
+                row.IsSelected = true;
+            }
+        }
+        /// <summary>
+        /// Handles the click event for the "Update" context menu item.
+        /// Opens the UpdateWindow with the selected expense for editing.
+        /// </summary>
+        /// <param name="sender">The MenuItem that triggered the event</param>
+        /// <param name="e">Event data associated with the menu item click.</param>
+        private void UpdateMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            //Make sure that the object is a Budget Item
+            if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
+            {
+                //Get the expense information from the 
+                Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
+                var updateWindow = new UpdateWindow(theSelectedExpense, _presenter, _view);
+                updateWindow.ShowDialog();
+            }
+        }
+
+        /// <summary>
+        /// Hnaldes the click event for the "Delete" context menu item.
+        /// Deletes the selected expense using the presenter and display
+        /// a message.
+        /// </summary>
+        /// <param name="sender">The MenuItem that triggered the event</param>
+        /// <param name="e">Event data associated with the menu item click.</param>
+        private void DeleteMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
+            {
+                bool success = _presenter.DeleteExpense(selectedItem.ExpenseID, out string message);
+
+                if (success)
+                {
+                    _view.DisplaySuccessMessage(message);
+                }
+                else
+                {
+                    _view.DisplayErrorMessage(message);
+                }
+            }
+        }
+
     }
 }
