@@ -307,6 +307,94 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Deletes an expense from the budget database by its ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the expense to delete.</param>
+        /// <param name="resultMessage">
+        /// A message describing the result of the operation, either confirming deletion or detailing the error.
+        /// </param>
+        /// <returns>True if the expense was successfully deleted; otherwise, false.</returns>
+        public bool DeleteExpense(int id, out string resultMessage)
+        {
+            if (_budget == null)
+            {
+                resultMessage = "Database not initialized.";
+                return false;
+            }
+            try
+            {
+                _budget.expenses.Delete(id);
+                resultMessage = "Expense deleted successfully.";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                resultMessage = $"Error while deleting expense: {ex.Message}";
+                return false;
+            }
+        }
+        /// <summary>
+        /// Updates an existing expense in the database with the provided details.
+        /// Validates the input, parses the amount, and creates or retrieves the corresponding category.
+        /// </summary>
+        /// <param name="id">The unique identifier of the expense to update.</param>
+        /// <param name="name">The new description of the expense.</param>
+        /// <param name="amountString">The amount as a string, which will be parsed into a numeric value.</param>
+        /// <param name="date">The new date of the expense.</param>
+        /// <param name="categoryName">The name of the category to associate with the expense.</param>
+        /// <param name="resultMessage">
+        /// A message describing the outcome of the operation, including success confirmation or validation errors.
+        /// </param>
+        /// <returns>True if the expense was updated successfully; otherwise, false.</returns>
+        public bool UpdateExistingExpense(int id, string name, string amountString,
+            DateTime date, string categoryName, out string resultMessage)
+        {
+            resultMessage = "";
+
+            if (_budget == null)
+            {
+                resultMessage = "Database not initialized.";
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(categoryName) || string.IsNullOrWhiteSpace(amountString))
+            {
+                resultMessage = "Please fill in all fields.";
+                return false;
+            }
+            if (!double.TryParse(amountString, out double amount))
+            {
+                resultMessage = "Invalid amount.";
+                return false;
+            }
+            try
+            {
+                Category category = CreateOrGetCategory(categoryName);
+                int categoryId = category.Id;
+
+                _budget.expenses.UpdateExpenses(id, date, amount, name, categoryId);
+                resultMessage = "Expense updated successfullly!!";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                resultMessage = $"Failed to update expense: {ex.Message}";
+                return false;
+            }
+        }
+
+
+        /// <summary>
+        /// Retrieves the description of a category based on its ID.
+        /// </summary>
+        /// <param name="id">The unique identifier of the category.</param>
+        /// <returns>The description of the category.</returns>
+        public string GetCategoryName(int id)
+        {
+            Category category = _budget.categories.GetCategoryFromId(id);
+
+            return category.Description;
+        }
 
     }
 }

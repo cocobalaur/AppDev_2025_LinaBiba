@@ -81,7 +81,9 @@
                       AutoGenerateColumns="False"
                       IsReadOnly="True"
                       CanUserAddRows="False"
-                      HeadersVisibility="Column">
+                      HeadersVisibility="Column"
+                      MouseDoubleClick="ExenseDataGrid_MouseDoubleClick"
+                      MouseRightButtonDown="ExpenseDataGrid_MouseRightButtonDown">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*" />
                     <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="*" />
@@ -89,7 +91,16 @@
                     <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="*" />
                     <DataGridTextColumn Header="Balance" Binding="{Binding Balance}" Width="*" />
                 </DataGrid.Columns>
+
+                <DataGrid.ContextMenu>
+                    <ContextMenu x:Name="ExpenseContentMenu">
+                        <MenuItem Header="Update" Click="UpdateMenuItem_Click"/>
+                        <MenuItem Header="Delete" Click="DeleteMenuItem_Click"/>
+                        <MenuItem Header="Cancel"/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
             </DataGrid>
+
         </Grid>
     </Grid>
 </Window>
