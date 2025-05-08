@@ -85,7 +85,7 @@
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*" />
                     <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="*" />
-                    <DataGridTextColumn Header="Description" Binding="{Binding Description}" Width="2*" />
+                    <DataGridTextColumn Header="Description" Binding="{Binding ShortDescription}" Width="2*" />
                     <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="*" />
                     <DataGridTextColumn Header="Balance" Binding="{Binding Balance}" Width="*" />
                 </DataGrid.Columns>

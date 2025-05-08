@@ -80,6 +80,7 @@ namespace BudgetModel
                 if (_budget == null)
                 {
                     _view.DisplayErrorMessage("Database not initialized.");
+                    return;
                 }
 
                 _view.DisplayAddExpense(); //open the add expense window
@@ -238,8 +239,8 @@ namespace BudgetModel
             }
             else
             {
-                // Default fallback to Expense if invalid input
-                type = Category.CategoryType.Expense;
+                _view.DisplayErrorMessage("Invalid category type selected.");
+                return false;
             }
 
             try
