@@ -239,8 +239,8 @@ namespace BudgetModel
             }
             else
             {
-                // Default fallback to Expense if invalid input
-                type = Category.CategoryType.Expense;
+                _view.DisplayErrorMessage("Invalid category type selected.");
+                return false;
             }
 
             try
