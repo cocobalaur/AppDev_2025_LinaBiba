@@ -72,27 +72,27 @@ namespace Views
         /// Returns whether the "By Category" summary checkbox is selected.
         /// </summary>
         /// <returns>True if "By Category" is checked, false otherwise.</returns>
-        bool GetByCategorySummary();
+        bool DisplayByCategorySummary();
 
         /// <summary>
         /// Returns whether the "By Month" summary checkbox is selected.
         /// </summary>
         /// <returns>True if "By Month" is checked, false otherwise.</returns>
-        bool GetByMonthSummary();
+        bool DisplayByMonthSummary();
 
         /// <summary>
         /// Determines whether the category filter is enabled (i.e., checkbox is checked).
         /// </summary>
         /// <returns>True if category filter is active; otherwise, false.</returns>
-        bool IsCategoryFilterEnabled();
+        bool DisplayIsCategoryFilter();
 
         /// <summary>
         /// Returns the category selected in the filter dropdown.
         /// </summary>
         /// <returns>The selected category name as a string.</returns>
-        string GetSelectedCategory();
+        string RenameSelectedCategory();
 
-
+        void DisplayExpenseUpdate(Expense expense);
 
     }
 }

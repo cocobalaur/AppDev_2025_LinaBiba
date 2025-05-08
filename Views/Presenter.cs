@@ -294,11 +294,11 @@ namespace BudgetModel
                 // Get list of all category names
                 var allCategories = _budget.categories.List().Select(c => c.Description).Distinct().ToList();
 
-                bool byMonth = _view.GetByMonthSummary();
-                bool byCategory = _view.GetByCategorySummary();
+                bool byMonth = _view.DisplayByMonthSummary();
+                bool byCategory = _view.DisplayByCategorySummary();
 
-                bool isCategoryFilter = _view.IsCategoryFilterEnabled();
-                string selectedCategory = _view.GetSelectedCategory();
+                bool isCategoryFilter = _view.DisplayIsCategoryFilter();
+                string selectedCategory = _view.RenameSelectedCategory();
 
                 if (isCategoryFilter && !string.IsNullOrWhiteSpace(selectedCategory))
                 {
@@ -556,6 +556,52 @@ namespace BudgetModel
             return category.Description;
         }
 
+        public void UpdateExpense(Expense expense)
+        {
+            try
+            {
+                _view.DisplayExpenseUpdate(expense);
+                //double goodAmount = VerificationOfData(name, amount, date, categories);
+                //_budget.expenses.UpdateExpenses(0, date, goodAmount, name, categories);
+            }
+            catch (Exception ex)
+            {
+                _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
+            }
+        }
+
+        private double VerificationOfData(string name, string amount, DateTime date, string categories)
+        {
+            try
+            {
+
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    throw new Exception("The name value cannot be empty.");
+                }
+                //Validate the amount
+                if (!double.TryParse(amount, out double amountGood))
+                {
+                    throw new Exception("The expense amount must be a valid number.");
+                }
+                //Validate the date
+                if (date == null)
+                {
+                    throw new Exception("Please select a valid date.");
+                }
+                //Validate that a category was entered.
+                if (categories == null)
+                {
+                    throw new Exception("Please enter a category.");
+                }
+                return amountGood;
+            }
+            catch (Exception ex)
+            {
+                _view.DisplayErrorMessage($"Error in the inputs: {ex.Message}");
+            }
+            return -1;
+        }
     }
 }
 

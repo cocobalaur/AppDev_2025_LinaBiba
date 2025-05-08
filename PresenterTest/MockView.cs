@@ -52,5 +52,35 @@ namespace PresenterTest
         {
             throw new NotImplementedException();
         }
+
+        public bool DisplayByCategorySummary()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DisplayByMonthSummary()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DisplayIsCategoryFilter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string RenameSelectedCategory()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ShowSucessMessage(string message)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ShowErrorMessage(string message)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

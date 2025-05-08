@@ -18,6 +18,7 @@ namespace BudgetModel
         private Expense _expense;
         private IView _view;
 
+
         /// <summary>
         /// Initializes a new instance of the update window class.
         /// Sets up the UI with the expense data that we want to update. 
@@ -30,14 +31,14 @@ namespace BudgetModel
         public UpdateWindow(Expense expenseToUpdate, Presenter presenter, IView view)
         {
             InitializeComponent();
-
+   
             //Initializes the variables
             _expense = expenseToUpdate;
             _presenter = presenter;
             _view = view;
 
             //Get the category name with the category id
-            string category = _presenter.GetCategoryName(_expense.Category);
+            string category = _presenter.GetCategoryName(expenseToUpdate.Category);
             
             //Displayy
             DataContext = _expense;
