@@ -112,15 +112,21 @@ namespace BudgetModel
             return _budget.categories.List();
         }
 
+        /// <summary>
+        /// Checks if a given category name exists in the list of categories (case-insensitive).
+        /// </summary>
+        /// <param name="category">The category name to search for.</param>
+        /// <returns>True if a matching category is found; otherwise, false.</returns>
         public bool FindCategory(string category)
         {
+            // Retrieve the list of categories from the database
             List<Category> categories = GetCategories();
 
             foreach (Category categoryName in categories) //loop through each category and check if any category matches the given category
             {
                 if (categoryName.Description.ToLower() == category.ToLower())
                 {
-                    return true;
+                    return true; // Match found
                 }
             }
 
@@ -136,13 +142,23 @@ namespace BudgetModel
             _selectedCategoryType = (CategoryType)categoryType;
         }
 
+        /// <summary>
+        /// Retrieves the list of all category descriptions from the database and passes them to the view
+        /// to update the category selection components in both the Filter and AddExpense windows.
+        /// Optionally preselects a specific category if provided.
+        /// </summary>
+        /// <param name="selectedCategory">
+        /// The category name to be pre-selected in the dropdowns, if any. If null, no selection is made.
+        /// </param>
         public void RefreshCategoryList(string selectedCategory = null)
         {
+            // Ensure the database is available before attempting to load categories
             if (_budget == null)
             {
                 _view.DisplayErrorMessage("Database not initialized.");
             }
 
+            // Build a list of category names (descriptions)
             List<string> categoryNames = new List<string>();
 
             foreach (Category category in GetCategories())
@@ -150,7 +166,10 @@ namespace BudgetModel
                 categoryNames.Add(category.Description);
             }
 
+            // Sort categories alphabetically for better user experience
             categoryNames.Sort();
+
+            // Update the category ComboBoxes in both Filter and AddExpense windows
             _view.DisplayCategoryFilterWindow(categoryNames, selectedCategory);
             _view.DisplayCategoryExpense(categoryNames, selectedCategory);
         }
@@ -296,6 +315,8 @@ namespace BudgetModel
             {
                 // Fetch items within the date range
                 var items = _budget.GetBudgetItems(start, end, false, -1);
+
+                // Get list of all category names
                 var allCategories = _budget.categories.List().Select(c => c.Description).Distinct().ToList();
 
                 bool byMonth = _view.GetByMonthSummary();
@@ -303,6 +324,7 @@ namespace BudgetModel
 
                 if (byMonth && byCategory)
                 {
+                    // Summarize by month and category, including empty categories
                     var grouped = items
                         .GroupBy(i => new { i.Date.Year, i.Date.Month })
                         .SelectMany(g =>
@@ -321,6 +343,7 @@ namespace BudgetModel
                 }
                 else if (byMonth)
                 {
+                    // Summarize only by month
                     var grouped = items
                         .GroupBy(i => new { i.Date.Year, i.Date.Month })
                         .Select(g => new BudgetItem
@@ -333,6 +356,7 @@ namespace BudgetModel
                 }
                 else if (byCategory)
                 {
+                    // Summarize only by category, including empty ones
                     var grouped = allCategories
                         .Select(cat => new BudgetItem
                         {
@@ -344,6 +368,7 @@ namespace BudgetModel
                 }
                 else
                 {
+                    // Show all raw items if no summary selected
                     _view.DisplayItems(items);
                 }
             }
@@ -352,6 +377,17 @@ namespace BudgetModel
                 _view.DisplayErrorMessage($"Failed to filter items: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Builds a summary table for the DataGrid based on selected filters:
+        /// by month, by category, or both. When both are selected, all categories are shown per month,
+        /// including those with zero expenses. Adds a total row when both filters are active.
+        /// </summary>
+        /// <param name="byMonth">Whether to summarize by month.</param>
+        /// <param name="byCategory">Whether to summarize by category.</param>
+        /// <param name="startDate">Start date of the filter range.</param>
+        /// <param name="endDate">End date of the filter range.</param>
+        /// <returns>A list of summarized result rows (as anonymous objects or dictionaries).</returns>
 
         public List<object> GetSummaryTable(bool byMonth, bool byCategory, DateTime? startDate, DateTime? endDate)
         {
@@ -367,6 +403,7 @@ namespace BudgetModel
                 return new List<object>();
             }
 
+            // List of all category names for consistency
             var allCategories = _budget.categories.List()
                 .Select(c => c.Description)
                 .Distinct()
@@ -396,7 +433,7 @@ namespace BudgetModel
                         return (object)row;
                     }).ToList();
 
-                // Add TOTAL row
+                // Add a TOTAL row summing each category across all months
                 var totalRow = new Dictionary<string, object>();
                 totalRow["Month"] = "TOTALS";
 
@@ -414,6 +451,7 @@ namespace BudgetModel
             }
             else if (byMonth)
             {
+                // Show month and total only
                 return items
                     .GroupBy(i => new { i.Date.Year, i.Date.Month })
                     .OrderBy(g => new DateTime(g.Key.Year, g.Key.Month, 1))
@@ -427,6 +465,7 @@ namespace BudgetModel
             }
             else if (byCategory)
             {
+                // Show category totals, but omit zero entries
                 return allCategories
                     .Select(cat => new
                     {
@@ -439,6 +478,7 @@ namespace BudgetModel
             }
             else
             {
+                // Return full items (raw data view)
                 return items.Cast<object>().ToList();
             }
         }
