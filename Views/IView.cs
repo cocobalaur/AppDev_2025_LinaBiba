@@ -41,11 +41,57 @@ namespace Views
         /// <param name="type">The type of the category (e.g., "Income", "Expense", etc.).</param>
         void DisplayCategoryFilterWindow (List<string> name, string type);
 
+        /// <summary>
+        /// Displays a list of category names in the Add Expense window's ComboBox.
+        /// Also optionally pre-selects a category if provided.
+        /// </summary>
+        /// <param name="categories">A list of category names to populate the ComboBox.</param>
+        /// <param name="selectedCategory">The category to be pre-selected, if any.</param>
         void DisplayCategoryExpense(List<string> categories, string selectedCategory);
 
+        /// <summary>
+        /// Retrieves the selected start date from the UI.
+        /// </summary>
+        /// <returns>The selected start date, or null if not selected.</returns>
         DateTime? GetStartDate();
+
+        /// <summary>
+        /// Retrieves the selected end date from the UI.
+        /// </summary>
+        /// <returns>The selected end date, or null if not selected.</returns>
         DateTime? GetEndDate();
+
+        /// <summary>
+        /// Displays a list of budget items in the DataGrid.
+        /// This method is used to show results of filtering or summaries.
+        /// </summary>
+        /// <param name="items">The list of budget items to display.</param>
         void DisplayItems(List<BudgetItem> items);
+
+        /// <summary>
+        /// Returns whether the "By Category" summary checkbox is selected.
+        /// </summary>
+        /// <returns>True if "By Category" is checked, false otherwise.</returns>
+        bool GetByCategorySummary();
+
+        /// <summary>
+        /// Returns whether the "By Month" summary checkbox is selected.
+        /// </summary>
+        /// <returns>True if "By Month" is checked, false otherwise.</returns>
+        bool GetByMonthSummary();
+
+        /// <summary>
+        /// Determines whether the category filter is enabled (i.e., checkbox is checked).
+        /// </summary>
+        /// <returns>True if category filter is active; otherwise, false.</returns>
+        bool IsCategoryFilterEnabled();
+
+        /// <summary>
+        /// Returns the category selected in the filter dropdown.
+        /// </summary>
+        /// <returns>The selected category name as a string.</returns>
+        string GetSelectedCategory();
+
 
 
     }
