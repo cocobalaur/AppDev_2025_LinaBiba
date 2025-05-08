@@ -307,6 +307,9 @@ namespace BudgetModel
             {                
                 foreach (var prop in first.GetType().GetProperties())
                 {
+                    // Skip displaying these columns (IDs)
+                    if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
+
                     ExpenseDataGrid.Columns.Add(new DataGridTextColumn
                     {
                         Header = prop.Name,
@@ -317,6 +320,8 @@ namespace BudgetModel
                 ExpenseDataGrid.ItemsSource = summary;
             }
         }
+
+
 
     }
 }

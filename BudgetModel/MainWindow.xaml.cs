@@ -210,6 +210,9 @@ namespace BudgetModel
         /// <returns>True if "By Category" is selected; otherwise, false.</returns>
         public bool GetByCategorySummary() => _filterWindow?.ByCategoryCheckBox.IsChecked == true;
 
+        public bool IsCategoryFilterEnabled() => _filterWindow?.FilterByCategory.IsChecked == true;
+
+        public string GetSelectedCategory() => _filterWindow?.CategoryComboBox.SelectedItem?.ToString() ?? "";
 
     }
 }

@@ -322,6 +322,15 @@ namespace BudgetModel
                 bool byMonth = _view.GetByMonthSummary();
                 bool byCategory = _view.GetByCategorySummary();
 
+                bool isCategoryFilter = _view.IsCategoryFilterEnabled();
+                string selectedCategory = _view.GetSelectedCategory();
+
+                if (isCategoryFilter && !string.IsNullOrWhiteSpace(selectedCategory))
+                {
+                    items = items.Where(i => i.Category == selectedCategory).ToList();
+                }
+
+
                 if (byMonth && byCategory)
                 {
                     // Summarize by month and category, including empty categories

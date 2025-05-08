@@ -80,6 +80,17 @@ namespace Views
         /// <returns>True if "By Month" is checked, false otherwise.</returns>
         bool GetByMonthSummary();
 
+        /// <summary>
+        /// Determines whether the category filter is enabled (i.e., checkbox is checked).
+        /// </summary>
+        /// <returns>True if category filter is active; otherwise, false.</returns>
+        bool IsCategoryFilterEnabled();
+
+        /// <summary>
+        /// Returns the category selected in the filter dropdown.
+        /// </summary>
+        /// <returns>The selected category name as a string.</returns>
+        string GetSelectedCategory();
 
     }
 }
