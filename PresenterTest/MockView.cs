@@ -50,7 +50,7 @@ namespace PresenterTest
 
         public void DisplayItems(List<BudgetItem> items)
         {
-            throw new NotImplementedException();
+            //Not needed for presenter test
         }
 
         public bool DisplayByCategorySummary()
@@ -75,12 +75,17 @@ namespace PresenterTest
 
         public void ShowSucessMessage(string message)
         {
-            throw new NotImplementedException();
+            //Not needed for presenter test
         }
 
         public void ShowErrorMessage(string message)
         {
-            throw new NotImplementedException();
+            //Not needed for presenter test
+        }
+
+        public void DisplayExpenseUpdate(Expense expense)
+        {
+            //Not needed for presenter test
         }
     }
 }
