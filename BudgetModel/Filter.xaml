@@ -30,15 +30,27 @@
                 </StackPanel>
 
 
-                <CheckBox x:Name="FilterByCategory" Content="Filter By Category?" Margin="0,10,0,5"/>
-                <ComboBox x:Name="CategoryComboBox" Width="200" Height="25" 
-                          DropDownClosed="CategoryComboBox_SelectionFilter"/>
+                <!-- Category Filter -->
+
+                <CheckBox x:Name="FilterByCategory" 
+                   Content="Filter By Category?" 
+                   Margin="0,10,0,5" 
+                   Checked="OnFilterChanged" 
+                   Unchecked="OnFilterChanged" />
+
+                <ComboBox x:Name="CategoryComboBox" 
+                      Width="200" 
+                      Height="25"
+                      SelectionChanged="OnFilterChanged" />
 
                 <!-- Summary Options -->
                 <GroupBox Header="Summary" Margin="0,20,0,0">
                     <StackPanel>
-                        <CheckBox x:Name="ByMonthCheckBox" Content="By Month" Margin="5"/>
-                        <CheckBox x:Name="ByCategoryCheckBox" Content="By Category" Margin="5"/>
+                        <CheckBox x:Name="ByMonthCheckBox" Content="By Month" Margin="5"
+                         Checked="SummaryCheckbox_Changed" Unchecked="SummaryCheckbox_Changed"/>
+                        <CheckBox x:Name="ByCategoryCheckBox" Content="By Category" Margin="5"
+                         Checked="SummaryCheckbox_Changed" Unchecked="SummaryCheckbox_Changed"/>
+
                     </StackPanel>
                 </GroupBox>
 
@@ -77,20 +89,12 @@
 
             <!-- Expense Table -->
             <DataGrid x:Name="ExpenseDataGrid"
-                      Grid.Row="1"
-                      AutoGenerateColumns="False"
-                      IsReadOnly="True"
-                      CanUserAddRows="False"
-                      HeadersVisibility="Column"
-                      MouseDoubleClick="ExenseDataGrid_MouseDoubleClick"
-                      MouseRightButtonDown="ExpenseDataGrid_MouseRightButtonDown">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="*" />
-                    <DataGridTextColumn Header="Category" Binding="{Binding Category}" Width="*" />
-                    <DataGridTextColumn Header="Description" Binding="{Binding ShortDescription}" Width="2*" />
-                    <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" Width="*" />
-                    <DataGridTextColumn Header="Balance" Binding="{Binding Balance}" Width="*" />
-                </DataGrid.Columns>
+              Grid.Row="1"
+              AutoGenerateColumns="False"
+              IsReadOnly="True"
+              CanUserAddRows="False"
+              HeadersVisibility="Column" >
+
 
                 <DataGrid.ContextMenu>
                     <ContextMenu x:Name="ExpenseContentMenu">
