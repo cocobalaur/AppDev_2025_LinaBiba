@@ -93,7 +93,9 @@
               AutoGenerateColumns="False"
               IsReadOnly="True"
               CanUserAddRows="False"
-              HeadersVisibility="Column" >
+              HeadersVisibility="Column"                        
+              MouseDoubleClick="ExenseDataGrid_MouseDoubleClick"
+              MouseRightButtonDown="ExpenseDataGrid_MouseRightButtonDown">
 
 
                 <DataGrid.ContextMenu>
