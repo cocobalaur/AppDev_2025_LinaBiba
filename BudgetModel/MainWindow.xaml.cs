@@ -27,6 +27,8 @@ namespace BudgetModel
         private Presenter _presenter;
         private Filter _filterWindow;
         private AddExpense _expense;
+        private UpdateWindow _updateWindow;
+        private Expense _expenseToUpdate;
 
         /// <summary>
         /// Constructor: Initializes the main window and applies the default Light theme on startup.
@@ -202,13 +204,13 @@ namespace BudgetModel
         /// Gets the current state of the "By Month" summary checkbox from the filter window.
         /// </summary>
         /// <returns>True if "By Month" is selected; otherwise, false.</returns>
-        public bool GetByMonthSummary() => _filterWindow?.ByMonthCheckBox.IsChecked == true;
+        public bool DisplayByMonthSummary() => _filterWindow?.ByMonthCheckBox.IsChecked == true;
 
         /// <summary>
         /// Gets the current state of the "By Category" summary checkbox from the filter window.
         /// </summary>
         /// <returns>True if "By Category" is selected; otherwise, false.</returns>
-        public bool GetByCategorySummary() => _filterWindow?.ByCategoryCheckBox.IsChecked == true;
+        public bool DisplayByCategorySummary() => _filterWindow?.ByCategoryCheckBox.IsChecked == true;
 
         /// <summary>
         /// Checks whether the "Filter By Category?" checkbox is currently enabled in the filter window.
@@ -217,7 +219,7 @@ namespace BudgetModel
         /// True if the checkbox is checked, indicating the user wants to filter by category;
         /// false otherwise.
         /// </returns>
-        public bool IsCategoryFilterEnabled() => _filterWindow?.FilterByCategory.IsChecked == true;
+        public bool DisplayIsCategoryFilter() => _filterWindow?.FilterByCategory.IsChecked == true;
 
         /// <summary>
         /// Retrieves the currently selected category from the category dropdown in the filter window.
@@ -225,7 +227,13 @@ namespace BudgetModel
         /// <returns>
         /// A string representing the selected category, or an empty string if no selection is made.
         /// </returns>
-        public string GetSelectedCategory() => _filterWindow?.CategoryComboBox.SelectedItem?.ToString() ?? "";
+        public string RenameSelectedCategory() => _filterWindow?.CategoryComboBox.SelectedItem?.ToString() ?? "";
 
+        public void DisplayExpenseUpdate(Expense expense)
+        {
+            _expenseToUpdate = expense;
+            _updateWindow = new UpdateWindow(_expenseToUpdate, _presenter, this);
+            _updateWindow.Show();
+        }
     }
 }

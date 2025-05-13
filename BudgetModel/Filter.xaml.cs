@@ -178,14 +178,14 @@ namespace BudgetModel
         /// </summary>
         /// <param name="sender">The DataGrid control that detected the double-click.</param>
         /// <param name="e">Provides information about the double-click event, including mouse position and button state.</param>
-        private void ExenseDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e)
+        private void ExenseDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e) //not working???
         {
             //If the selected object is a Budget item, find the expense info and open the update window.
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
                 Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
-                var updateWindow = new UpdateWindow(theSelectedExpense, _presenter, _view);
-                updateWindow.ShowDialog();
+                _presenter.UpdateExpense(theSelectedExpense);
+
             }
         }
 
@@ -218,13 +218,14 @@ namespace BudgetModel
         /// <param name="e">Event data associated with the menu item click.</param>
         private void UpdateMenuItem_Click(object sender, RoutedEventArgs e)
         {
+            
             //Make sure that the object is a Budget Item
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
                 //Get the expense information from the 
                 Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
-                var updateWindow = new UpdateWindow(theSelectedExpense, _presenter, _view);
-                updateWindow.ShowDialog();
+                _presenter.UpdateExpense(theSelectedExpense);
+                //refresh to load updated expense
             }
         }
 

@@ -50,7 +50,42 @@ namespace PresenterTest
 
         public void DisplayItems(List<BudgetItem> items)
         {
+            //Not needed for presenter test
+        }
+
+        public bool DisplayByCategorySummary()
+        {
             throw new NotImplementedException();
+        }
+
+        public bool DisplayByMonthSummary()
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool DisplayIsCategoryFilter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string RenameSelectedCategory()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ShowSucessMessage(string message)
+        {
+            //Not needed for presenter test
+        }
+
+        public void ShowErrorMessage(string message)
+        {
+            //Not needed for presenter test
+        }
+
+        public void DisplayExpenseUpdate(Expense expense)
+        {
+            //Not needed for presenter test
         }
     }
 }
