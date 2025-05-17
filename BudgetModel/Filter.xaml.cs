@@ -184,7 +184,7 @@ namespace BudgetModel
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
                 Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
-                _presenter.UpdateExpense(theSelectedExpense);
+                _presenter.UpdateExpense(theSelectedExpense, UpdateSummaryDisplay);
 
             }
         }
@@ -224,7 +224,7 @@ namespace BudgetModel
             {
                 //Get the expense information from the 
                 Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
-                _presenter.UpdateExpense(theSelectedExpense);
+                _presenter.UpdateExpense(theSelectedExpense, UpdateSummaryDisplay);
                 //refresh to load updated expense
             }
         }
@@ -240,7 +240,7 @@ namespace BudgetModel
         {
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
-                bool success = _presenter.DeleteExpense(selectedItem.ExpenseID, out string message);
+                bool success = _presenter.DeleteExpense(selectedItem.ExpenseID, out string message, UpdateSummaryDisplay);
 
                 if (success)
                 {

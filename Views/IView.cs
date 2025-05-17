@@ -92,7 +92,12 @@ namespace Views
         /// <returns>The selected category name as a string.</returns>
         string RenameSelectedCategory();
 
-        void DisplayExpenseUpdate(Expense expense);
+        /// <summary>
+        /// Display the update window with the proper expense.
+        /// </summary>
+        /// <param name="expense"> The expense to update.</param>
+        /// <param name="onUpdateComplete">The action to do once </param>
+        void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete);
 
     }
 }
