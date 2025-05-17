@@ -229,10 +229,15 @@ namespace BudgetModel
         /// </returns>
         public string RenameSelectedCategory() => _filterWindow?.CategoryComboBox.SelectedItem?.ToString() ?? "";
 
-        public void DisplayExpenseUpdate(Expense expense)
+        /// <summary>
+        /// Open the window to update expense.
+        /// </summary>
+        /// <param name="expense">The expense to update.</param>
+        /// <param name="onCompleteUpdate">The action to complete when the update is successfull.</param>
+        public void DisplayExpenseUpdate(Expense expense, Action onCompleteUpdate)
         {
             _expenseToUpdate = expense;
-            _updateWindow = new UpdateWindow(_expenseToUpdate, _presenter, this);
+            _updateWindow = new UpdateWindow(_expenseToUpdate, _presenter, this, onCompleteUpdate);
             _updateWindow.Show();
         }
     }

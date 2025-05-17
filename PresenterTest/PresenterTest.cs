@@ -279,7 +279,7 @@ namespace PresenterTest
             _presenter.GetDatabase("testingdb.db");
 
             // Act
-            bool result = _presenter.DeleteExpense(1, out string message);
+            bool result = _presenter.DeleteExpense(1, out string message, () => { });
 
             // Assert
             Assert.True(result);
@@ -293,7 +293,7 @@ namespace PresenterTest
             string message;
 
             // Act
-            bool result = _presenter.DeleteExpense(1, out message); // no DB initialized
+            bool result = _presenter.DeleteExpense(1, out message, () => { }); // no DB initialized
 
             // Assert
             Assert.False(result);

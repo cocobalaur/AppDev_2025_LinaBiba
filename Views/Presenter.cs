@@ -474,8 +474,9 @@ namespace BudgetModel
         /// <param name="resultMessage">
         /// A message describing the result of the operation, either confirming deletion or detailing the error.
         /// </param>
+        /// <param name="onUpdateComplete">The action to do once the expense have been deleted.</param>
         /// <returns>True if the expense was successfully deleted; otherwise, false.</returns>
-        public bool DeleteExpense(int id, out string resultMessage)
+        public bool DeleteExpense(int id, out string resultMessage, Action onUpdateComplete)
         {
             if (_budget == null)
             {
@@ -485,6 +486,7 @@ namespace BudgetModel
             try
             {
                 _budget.expenses.Delete(id);
+                onUpdateComplete.Invoke();
                 resultMessage = "Expense deleted successfully.";
                 return true;
             }
@@ -556,51 +558,16 @@ namespace BudgetModel
             return category.Description;
         }
 
-        public void UpdateExpense(Expense expense)
+        public void UpdateExpense(Expense expense, Action onUpdateComplete)
         {
             try
             {
-                _view.DisplayExpenseUpdate(expense);
-                //double goodAmount = VerificationOfData(name, amount, date, categories);
-                //_budget.expenses.UpdateExpenses(0, date, goodAmount, name, categories);
+                _view.DisplayExpenseUpdate(expense, onUpdateComplete);
             }
             catch (Exception ex)
             {
                 _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
             }
-        }
-
-        private double VerificationOfData(string name, string amount, DateTime date, string categories)
-        {
-            try
-            {
-
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    throw new Exception("The name value cannot be empty.");
-                }
-                //Validate the amount
-                if (!double.TryParse(amount, out double amountGood))
-                {
-                    throw new Exception("The expense amount must be a valid number.");
-                }
-                //Validate the date
-                if (date == null)
-                {
-                    throw new Exception("Please select a valid date.");
-                }
-                //Validate that a category was entered.
-                if (categories == null)
-                {
-                    throw new Exception("Please enter a category.");
-                }
-                return amountGood;
-            }
-            catch (Exception ex)
-            {
-                _view.DisplayErrorMessage($"Error in the inputs: {ex.Message}");
-            }
-            return -1;
         }
     }
 }

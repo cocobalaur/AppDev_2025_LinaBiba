@@ -17,6 +17,7 @@ namespace BudgetModel
         private Presenter _presenter;
         private Expense _expense;
         private IView _view;
+        private Action _onUpdateComplete;
 
 
         /// <summary>
@@ -28,7 +29,7 @@ namespace BudgetModel
         /// <param name="expenseToUpdate">The expense object to update.</param>
         /// <param name="presenter">The presenter to talk with the model.</param>
         /// <param name="view">The view interface to display message to the user.</param>
-        public UpdateWindow(Expense expenseToUpdate, Presenter presenter, IView view)
+        public UpdateWindow(Expense expenseToUpdate, Presenter presenter, IView view, Action onUpdateComplete)
         {
             InitializeComponent();
    
@@ -36,6 +37,7 @@ namespace BudgetModel
             _expense = expenseToUpdate;
             _presenter = presenter;
             _view = view;
+            _onUpdateComplete = onUpdateComplete;
 
             //Get the category name with the category id
             string category = _presenter.GetCategoryName(expenseToUpdate.Category);
@@ -67,7 +69,7 @@ namespace BudgetModel
         /// <summary>
         /// Handles the update operation when the user clicks the "Update" button.
         /// It will retrieves the input value from the form, sends them to the presenter
-        /// and then, depending on what happen, send a success or error message.
+        /// and then, depending on what happen, send a success and refresh the expenses, or error message.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event data associated with the click event.</param>
@@ -85,8 +87,9 @@ namespace BudgetModel
 
             //If the update is successful, display a success message
             if (success)
-            {
+            {                
                 _view.DisplaySuccessMessage(message);
+                _onUpdateComplete?.Invoke();
                 this.Close();
             }
             else
@@ -124,11 +127,11 @@ namespace BudgetModel
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
             //Call the presenter to try and delete the expense.
-            bool success = _presenter.DeleteExpense(_expense.Id, out string message);
+            bool success = _presenter.DeleteExpense(_expense.Id, out string message, _onUpdateComplete);
 
             //If the delete was successfully return a success message; else an Error message
             if (success)
-            {
+            {                
                 _view.DisplaySuccessMessage(message);
                 this.Close();
             }

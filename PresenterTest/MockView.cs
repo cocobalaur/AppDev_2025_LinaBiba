@@ -83,9 +83,9 @@ namespace PresenterTest
             //Not needed for presenter test
         }
 
-        public void DisplayExpenseUpdate(Expense expense)
+        public void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete)
         {
-            //Not needed for presenter test
+            throw new NotImplementedException();
         }
     }
 }
