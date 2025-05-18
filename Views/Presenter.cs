@@ -1,4 +1,5 @@
 ﻿using Budget;
+using System.IO;
 using Views;
 using static Budget.Category;
 
@@ -47,10 +48,21 @@ namespace BudgetModel
                     return false; // STOP if no directory selected
                 }
 
-                bool IsNewDatabase = !System.IO.File.Exists(databasePath); //does the db file exist -> to set up for homebudget boolean
+                string addedExtension = HomeBudget.VerifyFile(databasePath);
 
+                bool IsNewDatabase = !System.IO.File.Exists(addedExtension); //does the db file exist -> to set up for homebudget boolean
+               
                 _budget = new HomeBudget(databasePath, IsNewDatabase);
-                _view.DisplaySuccessMessage("Successfully opened database.");
+
+                if (IsNewDatabase)
+                {
+                    _view.DisplaySuccessMessage("Successfully opened new database.");
+                }
+                else
+                {
+                    _view.DisplaySuccessMessage("Successfully opened database.");
+                }
+
                 return true;
             }
             catch (Exception ex)
