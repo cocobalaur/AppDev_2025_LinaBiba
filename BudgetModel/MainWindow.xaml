@@ -13,7 +13,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-    
+
         <StackPanel Grid.ColumnSpan="2" HorizontalAlignment="Center" Margin="0,0,0,20">
             <TextBlock Text="Before starting, choose your database to be able to add expenses and categories:"
                        FontSize="18" FontWeight="Bold" Margin="0,0,0,10" TextAlignment="Center" />
@@ -26,4 +26,5 @@
             <Button Content="OK" Width="100" Height="30" HorizontalAlignment="Center" Click="Ok_Click" />
         </StackPanel>
     </Grid>
+
 </Window>
