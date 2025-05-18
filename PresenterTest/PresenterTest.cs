@@ -137,20 +137,6 @@ namespace PresenterTest
             Assert.Empty(categories);                                       //Making sure the list return is empty
             Assert.Equal("Database not initialized.", _mockView.LastError); // Error should be shown
         }
-        //Testing SetCategoryType
-        [Fact]
-        public void SetCategoryType_ValidCategoryType_UpdatesSelectedCategoryType()
-        {
-            // Arrange
-            int categoryTypeInt = (int)CategoryType.Income;
-
-            // Act
-            _presenter.SetCategoryType(categoryTypeInt);
-
-            //Assert
-            CategoryType selectedCategoryType = _presenter.GetSelectedCategoryType();
-            Assert.Equal(CategoryType.Income, selectedCategoryType);
-        }
 
         //Testing CreateOrGetCategory
         [Fact]
@@ -161,7 +147,7 @@ namespace PresenterTest
             string cateogryDescription = "Income";
 
             //Act
-            Category category = _presenter.CreateOrGetCategory(cateogryDescription);
+            Category category = _presenter.GetCategory(cateogryDescription);
 
             //Assert
             Assert.Equal(cateogryDescription, category.Description);
@@ -175,7 +161,7 @@ namespace PresenterTest
             string cateogryDescription = "CategoryToCreate";
 
             //Act
-            Category category = _presenter.CreateOrGetCategory(cateogryDescription);
+            Category category = _presenter.GetCategory(cateogryDescription);
 
             //Assert
             Assert.Equal(cateogryDescription, category.Description);
@@ -185,7 +171,7 @@ namespace PresenterTest
         public void CreateOrGetCategory_WithoutDatabase_ThrowsException()
         {
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => _presenter.CreateOrGetCategory("Groceries"));
+            Assert.Throws<InvalidOperationException>(() => _presenter.GetCategory("Groceries"));
         }
         //Testing AddCategory
         [Fact]
@@ -357,7 +343,7 @@ namespace PresenterTest
         {
             // Arrange
             _presenter.GetDatabase("testingdb.db");
-            var category = _presenter.CreateOrGetCategory("newCat");
+            var category = _presenter.GetCategory("newCat");
 
             // Act
             string name = _presenter.GetCategoryName(category.Id);

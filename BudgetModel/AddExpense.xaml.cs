@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Views;
+using static Budget.Category;
 
 namespace BudgetModel
 {
@@ -89,13 +90,14 @@ namespace BudgetModel
                     if (categoryWindow.DialogResult == true)
                     {
                         string categoryType = categoryWindow.SelectedCategoryType;
+                        Console.WriteLine(categoryType);
                         _presenter.AddCategory(category, categoryType); // Add new category only if confirmed
                     }
                     else
                     {
                         return; //if user canceled, go back
-                    }
                 }
+            }
 
             _presenter.ProcessNewAddExpense(date, name, amount, category);
         }
