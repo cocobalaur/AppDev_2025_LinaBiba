@@ -155,11 +155,11 @@ namespace BudgetModel
                     }
                 }
 
-                throw new InvalidOperationException("Failed to create or retrieve the category.");
+                throw new InvalidOperationException("Failed to retrieve the category.");
             }
             catch (Exception ex)
             {
-                throw new InvalidOperationException("An error occurred while creating or retrieving the category.", ex);
+                throw new InvalidOperationException("An error occurred retrieving the category.", ex);
             }
         }
 

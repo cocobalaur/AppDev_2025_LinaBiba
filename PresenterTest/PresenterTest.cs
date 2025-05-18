@@ -154,20 +154,6 @@ namespace PresenterTest
         }
 
         [Fact]
-        public void CreateOrGetCategory_CategoryDoesNotExist_CreatesAndReturnNewCategory()
-        {
-            //Arrange
-            _presenter.GetDatabase("testingdb.db");
-            string cateogryDescription = "CategoryToCreate";
-
-            //Act
-            Category category = _presenter.GetCategory(cateogryDescription);
-
-            //Assert
-            Assert.Equal(cateogryDescription, category.Description);
-        }
-
-        [Fact]
         public void CreateOrGetCategory_WithoutDatabase_ThrowsException()
         {
             // Act & Assert
@@ -295,12 +281,13 @@ namespace PresenterTest
             string name = "Updated name";
             string amount = "99,99";
             DateTime date = DateTime.Today;
-            string category = "Updated Category";
+
             _presenter.ProcessNewAddExpense(date, "woah", 12, "Clothes");
 
+           _presenter.AddCategory("newCat", "Income");
 
             // Act
-            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, category, out string message);
+            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, "newCat", out string message);
 
             // Assert
             Assert.True(result);
@@ -343,7 +330,9 @@ namespace PresenterTest
         {
             // Arrange
             _presenter.GetDatabase("testingdb.db");
-            var category = _presenter.GetCategory("newCat");
+            Category category;
+            _presenter.AddCategory("newCat", "Income");
+            category = _presenter.GetCategory("newCat");
 
             // Act
             string name = _presenter.GetCategoryName(category.Id);
