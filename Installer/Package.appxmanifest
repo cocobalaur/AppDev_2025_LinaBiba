@@ -9,7 +9,7 @@
   <Identity
     Name="e171f215-79bb-40cb-b8a6-8b8604e56730"
     Publisher="CN=LinaBiba"
-    Version="1.0.13.0" />
+    Version="1.0.17.0" />
 
   <Properties>
     <DisplayName>BudgetPlan</DisplayName>
@@ -35,7 +35,7 @@
         Description="BudgetApp"
         BackgroundColor="transparent"
         Square150x150Logo="Images\Square150x150Logo.png"
-        Square44x44Logo="Images\Square44x44Logo.png">
+        Square44x44Logo="Images\budgeticon.png">
         <uap:DefaultTile Wide310x150Logo="Images\Wide310x150Logo.png"  Square71x71Logo="Images\SmallTile.png" Square310x310Logo="Images\LargeTile.png">
         </uap:DefaultTile >
         <uap:SplashScreen Image="Images\SplashScreen.png" />

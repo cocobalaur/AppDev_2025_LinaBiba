@@ -102,6 +102,26 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Images\budgeticon.altform-lightunplated_targetsize-16.png" />
+    <Content Include="Images\budgeticon.altform-lightunplated_targetsize-24.png" />
+    <Content Include="Images\budgeticon.altform-lightunplated_targetsize-256.png" />
+    <Content Include="Images\budgeticon.altform-lightunplated_targetsize-32.png" />
+    <Content Include="Images\budgeticon.altform-lightunplated_targetsize-48.png" />
+    <Content Include="Images\budgeticon.altform-unplated_targetsize-16.png" />
+    <Content Include="Images\budgeticon.altform-unplated_targetsize-24.png" />
+    <Content Include="Images\budgeticon.altform-unplated_targetsize-256.png" />
+    <Content Include="Images\budgeticon.altform-unplated_targetsize-32.png" />
+    <Content Include="Images\budgeticon.altform-unplated_targetsize-48.png" />
+    <Content Include="Images\budgeticon.scale-100.png" />
+    <Content Include="Images\budgeticon.scale-125.png" />
+    <Content Include="Images\budgeticon.scale-150.png" />
+    <Content Include="Images\budgeticon.scale-200.png" />
+    <Content Include="Images\budgeticon.scale-400.png" />
+    <Content Include="Images\budgeticon.targetsize-16.png" />
+    <Content Include="Images\budgeticon.targetsize-24.png" />
+    <Content Include="Images\budgeticon.targetsize-256.png" />
+    <Content Include="Images\budgeticon.targetsize-32.png" />
+    <Content Include="Images\budgeticon.targetsize-48.png" />
     <Content Include="Images\LargeTile.scale-100.png" />
     <Content Include="Images\LargeTile.scale-125.png" />
     <Content Include="Images\LargeTile.scale-150.png" />
