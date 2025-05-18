@@ -90,7 +90,6 @@ namespace BudgetModel
                     if (categoryWindow.DialogResult == true)
                     {
                         string categoryType = categoryWindow.SelectedCategoryType;
-                        Console.WriteLine(categoryType);
                         _presenter.AddCategory(category, categoryType); // Add new category only if confirmed
                     }
                     else
