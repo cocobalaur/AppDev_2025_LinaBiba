@@ -60,6 +60,8 @@ namespace BudgetModel
             }
         }
 
+
+
         /// <summary>
         /// Handles the OK button click to load or create the selected budget database.
         /// If successful, it initializes and displays the Filter window,
@@ -81,10 +83,9 @@ namespace BudgetModel
 
                 _filterWindow.Show();
                 _presenter.RefreshCategoryList();
-                this.Hide(); 
+                this.Hide();
             }
         }
-
 
         /// <summary>
         /// Validates the file path entered by the user and attempts to initialize the database.
@@ -93,12 +94,22 @@ namespace BudgetModel
         /// <returns>True if the database was successfully initialized; otherwise, false.</returns>
         public bool FileDatabaseSelection()
         {
-            string path = DirectoryTextBox.Text;
+            string input = DirectoryTextBox.Text;
 
-            if (string.IsNullOrWhiteSpace(path))
+            if (string.IsNullOrWhiteSpace(input))
             {
-                DisplayErrorMessage("Please select a valid database file.");
+                DisplayErrorMessage("Please enter a valid file name or path.");
                 return false;
+            }
+
+            string path = input;
+
+            //if file doesnt exist, save it to desktop
+            if (!System.IO.Path.IsPathRooted(path)) //check if the user entered a path or a filename
+            {
+                //if path is just a name, save it to the desktop
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop); //get full path to desktop to place the new db file there
+                path = System.IO.Path.Combine(desktopPath, input); //combine the desktop path with the file name
             }
 
             bool success = _presenter.GetDatabase(path);
@@ -229,10 +240,15 @@ namespace BudgetModel
         /// </returns>
         public string RenameSelectedCategory() => _filterWindow?.CategoryComboBox.SelectedItem?.ToString() ?? "";
 
-        public void DisplayExpenseUpdate(Expense expense)
+        /// <summary>
+        /// Open the window to update expense.
+        /// </summary>
+        /// <param name="expense">The expense to update.</param>
+        /// <param name="onCompleteUpdate">The action to complete when the update is successfull.</param>
+        public void DisplayExpenseUpdate(Expense expense, Action onCompleteUpdate)
         {
             _expenseToUpdate = expense;
-            _updateWindow = new UpdateWindow(_expenseToUpdate, _presenter, this);
+            _updateWindow = new UpdateWindow(_expenseToUpdate, _presenter, this, onCompleteUpdate);
             _updateWindow.Show();
         }
     }

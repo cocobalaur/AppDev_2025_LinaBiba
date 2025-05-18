@@ -1,4 +1,5 @@
 ﻿using Budget;
+using System.IO;
 using Views;
 using static Budget.Category;
 
@@ -13,7 +14,6 @@ namespace BudgetModel
         private IView _view;
 
         private HomeBudget? _budget;
-        private CategoryType _selectedCategoryType = CategoryType.Expense; //default category type
 
         /// <summary>
         /// Gets or sets the associated view.
@@ -47,10 +47,21 @@ namespace BudgetModel
                     return false; // STOP if no directory selected
                 }
 
-                bool IsNewDatabase = !System.IO.File.Exists(databasePath); //does the db file exist -> to set up for homebudget boolean
+                string addedExtension = HomeBudget.VerifyFile(databasePath);
 
+                bool IsNewDatabase = !System.IO.File.Exists(addedExtension); //does the db file exist -> to set up for homebudget boolean
+               
                 _budget = new HomeBudget(databasePath, IsNewDatabase);
-                _view.DisplaySuccessMessage("Successfully opened database.");
+
+                if (IsNewDatabase)
+                {
+                    _view.DisplaySuccessMessage("Successfully opened new database.");
+                }
+                else
+                {
+                    _view.DisplaySuccessMessage("Successfully opened database.");
+                }
+
                 return true;
             }
             catch (Exception ex)
@@ -78,8 +89,8 @@ namespace BudgetModel
                 }
 
                 _view.DisplayAddExpense(); //open the add expense window
-                Category category = CreateOrGetCategory(categoryName);
-
+                Category category = GetCategory(categoryName);
+        
                 int categoryId = category.Id; //get category id when adding the expense 
 
                 _budget.expenses.Add(date, amount, name, categoryId);
@@ -122,12 +133,34 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Sets the currently selected category type for future category creation.
+        /// Searches for a category by description or creates a new one if it doesn't exist.
         /// </summary>
-        /// <param name="categoryType">Integer representation of CategoryType (enum).</param>
-        public void SetCategoryType(int categoryType)
+        /// <param name="categoryDescription">The category name to find or create.</param>
+        /// <returns>The existing or newly created Category object.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if creation or retrieval fails.</exception>
+        public Category GetCategory(string categoryDescription)
         {
-            _selectedCategoryType = (CategoryType)categoryType;
+            try
+            {
+                string inputName = categoryDescription.ToLower();
+
+                List<Category> categories = _budget.categories.List();
+
+                //find existing category
+                for (int i = 0; i < categories.Count; i++)
+                {
+                    if (categories[i].Description.ToLower() == inputName)
+                    {
+                        return categories[i];
+                    }
+                }
+
+                throw new InvalidOperationException("Failed to retrieve the category.");
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("An error occurred retrieving the category.", ex);
+            }
         }
 
         public void RefreshCategoryList(string selectedCategory = null)
@@ -149,53 +182,7 @@ namespace BudgetModel
             _view.DisplayCategoryExpense(categoryNames, selectedCategory);
         }
 
-
         /// <summary>
-        /// Searches for a category by description or creates a new one if it doesn't exist.
-        /// </summary>
-        /// <param name="categoryDescription">The category name to find or create.</param>
-        /// <returns>The existing or newly created Category object.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if creation or retrieval fails.</exception>
-        public Category CreateOrGetCategory(string categoryDescription)
-        {
-            try
-            {
-                string inputName = categoryDescription.ToLower();
-
-                List<Category> categories = _budget.categories.List();
-
-                //find existing category
-                for (int i = 0; i < categories.Count; i++)
-                {
-                    if (categories[i].Description.ToLower() == inputName)
-                    {
-                        return categories[i];
-                    }
-                }
-
-                //if not found, try to create new category
-                _budget.categories.Add(categoryDescription, _selectedCategoryType);
-
-                //search again
-                categories = _budget.categories.List();
-
-                for (int i = 0; i < categories.Count; i++)
-                {
-                    if (categories[i].Description.ToLower() == inputName)
-                    {
-                        return categories[i];
-                    }
-                }
-
-                throw new InvalidOperationException("Failed to create or retrieve the category.");
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException("An error occurred while creating or retrieving the category.", ex);
-            }
-        }
-
-        // <summary>
         /// Adds a new category based on user input (name and type string).
         /// </summary>
         /// <param name="name">The name of the new category.</param>
@@ -256,16 +243,6 @@ namespace BudgetModel
                 System.Diagnostics.Debug.WriteLine($"Unexpected error when adding category: {ex.Message}");
                 return false;
             }
-        }
-
-        //Method for testing purpose 
-        /// <summary>
-        /// Method to get the categoryType that was selected by the user.
-        /// </summary>
-        /// <returns>Return the selected type for the category.</returns>
-        public CategoryType GetSelectedCategoryType()
-        {
-            return _selectedCategoryType;
         }
 
         /// <summary>
@@ -474,8 +451,9 @@ namespace BudgetModel
         /// <param name="resultMessage">
         /// A message describing the result of the operation, either confirming deletion or detailing the error.
         /// </param>
+        /// <param name="onUpdateComplete">The action to do once the expense have been deleted.</param>
         /// <returns>True if the expense was successfully deleted; otherwise, false.</returns>
-        public bool DeleteExpense(int id, out string resultMessage)
+        public bool DeleteExpense(int id, out string resultMessage, Action onUpdateComplete)
         {
             if (_budget == null)
             {
@@ -485,6 +463,7 @@ namespace BudgetModel
             try
             {
                 _budget.expenses.Delete(id);
+                onUpdateComplete.Invoke();
                 resultMessage = "Expense deleted successfully.";
                 return true;
             }
@@ -529,7 +508,7 @@ namespace BudgetModel
             }
             try
             {
-                Category category = CreateOrGetCategory(categoryName);
+                Category category = GetCategory(categoryName);
                 int categoryId = category.Id;
 
                 _budget.expenses.UpdateExpenses(id, date, amount, name, categoryId);
@@ -556,51 +535,16 @@ namespace BudgetModel
             return category.Description;
         }
 
-        public void UpdateExpense(Expense expense)
+        public void UpdateExpense(Expense expense, Action onUpdateComplete)
         {
             try
             {
-                _view.DisplayExpenseUpdate(expense);
-                //double goodAmount = VerificationOfData(name, amount, date, categories);
-                //_budget.expenses.UpdateExpenses(0, date, goodAmount, name, categories);
+                _view.DisplayExpenseUpdate(expense, onUpdateComplete);
             }
             catch (Exception ex)
             {
                 _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
             }
-        }
-
-        private double VerificationOfData(string name, string amount, DateTime date, string categories)
-        {
-            try
-            {
-
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    throw new Exception("The name value cannot be empty.");
-                }
-                //Validate the amount
-                if (!double.TryParse(amount, out double amountGood))
-                {
-                    throw new Exception("The expense amount must be a valid number.");
-                }
-                //Validate the date
-                if (date == null)
-                {
-                    throw new Exception("Please select a valid date.");
-                }
-                //Validate that a category was entered.
-                if (categories == null)
-                {
-                    throw new Exception("Please enter a category.");
-                }
-                return amountGood;
-            }
-            catch (Exception ex)
-            {
-                _view.DisplayErrorMessage($"Error in the inputs: {ex.Message}");
-            }
-            return -1;
         }
     }
 }

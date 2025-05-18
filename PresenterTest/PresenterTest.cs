@@ -137,20 +137,6 @@ namespace PresenterTest
             Assert.Empty(categories);                                       //Making sure the list return is empty
             Assert.Equal("Database not initialized.", _mockView.LastError); // Error should be shown
         }
-        //Testing SetCategoryType
-        [Fact]
-        public void SetCategoryType_ValidCategoryType_UpdatesSelectedCategoryType()
-        {
-            // Arrange
-            int categoryTypeInt = (int)CategoryType.Income;
-
-            // Act
-            _presenter.SetCategoryType(categoryTypeInt);
-
-            //Assert
-            CategoryType selectedCategoryType = _presenter.GetSelectedCategoryType();
-            Assert.Equal(CategoryType.Income, selectedCategoryType);
-        }
 
         //Testing CreateOrGetCategory
         [Fact]
@@ -161,21 +147,7 @@ namespace PresenterTest
             string cateogryDescription = "Income";
 
             //Act
-            Category category = _presenter.CreateOrGetCategory(cateogryDescription);
-
-            //Assert
-            Assert.Equal(cateogryDescription, category.Description);
-        }
-
-        [Fact]
-        public void CreateOrGetCategory_CategoryDoesNotExist_CreatesAndReturnNewCategory()
-        {
-            //Arrange
-            _presenter.GetDatabase("testingdb.db");
-            string cateogryDescription = "CategoryToCreate";
-
-            //Act
-            Category category = _presenter.CreateOrGetCategory(cateogryDescription);
+            Category category = _presenter.GetCategory(cateogryDescription);
 
             //Assert
             Assert.Equal(cateogryDescription, category.Description);
@@ -185,7 +157,7 @@ namespace PresenterTest
         public void CreateOrGetCategory_WithoutDatabase_ThrowsException()
         {
             // Act & Assert
-            Assert.Throws<InvalidOperationException>(() => _presenter.CreateOrGetCategory("Groceries"));
+            Assert.Throws<InvalidOperationException>(() => _presenter.GetCategory("Groceries"));
         }
         //Testing AddCategory
         [Fact]
@@ -279,7 +251,7 @@ namespace PresenterTest
             _presenter.GetDatabase("testingdb.db");
 
             // Act
-            bool result = _presenter.DeleteExpense(1, out string message);
+            bool result = _presenter.DeleteExpense(1, out string message, () => { });
 
             // Assert
             Assert.True(result);
@@ -293,7 +265,7 @@ namespace PresenterTest
             string message;
 
             // Act
-            bool result = _presenter.DeleteExpense(1, out message); // no DB initialized
+            bool result = _presenter.DeleteExpense(1, out message, () => { }); // no DB initialized
 
             // Assert
             Assert.False(result);
@@ -309,12 +281,13 @@ namespace PresenterTest
             string name = "Updated name";
             string amount = "99,99";
             DateTime date = DateTime.Today;
-            string category = "Updated Category";
+
             _presenter.ProcessNewAddExpense(date, "woah", 12, "Clothes");
 
+           _presenter.AddCategory("newCat", "Income");
 
             // Act
-            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, category, out string message);
+            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, "newCat", out string message);
 
             // Assert
             Assert.True(result);
@@ -357,7 +330,9 @@ namespace PresenterTest
         {
             // Arrange
             _presenter.GetDatabase("testingdb.db");
-            var category = _presenter.CreateOrGetCategory("newCat");
+            Category category;
+            _presenter.AddCategory("newCat", "Income");
+            category = _presenter.GetCategory("newCat");
 
             // Act
             string name = _presenter.GetCategoryName(category.Id);
