@@ -1,17 +1,9 @@
 ﻿using Budget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Views;
 
 namespace BudgetModel
@@ -28,7 +20,7 @@ namespace BudgetModel
 
         public Filter(Presenter presenter, IView view)
         {
-            
+
             InitializeComponent();
             _presenter = presenter;
             _view = view;
@@ -218,7 +210,7 @@ namespace BudgetModel
         /// <param name="e">Event data associated with the menu item click.</param>
         private void UpdateMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            
+
             //Make sure that the object is a Budget Item
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
@@ -377,11 +369,24 @@ namespace BudgetModel
                 // Build columns from dictionary keys
                 foreach (var key in dictRow.Keys)
                 {
-                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+                    var column = new DataGridTextColumn
                     {
                         Header = key,
-                        Binding = new Binding($"[{key}]") // Bind dictionary key directly
-                    });
+                        Binding = new Binding($"[{key}]")   // Bind dictionary key directly
+                    };
+                    // Force right-alignment for any likely numeric category
+                    string lowerKey = key.ToLower();
+                    if (lowerKey != "month") // everything except 'Month'
+                    {
+                        column.ElementStyle = new Style(typeof(TextBlock))
+                        {
+                            Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) }
+                        };
+                    }
+
+                    ExpenseDataGrid.Columns.Add(column);
+
+
                 }
 
                 ExpenseDataGrid.ItemsSource = summary;
@@ -393,19 +398,31 @@ namespace BudgetModel
                     // Skip displaying these columns (IDs)
                     if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
 
-                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+                    var column = new DataGridTextColumn
                     {
                         Header = prop.Name,
                         Binding = new Binding(prop.Name)
-                    });
+                    };
+
+                    if (prop.Name.Contains("Date") || prop.Name.Contains("Amount") || prop.Name.Contains("Total"))
+                    {
+                        column.ElementStyle = new Style(typeof(TextBlock))
+                        {
+                            Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) }
+                        };
+                    }
+
+                    ExpenseDataGrid.Columns.Add(column);
+
                 }
 
-                ExpenseDataGrid.ItemsSource = summary;
             }
+
+            ExpenseDataGrid.ItemsSource = summary;
         }
-
-
-
-
     }
+
+
+
+
 }
