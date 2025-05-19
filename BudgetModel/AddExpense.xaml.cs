@@ -13,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using Views;
+using static Budget.Category;
 
 namespace BudgetModel
 {
@@ -94,8 +95,8 @@ namespace BudgetModel
                     else
                     {
                         return; //if user canceled, go back
-                    }
                 }
+            }
 
             _presenter.ProcessNewAddExpense(date, name, amount, category);
         }

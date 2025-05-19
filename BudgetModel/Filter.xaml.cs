@@ -1,17 +1,9 @@
 ﻿using Budget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Views;
 
 namespace BudgetModel
@@ -24,11 +16,12 @@ namespace BudgetModel
         private Presenter _presenter;
         private IView _view;
 
+        private List<object>? _lastFilteredItems; // Store the full list to reset search
         public event EventHandler DateRangeChanged;
 
         public Filter(Presenter presenter, IView view)
         {
-            
+
             InitializeComponent();
             _presenter = presenter;
             _view = view;
@@ -218,7 +211,7 @@ namespace BudgetModel
         /// <param name="e">Event data associated with the menu item click.</param>
         private void UpdateMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            
+
             //Make sure that the object is a Budget Item
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
@@ -377,11 +370,24 @@ namespace BudgetModel
                 // Build columns from dictionary keys
                 foreach (var key in dictRow.Keys)
                 {
-                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+                    var column = new DataGridTextColumn
                     {
                         Header = key,
-                        Binding = new Binding($"[{key}]") // Bind dictionary key directly
-                    });
+                        Binding = new Binding($"[{key}]")   // Bind dictionary key directly
+                    };
+                    // Force right-alignment for any likely numeric category
+                    string lowerKey = key.ToLower();
+                    if (lowerKey != "month") // everything except 'Month'
+                    {
+                        column.ElementStyle = new Style(typeof(TextBlock))
+                        {
+                            Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) }
+                        };
+                    }
+
+                    ExpenseDataGrid.Columns.Add(column);
+
+
                 }
 
                 ExpenseDataGrid.ItemsSource = summary;
@@ -393,19 +399,86 @@ namespace BudgetModel
                     // Skip displaying these columns (IDs)
                     if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
 
-                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+                    var column = new DataGridTextColumn
                     {
                         Header = prop.Name,
                         Binding = new Binding(prop.Name)
-                    });
+                    };
+
+                    if (prop.Name.Contains("Date") || prop.Name.Contains("Amount") || prop.Name.Contains("Total"))
+                    {
+                        column.ElementStyle = new Style(typeof(TextBlock))
+                        {
+                            Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) }
+                        };
+                    }
+
+                    ExpenseDataGrid.Columns.Add(column);
+
                 }
 
-                ExpenseDataGrid.ItemsSource = summary;
+            }
+
+            ExpenseDataGrid.ItemsSource = summary;
+        }
+
+        /// <summary>
+        /// Handles the click event for the Search button.
+        /// Performs a case-insensitive search through the currently visible (filtered) budget items
+        /// based on the user's input in the SearchBox. Matches are found by comparing both the
+        /// <c>ShortDescription</c> and <c>Amount</c> fields of each item.
+        /// </summary>
+        /// <param name="sender">The Search button that triggered the event.</param>
+        /// <param name="e">The event arguments associated with the button click.</param>
+        /// <remarks>
+        /// If the search box is empty, the method re-applies the full filter logic by raising the
+        /// <c>DateRangeChanged</c> event, which causes the Presenter to refresh the filtered data.
+        /// If matches are found, the DataGrid displays only those matching entries and scrolls to the first.
+        /// If no matches are found, a message box informs the user.
+        /// </remarks>
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            string searchTerm = SearchBox.Text?.Trim().ToLower();
+
+            // If the search box is empty, reapply the full filter from Presenter
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                DateRangeChanged?.Invoke(this, EventArgs.Empty); // triggers FilterByDate() in MainWindow
+                ExpenseDataGrid.SelectedIndex = -1;
+                return;
+            }
+
+            // Get currently visible filtered items
+            var items = ExpenseDataGrid.ItemsSource?.Cast<object>().ToList();
+            if (items == null || items.Count == 0) return;
+
+            // Filter matching entries
+            var filtered = items.Where(obj =>
+            {
+                string? description = obj.GetType().GetProperty("ShortDescription")?.GetValue(obj)?.ToString()?.ToLower();
+                string? amount = obj.GetType().GetProperty("Amount")?.GetValue(obj)?.ToString()?.ToLower();
+
+                return (description != null && description.Contains(searchTerm)) ||
+                       (amount != null && amount.Contains(searchTerm));
+            }).ToList();
+
+            if (filtered.Any())
+            {
+                ExpenseDataGrid.ItemsSource = filtered;
+                ExpenseDataGrid.SelectedIndex = 0;
+                ExpenseDataGrid.ScrollIntoView(filtered[0]);
+            }
+            else
+            {
+                MessageBox.Show("No matching results found.", "Search", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
 
 
-
     }
+
+
+
+
 }
