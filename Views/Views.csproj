@@ -4,6 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<Platforms>AnyCPU;x86;x64</Platforms>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,9 +16,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Reference Include="Budget">
-			<HintPath>..\Budget\bin\Debug\net8.0\Budget.dll</HintPath>
-		</Reference>
+	  <Reference Include="Budget">
+	    <HintPath>..\dll\Budget.dll</HintPath>
+	  </Reference>
 	</ItemGroup>
 
 </Project>
