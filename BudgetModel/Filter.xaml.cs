@@ -1,17 +1,8 @@
 ﻿using Budget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 using Views;
 
 namespace BudgetModel
@@ -28,7 +19,7 @@ namespace BudgetModel
 
         public Filter(Presenter presenter, IView view)
         {
-            
+
             InitializeComponent();
             _presenter = presenter;
             _view = view;
@@ -218,7 +209,7 @@ namespace BudgetModel
         /// <param name="e">Event data associated with the menu item click.</param>
         private void UpdateMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            
+
             //Make sure that the object is a Budget Item
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
@@ -343,9 +334,71 @@ namespace BudgetModel
             UpdateSummaryDisplay();
         }
 
+
         /// <summary>
         /// Refreshes the DataGrid columns and rows to show a summary view
         /// based on the combination of "By Month" and/or "By Category" selections.
+        /// </summary>
+        //private void UpdateSummaryDisplay()
+        //{
+        //    if (_presenter == null)
+        //        return;
+
+        //    // Determine summary mode
+        //    bool byMonth = ByMonthCheckBox.IsChecked == true;
+        //    bool byCategory = ByCategoryCheckBox.IsChecked == true;
+
+        //    // Clear any existing columns before generating new ones
+        //    ExpenseDataGrid.Columns.Clear();
+
+        //    // Get the summary data from the Presenter
+        //    var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
+
+        //    // If no data found, clear the table
+        //    if (summary == null || summary.Count == 0)
+        //    {
+        //        ExpenseDataGrid.ItemsSource = null;
+        //        return;
+        //    }
+
+        //    var first = summary[0];
+
+        //    // Handle dynamic dictionaries (Month + Category table with flexible headers)
+        //    if (first is Dictionary<string, object> dictRow)
+        //    {
+        //        // Build columns from dictionary keys
+        //        foreach (var key in dictRow.Keys)
+        //        {
+        //            ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+        //            {
+        //                Header = key,
+        //                Binding = new Binding($"[{key}]") // Bind dictionary key directly
+        //            });
+        //        }
+
+        //        ExpenseDataGrid.ItemsSource = summary;
+        //    }
+        //    else
+        //    {
+        //        foreach (var prop in first.GetType().GetProperties())
+        //        {
+        //            // Skip displaying these columns (IDs)
+        //            if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
+
+        //            ExpenseDataGrid.Columns.Add(new DataGridTextColumn
+        //            {
+        //                Header = prop.Name,
+        //                Binding = new Binding(prop.Name)
+        //            });
+        //        }
+
+        //        ExpenseDataGrid.ItemsSource = summary;
+        //    }
+        //}
+        /// <summary>
+        /// Refreshes the DataGrid columns and rows to show a summary view
+        /// based on the combination of "By Month" and/or "By Category" selections.
+        /// Also toggles visibility of a pie chart button if both filters are enabled.
         /// </summary>
         private void UpdateSummaryDisplay()
         {
@@ -356,54 +409,75 @@ namespace BudgetModel
             bool byMonth = ByMonthCheckBox.IsChecked == true;
             bool byCategory = ByCategoryCheckBox.IsChecked == true;
 
-            // Clear any existing columns before generating new ones
-            ExpenseDataGrid.Columns.Clear();
+            // Show pie chart button only when both Month and Category are selected
+            PieChartButton.Visibility = (byMonth && byCategory) ? Visibility.Visible : Visibility.Collapsed;
 
-            // Get the summary data from the Presenter
-            var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
-
-            // If no data found, clear the table
-            if (summary == null || summary.Count == 0)
+            // Show chart only when both Month and Category are selected
+            if (byMonth && byCategory)
             {
-                ExpenseDataGrid.ItemsSource = null;
-                return;
-            }
-
-            var first = summary[0];
-
-            // Handle dynamic dictionaries (Month + Category table with flexible headers)
-            if (first is Dictionary<string, object> dictRow)
-            {
-                // Build columns from dictionary keys
-                foreach (var key in dictRow.Keys)
+                // Get data grouped by Month and Category
+                var groupedData = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
+                if (groupedData == null || groupedData.Count == 0)
                 {
-                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
-                    {
-                        Header = key,
-                        Binding = new Binding($"[{key}]") // Bind dictionary key directly
-                    });
+                    ExpenseDataGrid.ItemsSource = null;
+                    MyChartControl.Visibility = Visibility.Collapsed;
+                    return;
                 }
 
-                ExpenseDataGrid.ItemsSource = summary;
+                ExpenseDataGrid.ItemsSource = groupedData;
+
+                // Cast to List<KeyValuePair<string, double>> for pie chart
+                var pieData = BuildPieData(groupedData);
+                MyChartControl.Visibility = Visibility.Visible;
+                MyChartControl.SetData(pieData);
             }
             else
             {
-                foreach (var prop in first.GetType().GetProperties())
-                {
-                    // Skip displaying these columns (IDs)
-                    if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
+                // Reset to regular DataGrid mode if one filter is unchecked
+                MyChartControl.Visibility = Visibility.Collapsed;
 
-                    ExpenseDataGrid.Columns.Add(new DataGridTextColumn
-                    {
-                        Header = prop.Name,
-                        Binding = new Binding(prop.Name)
-                    });
+                var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
+                if (summary == null || summary.Count == 0)
+                {
+                    ExpenseDataGrid.ItemsSource = null;
+                    return;
                 }
 
                 ExpenseDataGrid.ItemsSource = summary;
             }
         }
 
+        private List<KeyValuePair<string, double>> BuildPieData(List<object> groupedData)
+        {
+            var displayData = new List<KeyValuePair<string, double>>();
+            foreach (var obj in groupedData)
+            {
+                if (obj is Dictionary<string, object> dict && dict.ContainsKey("Month"))
+                {
+                    string month = dict["Month"].ToString();
+                    foreach (var pair in dict)
+                    {
+                        if (pair.Key == "Month") continue;
+                        double amount;
+                        if (double.TryParse(pair.Value.ToString(), out amount) && amount < 0)
+                        {
+                            displayData.Add(new KeyValuePair<string, double>($"{month} - {pair.Key}", -amount));
+                        }
+                    }
+                }
+            }
+            return displayData;
+        }
+
+        //private void PieChartButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    // Example logic: you should replace this with your actual chart data logic
+        //    var groupedData = _presenter.GetGroupedDataForChart(StartDate, EndDate); // you might have a method like this
+        //    var categories = _presenter.GetAllCategoryNames(); // get list of all categories (even $0 ones)
+
+        //    MyChartControl.Visibility = Visibility.Visible;
+        //    MyChartControl.SetData(groupedData, categories);
+        //}
 
 
 

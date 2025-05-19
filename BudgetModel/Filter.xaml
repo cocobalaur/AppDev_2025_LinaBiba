@@ -107,6 +107,10 @@
                 </DataGrid.ContextMenu>
             </DataGrid>
 
+            <local:ChartView x:Name="MyChartControl" Visibility="Collapsed" />
+            <Button x:Name="PieChartButton" Content="Show Pie Chart" Visibility="Collapsed" Click="PieChartButton_Click"/>
+
+
         </Grid>
     </Grid>
 </Window>
