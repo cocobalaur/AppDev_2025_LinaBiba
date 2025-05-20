@@ -87,5 +87,15 @@ namespace PresenterTest
         {
             throw new NotImplementedException();
         }
+
+        public void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void HideChart()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
