@@ -8,11 +8,10 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
-        <toolkit:Chart x:Name="chPie">
-            <toolkit:LabeledPieSeries 
-                IndependentValueBinding="{Binding Path=Key}"
-                DependentValueBinding="{Binding Path=Value}" 
-                Title="Expenses Breakdown" />
+        <toolkit:Chart x:Name="chPie" Title="Expense Summary">
+            <toolkit:PieSeries 
+                IndependentValueBinding="{Binding Key}" 
+                DependentValueBinding="{Binding Value}" />
         </toolkit:Chart>
     </Grid>
 </UserControl>

@@ -99,6 +99,11 @@ namespace Views
         /// <param name="onUpdateComplete">The action to do once </param>
         void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete);
 
+        // Enables the chart to be shown with grouped data and all categories
+        void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories);
+
+        // Hides the chart when not applicable
+        void HideChart();
 
     }
 }

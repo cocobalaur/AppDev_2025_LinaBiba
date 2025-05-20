@@ -546,6 +546,64 @@ namespace BudgetModel
                 _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// Returns all category descriptions for chart labeling and to include zeroes.
+        /// </summary>
+        public List<string> GetAllCategoryNames()
+        {
+            return _budget.categories.List().Select(c => c.Description).Distinct().OrderBy(c => c).ToList();
+        }
+
+        /// <summary>
+        /// Returns grouped expense data by month and category using existing summary logic.
+        /// Filters out the "TOTAL" row if present.
+        /// </summary>
+        /// <param name="start">Start date of the range.</param>
+        /// <param name="end">End date of the range.</param>
+        /// <returns>A list of dictionaries, each representing a month's grouped expenses.</returns>
+        public List<Dictionary<string, object>> GetGroupedExpensesByMonthAndCategory(DateTime? start, DateTime? end)
+        {
+            var categories = GetAllCategoryNames();
+            var items = _budget.GetBudgetItems(start, end, false, -1);
+
+            return items
+                .GroupBy(i => new { i.Date.Year, i.Date.Month })
+                .OrderBy(g => new DateTime(g.Key.Year, g.Key.Month, 1))
+                .Select(g =>
+                {
+                    var row = new Dictionary<string, object>();
+                    string month = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("yyyy-MM");
+                    row["Month"] = month;
+
+                    foreach (var cat in categories)
+                    {
+                        double total = g.Where(i => i.Category == cat).Sum(i => i.Amount);
+                        row[cat] = Math.Round(total, 2);
+                    }
+                    return row;
+                }).ToList();
+        }
+
+        public void DisplayChartIfEnabled()
+        {
+            if (_budget == null) return;
+
+            bool byMonth = _view.DisplayByMonthSummary();
+            bool byCategory = _view.DisplayByCategorySummary();
+
+            if (byMonth && byCategory)
+            {
+                var groupedData = GetGroupedExpensesByMonthAndCategory(_view.GetStartDate(), _view.GetEndDate());
+                var allCategories = GetAllCategoryNames();
+                _view.ShowChart(groupedData, allCategories);
+            }
+            else
+            {
+                _view.HideChart();
+            }
+        }
+
     }
 }
 

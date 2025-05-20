@@ -1,9 +1,11 @@
 ﻿using Budget;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
 using Views;
+
 
 namespace BudgetModel
 {
@@ -395,90 +397,207 @@ namespace BudgetModel
         //        ExpenseDataGrid.ItemsSource = summary;
         //    }
         //}
+
         /// <summary>
         /// Refreshes the DataGrid columns and rows to show a summary view
         /// based on the combination of "By Month" and/or "By Category" selections.
-        /// Also toggles visibility of a pie chart button if both filters are enabled.
+        /// Also manages the visibility of the chart button and the chart control.
         /// </summary>
         private void UpdateSummaryDisplay()
         {
             if (_presenter == null)
                 return;
 
-            // Determine summary mode
+            // Check if both filters are active
             bool byMonth = ByMonthCheckBox.IsChecked == true;
             bool byCategory = ByCategoryCheckBox.IsChecked == true;
 
-            // Show pie chart button only when both Month and Category are selected
-            PieChartButton.Visibility = (byMonth && byCategory) ? Visibility.Visible : Visibility.Collapsed;
+            // Hide chart by default
+            MyChartControl.Visibility = Visibility.Collapsed;
+            NoResultLabel.Visibility = Visibility.Collapsed;
 
-            // Show chart only when both Month and Category are selected
-            if (byMonth && byCategory)
+            // Clear DataGrid columns
+            ExpenseDataGrid.Columns.Clear();
+
+            // Get summary data
+            var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
+
+            if (summary == null || summary.Count == 0)
             {
-                // Get data grouped by Month and Category
-                var groupedData = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
-                if (groupedData == null || groupedData.Count == 0)
+                ExpenseDataGrid.ItemsSource = null;
+                ChartButton.Visibility = Visibility.Collapsed;
+                NoResultLabel.Text = "No results match your filters.";
+                NoResultLabel.Visibility = Visibility.Visible;
+                return;
+            }
+
+            var first = summary[0];
+
+            if (first is Dictionary<string, object> dictRow)
+            {
+                foreach (var key in dictRow.Keys)
                 {
-                    ExpenseDataGrid.ItemsSource = null;
-                    MyChartControl.Visibility = Visibility.Collapsed;
-                    return;
+                    var column = new DataGridTextColumn
+                    {
+                        Header = key,
+                        Binding = new Binding($"[{key}]")
+                    };
+
+                    if (!key.Equals("Month", StringComparison.OrdinalIgnoreCase))
+                    {
+                        column.ElementStyle = new Style(typeof(TextBlock))
+                        {
+                            Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) }
+                        };
+                    }
+
+                    ExpenseDataGrid.Columns.Add(column);
                 }
-
-                ExpenseDataGrid.ItemsSource = groupedData;
-
-                // Cast to List<KeyValuePair<string, double>> for pie chart
-                var pieData = BuildPieData(groupedData);
-                MyChartControl.Visibility = Visibility.Visible;
-                MyChartControl.SetData(pieData);
             }
             else
             {
-                // Reset to regular DataGrid mode if one filter is unchecked
-                MyChartControl.Visibility = Visibility.Collapsed;
-
-                var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
-                if (summary == null || summary.Count == 0)
+                foreach (var prop in first.GetType().GetProperties())
                 {
-                    ExpenseDataGrid.ItemsSource = null;
+                    if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
+
+                    var column = new DataGridTextColumn
+                    {
+                        Header = prop.Name,
+                        Binding = new Binding(prop.Name)
+                    };
+
+                    if (prop.Name.Contains("Date") || prop.Name.Contains("Amount") || prop.Name.Contains("Total"))
+                    {
+                        column.ElementStyle = new Style(typeof(TextBlock))
+                        {
+                            Setters = { new Setter(TextBlock.TextAlignmentProperty, TextAlignment.Right) }
+                        };
+                    }
+
+                    ExpenseDataGrid.Columns.Add(column);
+                }
+            }
+
+            // Bind data
+            ExpenseDataGrid.ItemsSource = summary;
+
+            // Chart button logic
+            ChartButton.Visibility = (byMonth && byCategory) ? Visibility.Visible : Visibility.Collapsed;
+
+            // Let presenter decide whether to show the chart
+            _presenter.DisplayChartIfEnabled();
+        }
+
+
+        private void ChartButton_Click(object sender, RoutedEventArgs e)
+        {
+            bool byMonth = ByMonthCheckBox?.IsChecked == true;
+            bool byCategory = ByCategoryCheckBox?.IsChecked == true;
+
+            if (byMonth && byCategory)
+            {
+                var summaryData = ExpenseDataGrid.ItemsSource?.OfType<Dictionary<string, object>>().ToList();
+
+                if (summaryData == null || summaryData.Count == 0)
+                {
+                    MessageBox.Show("No data available to display in the chart.", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
-                ExpenseDataGrid.ItemsSource = summary;
+                // Remove TOTALS row
+                summaryData = summaryData.Where(row =>
+                    !row.TryGetValue("Month", out object value) || value?.ToString() != "TOTALS").ToList();
+
+                var categories = summaryData.FirstOrDefault()?.Keys
+                    .Where(k => k != "Month")
+                    .ToList() ?? new List<string>();
+
+                MyChartControl.Visibility = Visibility.Visible;
+                MyChartControl.SetData(summaryData.Cast<object>().ToList(), categories);
+            }
+            else
+            {
+                MessageBox.Show("Please check both 'By Month' and 'By Category' to view the chart.", "Chart Filter", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 
-        private List<KeyValuePair<string, double>> BuildPieData(List<object> groupedData)
+        private int _lastSearchIndex = -1;
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            var displayData = new List<KeyValuePair<string, double>>();
-            foreach (var obj in groupedData)
+            string searchTerm = SearchTextBox.Text.Trim().ToLower();
+            var items = ExpenseDataGrid.ItemsSource?.Cast<object>().ToList();
+
+            if (items == null || items.Count == 0 || string.IsNullOrWhiteSpace(searchTerm))
             {
-                if (obj is Dictionary<string, object> dict && dict.ContainsKey("Month"))
+                NoResultLabel.Text = "Nothing found.";
+                NoResultLabel.Visibility = Visibility.Visible;
+                return;
+            }
+
+            int start = (_lastSearchIndex + 1) % items.Count;
+            for (int i = 0; i < items.Count; i++)
+            {
+                int index = (start + i) % items.Count;
+                var item = items[index];
+                var row = item as Dictionary<string, object>;
+
+                if (row != null && row.Values.Any(val => val.ToString().ToLower().Contains(searchTerm)))
                 {
-                    string month = dict["Month"].ToString();
-                    foreach (var pair in dict)
-                    {
-                        if (pair.Key == "Month") continue;
-                        double amount;
-                        if (double.TryParse(pair.Value.ToString(), out amount) && amount < 0)
-                        {
-                            displayData.Add(new KeyValuePair<string, double>($"{month} - {pair.Key}", -amount));
-                        }
-                    }
+                    ExpenseDataGrid.SelectedItem = item;
+                    ExpenseDataGrid.ScrollIntoView(item);
+                    _lastSearchIndex = index;
+                    NoResultLabel.Visibility = Visibility.Collapsed;
+                    return;
                 }
             }
-            return displayData;
+
+            NoResultLabel.Text = "Nothing found.";
+            NoResultLabel.Visibility = Visibility.Visible;
+            System.Media.SystemSounds.Beep.Play();
         }
 
-        //private void PieChartButton_Click(object sender, RoutedEventArgs e)
-        //{
-        //    // Example logic: you should replace this with your actual chart data logic
-        //    var groupedData = _presenter.GetGroupedDataForChart(StartDate, EndDate); // you might have a method like this
-        //    var categories = _presenter.GetAllCategoryNames(); // get list of all categories (even $0 ones)
 
-        //    MyChartControl.Visibility = Visibility.Visible;
-        //    MyChartControl.SetData(groupedData, categories);
-        //}
+        public void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories)
+        {
+            MyChartControl.Visibility = Visibility.Visible;
+            MyChartControl.SetData(groupedData.Cast<object>().ToList(), allCategories);
+        }
 
+
+        public void HideChart()
+        {
+            MyChartControl.Visibility = Visibility.Collapsed;
+            ExpenseDataGrid.Visibility = Visibility.Visible;
+        }
+
+
+        private void ViewModeSelector_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (ViewModeSelector.SelectedItem is ComboBoxItem selected)
+            {
+                string mode = selected.Content.ToString();
+
+                // Safeguard in case components haven't initialized
+                if (ExpenseDataGrid == null || MyChartControl == null)
+                    return;
+
+                else if (mode == "Pie Chart")
+                {
+                    if (ByMonthCheckBox.IsChecked == true && ByCategoryCheckBox.IsChecked == true)
+                    {
+                        ExpenseDataGrid.Visibility = Visibility.Collapsed;
+                        MyChartControl.Visibility = Visibility.Visible;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Chart view only works with both 'By Month' and 'By Category' checked.");
+                        ViewModeSelector.SelectedIndex = 0;
+                    }
+                }
+
+            }
+        }
 
 
     }

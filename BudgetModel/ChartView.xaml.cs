@@ -1,22 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.DataVisualization.Charting;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace BudgetModel
 {
-    /// <summary>
+    /// <summary> 
     /// Interaction logic for ChartView.xaml
     /// </summary>
     public partial class ChartView : UserControl
@@ -27,52 +15,55 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Sets and displays the pie chart using grouped expense data.
+        /// Sets the chart data source using summary data and category list.
+        /// Groups values by month and category, displaying them in a pie chart.
         /// </summary>
-        /// <param name="groupedData">A list of dictionaries where each dictionary represents a month's data with category keys.</param>
-        /// <param name="allCategories">All available category names, used to ensure $0 categories are still shown.</param>
-        public void SetData(List<Dictionary<string, object>> groupedData, List<string> allCategories)
+        public void SetData(List<object> summaryData, List<string> categories)
         {
-            if (groupedData == null || groupedData.Count == 0)
+            if (summaryData == null || summaryData.Count == 0 || categories == null || categories.Count == 0)
             {
-                chPie.Series.Clear();
+                MessageBox.Show("NO DATA");
                 return;
             }
 
-            // Get the last month by default
-            var latestMonth = groupedData.LastOrDefault();
-            if (latestMonth == null || !latestMonth.ContainsKey("Month")) return;
-
-            string selectedMonth = latestMonth["Month"].ToString();
-
             var pieData = new List<KeyValuePair<string, double>>();
 
-            foreach (var pair in latestMonth)
+            foreach (var rowObj in summaryData)
             {
-                if (pair.Key == "Month") continue;
-
-                string category = pair.Key;
-                double value = 0;
-                double.TryParse(pair.Value?.ToString(), out value);
-
-                // Always show the category, even if zero (for chart balance)
-                if (allCategories.Contains(category))
+                if (rowObj is Dictionary<string, object> row && row.ContainsKey("Month"))
                 {
-                    pieData.Add(new KeyValuePair<string, double>(category, Math.Abs(value)));
+                    string month = row["Month"]?.ToString();
+                    if (month == "TOTALS") continue;
+
+                    foreach (var cat in categories)
+                    {
+                        if (row.TryGetValue(cat, out object valObj) &&
+                            double.TryParse(valObj?.ToString(), out double value) &&
+                            value != 0)
+                        {
+                            pieData.Add(new KeyValuePair<string, double>($"{month} - {cat}", Math.Abs(value)));
+                        }
+                    }
                 }
             }
 
-            chPie.Series.Clear();
-
-            var pieSeries = new LabeledPieSeries
+            // Bind data to the PieSeries inside the Chart
+            if (chPie.Series.Count > 0 && chPie.Series[0] is PieSeries pieSeries)
             {
-                IndependentValueBinding = new System.Windows.Data.Binding("Key"),
-                DependentValueBinding = new System.Windows.Data.Binding("Value"),
-                ItemsSource = pieData,
-                Title = $"Expenses for {selectedMonth}"
-            };
-
-            chPie.Series.Add(pieSeries);
+                pieSeries.ItemsSource = pieData;
+                this.Visibility = Visibility.Visible;
+            }
         }
+
+        public void Show()
+        {
+            this.Visibility = Visibility.Visible;
+        }
+
+        public void Hide()
+        {
+            this.Visibility = Visibility.Collapsed;
+        }
+
     }
 }

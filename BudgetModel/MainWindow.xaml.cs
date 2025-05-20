@@ -30,6 +30,7 @@ namespace BudgetModel
         private UpdateWindow _updateWindow;
         private Expense _expenseToUpdate;
 
+
         /// <summary>
         /// Constructor: Initializes the main window and applies the default Light theme on startup.
         /// </summary>
@@ -251,5 +252,20 @@ namespace BudgetModel
             _updateWindow = new UpdateWindow(_expenseToUpdate, _presenter, this, onCompleteUpdate);
             _updateWindow.Show();
         }
+
+
+        public void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories)
+        {
+            _filterWindow.MyChartControl.Visibility = Visibility.Visible;
+            _filterWindow.MyChartControl.SetData(groupedData.Cast<object>().ToList(), allCategories);
+        }
+
+
+        public void HideChart()
+        {
+            _filterWindow.MyChartControl.Visibility = Visibility.Collapsed;
+        }
+
+
     }
 }

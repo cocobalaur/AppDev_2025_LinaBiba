@@ -24,6 +24,7 @@
                     <TextBlock Text="Start Date" Width="80"/>
                     <DatePicker x:Name="StartDatePicker" SelectedDate="2014-04-25" SelectedDateChanged="OnDateChanged"/>
                 </StackPanel>
+                
                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                     <TextBlock Text="End Date" Width="80"/>
                     <DatePicker x:Name="EndDatePicker" SelectedDate="2019-04-25" SelectedDateChanged="OnDateChanged"/>
@@ -54,6 +55,14 @@
                     </StackPanel>
                 </GroupBox>
 
+                <!-- View Mode Toggle -->
+                <TextBlock Text="View Mode" FontWeight="Bold" Margin="0,15,0,5"/>
+                <ComboBox x:Name="ViewModeSelector" Width="200" SelectionChanged="ViewModeSelector_Changed">
+                    <ComboBoxItem Content="Data Grid" IsSelected="True"/>
+                    <ComboBoxItem Content="Pie Chart"/>
+                </ComboBox>
+
+
                 <Button Content="Add Expense" Width="200" Margin="0,20,0,10" Click="AddExpense_Click"/>
 
                 <!-- Theme Settings -->
@@ -83,33 +92,49 @@
 
             <!-- Search bar -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,5" HorizontalAlignment="Right">
-                <TextBox x:Name="SearchBox" Width="200" Height="25"/>
-                <Button Content="Search" Width="75" Height="25" Margin="5,0,0,0"/>
+                <TextBox x:Name="SearchTextBox" Width="200" Margin="5"/>
+                <Button Content="Search" Click="SearchButton_Click"/>
+                <TextBlock x:Name="NoResultLabel"
+                           Text=""
+                           Visibility="Collapsed"
+                           Foreground="Red"
+                           FontSize="12"
+                           Margin="5,0,0,5"
+                           FontStyle="Italic"/>     
+
+
+                <Button x:Name="ChartButton"
+                        Content="Show Chart"
+                        Width="100"
+                        Height="25"
+                        Margin="5,0,0,0"
+                        Click="ChartButton_Click"
+                        Visibility="Collapsed"/>        
+
             </StackPanel>
 
-            <!-- Expense Table -->
-            <DataGrid x:Name="ExpenseDataGrid"
-              Grid.Row="1"
-              AutoGenerateColumns="False"
-              IsReadOnly="True"
-              CanUserAddRows="False"
-              HeadersVisibility="Column"                        
-              MouseDoubleClick="ExenseDataGrid_MouseDoubleClick"
-              MouseRightButtonDown="ExpenseDataGrid_MouseRightButtonDown">
+            <Grid Grid.Row="1">
+                <!-- Pie Chart -->
+                <local:ChartView x:Name="MyChartControl" Visibility="Collapsed" />
 
-
-                <DataGrid.ContextMenu>
-                    <ContextMenu x:Name="ExpenseContentMenu">
-                        <MenuItem Header="Update" Click="UpdateMenuItem_Click"/>
-                        <MenuItem Header="Delete" Click="DeleteMenuItem_Click"/>
-                        <MenuItem Header="Cancel"/>
-                    </ContextMenu>
-                </DataGrid.ContextMenu>
-            </DataGrid>
-
-            <local:ChartView x:Name="MyChartControl" Visibility="Collapsed" />
-            <Button x:Name="PieChartButton" Content="Show Pie Chart" Visibility="Collapsed" Click="PieChartButton_Click"/>
-
+                <!-- Data Grid -->
+                <DataGrid x:Name="ExpenseDataGrid"
+                          AutoGenerateColumns="False"
+                          IsReadOnly="True"
+                          CanUserAddRows="False"
+                          HeadersVisibility="Column"
+                          Visibility="Visible"
+                          MouseDoubleClick="ExenseDataGrid_MouseDoubleClick"
+                          MouseRightButtonDown="ExpenseDataGrid_MouseRightButtonDown">  
+                    <DataGrid.ContextMenu>
+                        <ContextMenu x:Name="ExpenseContentMenu">
+                            <MenuItem Header="Update" Click="UpdateMenuItem_Click"/>
+                            <MenuItem Header="Delete" Click="DeleteMenuItem_Click"/>
+                            <MenuItem Header="Cancel"/>
+                        </ContextMenu>
+                    </DataGrid.ContextMenu>
+                </DataGrid>
+            </Grid>
 
         </Grid>
     </Grid>
