@@ -93,13 +93,12 @@ jobs:
     # Execute all unit tests in the solution
     - name: Execute unit tests
       run: dotnet test ${{ env.Test_Project_Path }}
-      
-    # Restore the application
-    - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
+
+    # Restore the application to populate the obj folder 
+    - name: Restore the application
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
       env:
         Configuration: ${{ matrix.configuration }}
-        RuntimeIdentifier: ${{ matrix.targetplatform }}
         
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Build the Windows Application Packaging Project (wapproj)
