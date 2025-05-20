@@ -362,7 +362,7 @@ namespace BudgetModel
 
             if (summary == null || summary.Count == 0)
             {
-                ExpenseDataGrid.ItemsSource = null;                
+                ExpenseDataGrid.ItemsSource = null;
                 NoResultLabel.Text = "No results match your filters.";
                 NoResultLabel.Visibility = Visibility.Visible;
                 return;
@@ -418,79 +418,113 @@ namespace BudgetModel
             // Bind data
             ExpenseDataGrid.ItemsSource = summary;
 
-           
+
             // Let presenter decide whether to show the chart
             _presenter.DisplayChartIfEnabled();
         }
 
 
-        private int _lastSearchIndex = -1;
-
+        /// <summary>
+        /// Handles the Search button click.
+        /// If the search box is empty, resets the DataGrid to show all filtered data.
+        /// Otherwise, filters the grid to show only matching expenses based on description or amount.
+        /// </summary>
         private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            string searchTerm = SearchTextBox.Text.Trim().ToLower();
+            string searchTerm = SearchTextBox.Text?.Trim().ToLower();
+
+            // If the search box is empty, show full filtered data
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                DateRangeChanged?.Invoke(this, EventArgs.Empty); // repopulate DataGrid from Presenter
+                NoResultLabel.Visibility = Visibility.Collapsed;
+                ExpenseDataGrid.SelectedIndex = -1;
+                return;
+            }
+
+            // Get currently visible/filtered items
             var items = ExpenseDataGrid.ItemsSource?.Cast<object>().ToList();
 
-            if (items == null || items.Count == 0 || string.IsNullOrWhiteSpace(searchTerm))
+            if (items == null || items.Count == 0)
             {
-                NoResultLabel.Text = "Nothing found.";
+                NoResultLabel.Text = "No expenses to search.";
                 NoResultLabel.Visibility = Visibility.Visible;
                 return;
             }
 
-            int start = (_lastSearchIndex + 1) % items.Count;
-            for (int i = 0; i < items.Count; i++)
+            // Filter to matches based on description or amount
+            var filtered = items.Where(item =>
             {
-                int index = (start + i) % items.Count;
-                var item = items[index];
-                var row = item as Dictionary<string, object>;
+                string? description = item.GetType().GetProperty("ShortDescription")?.GetValue(item)?.ToString()?.ToLower();
+                string? amount = item.GetType().GetProperty("Amount")?.GetValue(item)?.ToString()?.ToLower();
 
-                if (row != null && row.Values.Any(val => val.ToString().ToLower().Contains(searchTerm)))
-                {
-                    ExpenseDataGrid.SelectedItem = item;
-                    ExpenseDataGrid.ScrollIntoView(item);
-                    _lastSearchIndex = index;
-                    NoResultLabel.Visibility = Visibility.Collapsed;
-                    return;
-                }
+                return (description != null && description.Contains(searchTerm)) ||
+                       (amount != null && amount.Contains(searchTerm));
+            }).ToList();
+
+            // Show filtered results or notify if no matches
+            if (filtered.Any())
+            {
+                ExpenseDataGrid.ItemsSource = filtered;
+                NoResultLabel.Visibility = Visibility.Collapsed;
             }
-
-            NoResultLabel.Text = "Nothing found.";
-            NoResultLabel.Visibility = Visibility.Visible;
-            System.Media.SystemSounds.Beep.Play();
+            else
+            {
+                ExpenseDataGrid.ItemsSource = null;
+                NoResultLabel.Text = "Nothing found.";
+                NoResultLabel.Visibility = Visibility.Visible;
+                System.Media.SystemSounds.Beep.Play();
+            }
         }
-
-
+        /// <summary>
+        /// Displays the pie chart and populates it with grouped data and category labels.
+        /// Called when both 'By Month' and 'By Category' are selected and the chart view is enabled.
+        /// </summary>
+        /// <param name="groupedData">List of grouped expense data dictionaries (by month and category).</param>
+        /// <param name="allCategories">List of all category names used as chart segments.</param>
         public void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories)
         {
             MyChartControl.Visibility = Visibility.Visible;
             MyChartControl.SetData(groupedData.Cast<object>().ToList(), allCategories);
         }
 
-
+        /// <summary>
+        /// Hides the pie chart and switches back to displaying the DataGrid.
+        /// Called when the user switches back to data view mode or filters are not satisfied.
+        /// </summary>
         public void HideChart()
         {
             MyChartControl.Visibility = Visibility.Collapsed;
             ExpenseDataGrid.Visibility = Visibility.Visible;
         }
 
-
+        /// <summary>
+        /// Handles selection changes in the View Mode ComboBox.
+        /// Switches between displaying the DataGrid and the Pie Chart depending on the selected mode,
+        /// and ensures that both 'By Month' and 'By Category' checkboxes are checked before enabling chart view.
+        /// </summary>
+        /// <param name="sender">The ComboBox control that triggered the event.</param>
+        /// <param name="e">Event arguments associated with the selection change.</param>
         private void ViewModeSelector_Changed(object sender, SelectionChangedEventArgs e)
-        { // Don't do anything if critical UI elements are not ready
+        {
+            // Avoid null reference errors if UI is not fully initialized
             if (ExpenseDataGrid == null || MyChartControl == null || ViewModeSelector == null)
                 return;
 
+            // Determine selected view mode
             if (ViewModeSelector.SelectedItem is ComboBoxItem selected)
             {
                 string mode = selected.Content.ToString();
 
                 if (mode == "Data Grid")
                 {
+                    // Show the DataGrid and hide the chart
                     ExpenseDataGrid.Visibility = Visibility.Visible;
                     MyChartControl.Visibility = Visibility.Collapsed;
                 }
                 else if (mode == "Pie Chart")
                 {
+                    // Only allow chart view if both filters are active
                     if (ByMonthCheckBox.IsChecked == true && ByCategoryCheckBox.IsChecked == true)
                     {
                         ExpenseDataGrid.Visibility = Visibility.Collapsed;
@@ -498,12 +532,13 @@ namespace BudgetModel
                     }
                     else
                     {
+                        // Show warning and revert to DataGrid view if filters are not valid
                         MessageBox.Show("Pie Chart view requires both 'By Month' and 'By Category' filters.",
                                         "Filter Requirement",
                                         MessageBoxButton.OK,
                                         MessageBoxImage.Warning);
 
-                        ViewModeSelector.SelectedIndex = 0;
+                        ViewModeSelector.SelectedIndex = 0; // revert selection
 
                         ExpenseDataGrid.Visibility = Visibility.Visible;
                         MyChartControl.Visibility = Visibility.Collapsed;
@@ -511,6 +546,8 @@ namespace BudgetModel
                 }
             }
         }
+
+
 
 
     }

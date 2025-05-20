@@ -254,17 +254,27 @@ namespace BudgetModel
         }
 
 
+        /// <summary>
+        /// Displays the pie chart control in the filter window and populates it with grouped expense data.
+        /// Used when both 'By Month' and 'By Category' filters are selected, and the user switches to chart view.
+        /// </summary>
+        /// <param name="groupedData">A list of dictionaries representing grouped expense data (e.g., by month and category).</param>
+        /// <param name="allCategories">A list of all category names that will be used as pie chart segments.</param>
         public void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories)
         {
             _filterWindow.MyChartControl.Visibility = Visibility.Visible;
             _filterWindow.MyChartControl.SetData(groupedData.Cast<object>().ToList(), allCategories);
         }
 
-
+        /// <summary>
+        /// Hides the pie chart control in the filter window.
+        /// Called when switching back to the DataGrid view or when filters are not suitable for chart display.
+        /// </summary>
         public void HideChart()
         {
             _filterWindow.MyChartControl.Visibility = Visibility.Collapsed;
         }
+
 
 
     }

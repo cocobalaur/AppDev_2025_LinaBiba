@@ -55,15 +55,24 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Makes the current control or window visible.
+        /// Typically used to display UI elements like the chart or a panel.
+        /// </summary>
         public void Show()
         {
             this.Visibility = Visibility.Visible;
         }
 
+        /// <summary>
+        /// Hides the current control or window by collapsing it from the layout.
+        /// Typically used to hide UI elements like the chart or a panel when not needed.
+        /// </summary>
         public void Hide()
         {
             this.Visibility = Visibility.Collapsed;
         }
+
 
     }
 }

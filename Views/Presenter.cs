@@ -1,7 +1,5 @@
 ﻿using Budget;
-using System.IO;
 using Views;
-using static Budget.Category;
 
 namespace BudgetModel
 {
@@ -50,7 +48,7 @@ namespace BudgetModel
                 string addedExtension = HomeBudget.VerifyFile(databasePath);
 
                 bool IsNewDatabase = !System.IO.File.Exists(addedExtension); //does the db file exist -> to set up for homebudget boolean
-               
+
                 _budget = new HomeBudget(databasePath, IsNewDatabase);
 
                 if (IsNewDatabase)
@@ -90,7 +88,7 @@ namespace BudgetModel
 
                 _view.DisplayAddExpense(); //open the add expense window
                 Category category = GetCategory(categoryName);
-        
+
                 int categoryId = category.Id; //get category id when adding the expense 
 
                 _budget.expenses.Add(date, amount, name, categoryId);
@@ -349,7 +347,6 @@ namespace BudgetModel
         /// <param name="startDate">Start date of the filter range.</param>
         /// <param name="endDate">End date of the filter range.</param>
         /// <returns>A list of summarized result rows (as anonymous objects or dictionaries).</returns>
-
         public List<object> GetSummaryTable(bool byMonth, bool byCategory, DateTime? startDate, DateTime? endDate)
         {
             if (_budget == null)
@@ -585,24 +582,36 @@ namespace BudgetModel
                 }).ToList();
         }
 
+        /// <summary>
+        /// Determines whether the chart view should be displayed based on the current filter state.
+        /// If both 'By Month' and 'By Category' are selected, it retrieves the grouped expense data
+        /// and passes it to the view to render the pie chart.
+        /// Otherwise, it hides the chart view.
+        /// </summary>
         public void DisplayChartIfEnabled()
         {
             if (_budget == null) return;
 
+            // Check if both summary filters are enabled
             bool byMonth = _view.DisplayByMonthSummary();
             bool byCategory = _view.DisplayByCategorySummary();
 
             if (byMonth && byCategory)
             {
+                // Retrieve grouped data and category list for chart visualization
                 var groupedData = GetGroupedExpensesByMonthAndCategory(_view.GetStartDate(), _view.GetEndDate());
                 var allCategories = GetAllCategoryNames();
+
+                // Display the chart with provided data
                 _view.ShowChart(groupedData, allCategories);
             }
             else
             {
+                // Hide chart if filter conditions are not satisfied
                 _view.HideChart();
             }
         }
+
 
     }
 }
