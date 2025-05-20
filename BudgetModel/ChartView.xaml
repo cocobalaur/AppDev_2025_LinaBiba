@@ -9,9 +9,16 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid>
         <toolkit:Chart x:Name="chPie" Title="Expense Summary">
+            <toolkit:Chart.LegendStyle>
+                <Style TargetType="toolkit:Legend">
+                    <Setter Property="Background" Value="White"/>
+                </Style>
+            </toolkit:Chart.LegendStyle>
+
             <toolkit:PieSeries 
-                IndependentValueBinding="{Binding Key}" 
-                DependentValueBinding="{Binding Value}" />
+        IndependentValueBinding="{Binding Key}" 
+        DependentValueBinding="{Binding Value}" />
         </toolkit:Chart>
+
     </Grid>
 </UserControl>

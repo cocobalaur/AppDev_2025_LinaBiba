@@ -336,68 +336,6 @@ namespace BudgetModel
             UpdateSummaryDisplay();
         }
 
-
-        /// <summary>
-        /// Refreshes the DataGrid columns and rows to show a summary view
-        /// based on the combination of "By Month" and/or "By Category" selections.
-        /// </summary>
-        //private void UpdateSummaryDisplay()
-        //{
-        //    if (_presenter == null)
-        //        return;
-
-        //    // Determine summary mode
-        //    bool byMonth = ByMonthCheckBox.IsChecked == true;
-        //    bool byCategory = ByCategoryCheckBox.IsChecked == true;
-
-        //    // Clear any existing columns before generating new ones
-        //    ExpenseDataGrid.Columns.Clear();
-
-        //    // Get the summary data from the Presenter
-        //    var summary = _presenter.GetSummaryTable(byMonth, byCategory, StartDate, EndDate);
-
-        //    // If no data found, clear the table
-        //    if (summary == null || summary.Count == 0)
-        //    {
-        //        ExpenseDataGrid.ItemsSource = null;
-        //        return;
-        //    }
-
-        //    var first = summary[0];
-
-        //    // Handle dynamic dictionaries (Month + Category table with flexible headers)
-        //    if (first is Dictionary<string, object> dictRow)
-        //    {
-        //        // Build columns from dictionary keys
-        //        foreach (var key in dictRow.Keys)
-        //        {
-        //            ExpenseDataGrid.Columns.Add(new DataGridTextColumn
-        //            {
-        //                Header = key,
-        //                Binding = new Binding($"[{key}]") // Bind dictionary key directly
-        //            });
-        //        }
-
-        //        ExpenseDataGrid.ItemsSource = summary;
-        //    }
-        //    else
-        //    {
-        //        foreach (var prop in first.GetType().GetProperties())
-        //        {
-        //            // Skip displaying these columns (IDs)
-        //            if (prop.Name == "CategoryID" || prop.Name == "ExpenseID") continue;
-
-        //            ExpenseDataGrid.Columns.Add(new DataGridTextColumn
-        //            {
-        //                Header = prop.Name,
-        //                Binding = new Binding(prop.Name)
-        //            });
-        //        }
-
-        //        ExpenseDataGrid.ItemsSource = summary;
-        //    }
-        //}
-
         /// <summary>
         /// Refreshes the DataGrid columns and rows to show a summary view
         /// based on the combination of "By Month" and/or "By Category" selections.
@@ -424,8 +362,7 @@ namespace BudgetModel
 
             if (summary == null || summary.Count == 0)
             {
-                ExpenseDataGrid.ItemsSource = null;
-                ChartButton.Visibility = Visibility.Collapsed;
+                ExpenseDataGrid.ItemsSource = null;                
                 NoResultLabel.Text = "No results match your filters.";
                 NoResultLabel.Visibility = Visibility.Visible;
                 return;
@@ -481,45 +418,11 @@ namespace BudgetModel
             // Bind data
             ExpenseDataGrid.ItemsSource = summary;
 
-            // Chart button logic
-            ChartButton.Visibility = (byMonth && byCategory) ? Visibility.Visible : Visibility.Collapsed;
-
+           
             // Let presenter decide whether to show the chart
             _presenter.DisplayChartIfEnabled();
         }
 
-
-        private void ChartButton_Click(object sender, RoutedEventArgs e)
-        {
-            bool byMonth = ByMonthCheckBox?.IsChecked == true;
-            bool byCategory = ByCategoryCheckBox?.IsChecked == true;
-
-            if (byMonth && byCategory)
-            {
-                var summaryData = ExpenseDataGrid.ItemsSource?.OfType<Dictionary<string, object>>().ToList();
-
-                if (summaryData == null || summaryData.Count == 0)
-                {
-                    MessageBox.Show("No data available to display in the chart.", "Chart Error", MessageBoxButton.OK, MessageBoxImage.Information);
-                    return;
-                }
-
-                // Remove TOTALS row
-                summaryData = summaryData.Where(row =>
-                    !row.TryGetValue("Month", out object value) || value?.ToString() != "TOTALS").ToList();
-
-                var categories = summaryData.FirstOrDefault()?.Keys
-                    .Where(k => k != "Month")
-                    .ToList() ?? new List<string>();
-
-                MyChartControl.Visibility = Visibility.Visible;
-                MyChartControl.SetData(summaryData.Cast<object>().ToList(), categories);
-            }
-            else
-            {
-                MessageBox.Show("Please check both 'By Month' and 'By Category' to view the chart.", "Chart Filter", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
 
         private int _lastSearchIndex = -1;
 
@@ -573,15 +476,19 @@ namespace BudgetModel
 
 
         private void ViewModeSelector_Changed(object sender, SelectionChangedEventArgs e)
-        {
+        { // Don't do anything if critical UI elements are not ready
+            if (ExpenseDataGrid == null || MyChartControl == null || ViewModeSelector == null)
+                return;
+
             if (ViewModeSelector.SelectedItem is ComboBoxItem selected)
             {
                 string mode = selected.Content.ToString();
 
-                // Safeguard in case components haven't initialized
-                if (ExpenseDataGrid == null || MyChartControl == null)
-                    return;
-
+                if (mode == "Data Grid")
+                {
+                    ExpenseDataGrid.Visibility = Visibility.Visible;
+                    MyChartControl.Visibility = Visibility.Collapsed;
+                }
                 else if (mode == "Pie Chart")
                 {
                     if (ByMonthCheckBox.IsChecked == true && ByCategoryCheckBox.IsChecked == true)
@@ -591,11 +498,17 @@ namespace BudgetModel
                     }
                     else
                     {
-                        MessageBox.Show("Chart view only works with both 'By Month' and 'By Category' checked.");
+                        MessageBox.Show("Pie Chart view requires both 'By Month' and 'By Category' filters.",
+                                        "Filter Requirement",
+                                        MessageBoxButton.OK,
+                                        MessageBoxImage.Warning);
+
                         ViewModeSelector.SelectedIndex = 0;
+
+                        ExpenseDataGrid.Visibility = Visibility.Visible;
+                        MyChartControl.Visibility = Visibility.Collapsed;
                     }
                 }
-
             }
         }
 

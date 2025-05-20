@@ -88,7 +88,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+            </Grid.RowDefinitions>  
 
             <!-- Search bar -->
             <StackPanel Orientation="Horizontal" Margin="0,0,0,5" HorizontalAlignment="Right">
@@ -101,16 +101,7 @@
                            FontSize="12"
                            Margin="5,0,0,5"
                            FontStyle="Italic"/>     
-
-
-                <Button x:Name="ChartButton"
-                        Content="Show Chart"
-                        Width="100"
-                        Height="25"
-                        Margin="5,0,0,0"
-                        Click="ChartButton_Click"
-                        Visibility="Collapsed"/>        
-
+                   
             </StackPanel>
 
             <Grid Grid.Row="1">
@@ -134,6 +125,8 @@
                         </ContextMenu>
                     </DataGrid.ContextMenu>
                 </DataGrid>
+                
+                
             </Grid>
 
         </Grid>
