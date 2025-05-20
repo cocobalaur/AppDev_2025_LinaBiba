@@ -3,10 +3,11 @@
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows</TargetFramework>
+		<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
-		<Platforms>AnyCPU;x64;x86</Platforms>
+		<Platforms>AnyCPU;x86;x64</Platforms>
 		<ApplicationIcon>favicon.ico</ApplicationIcon>
 	</PropertyGroup>
 
