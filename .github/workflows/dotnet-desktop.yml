@@ -90,14 +90,16 @@ jobs:
     - name: Show the contents of the current directory
       run: dir
 
-
     # Execute all unit tests in the solution
     - name: Execute unit tests
       run: dotnet test ${{ env.Test_Project_Path }}
+      
+    - name: dotnet restore for target platform
+      run: dotnet restore ${{ env.Solution_Name }} --runtime win-${{ matrix.targetPlatform }}
 
     # Restore the application
     - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Budget.sln /t:Restore /p:Configuration=$env:Configuration 
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifi
       env:
         Configuration: ${{ matrix.configuration }}
         RuntimeIdentifier: win-${{ matrix.targetplatform }}
