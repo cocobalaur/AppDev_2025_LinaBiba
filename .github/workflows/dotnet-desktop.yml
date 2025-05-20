@@ -96,10 +96,10 @@ jobs:
 
     # Restore the application
     - name:  Restore the Wpf application to populate the obj folder
-      run: msbuild $env:Solution_Path /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
+      run: |
+        msbuild $env:Solution_Path /t:Restore /p:Configuration=$env:Configuration /p:RuntimeIdentifier=$env:RuntimeIdentifier
       env:
         Configuration: ${{ matrix.Configuration }}
-        TargetPlatform: ${{ matrix.targetPlatform }}
         RuntimeIdentifier: win-${{ matrix.targetplatform }}
         
     # Create the app package by building and packaging the Windows Application Packaging project
