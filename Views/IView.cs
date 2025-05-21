@@ -99,10 +99,24 @@ namespace Views
         /// <param name="onUpdateComplete">The action to do once </param>
         void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete);
 
-
+        /// <summary>
+        /// Reselects an appropriate expense in the view after one has been deleted,
+        /// typically the next or previous item in the list.
+        /// </summary>
+        /// <param name="deleteId">The ID of the expense that was deleted.</param>
         void ReselectExpenseOnceDeleted(int deleteId);
+
+        /// <summary>
+        /// Reselects the updated expense in the view to keep it highlighted or focused after an update.
+        /// </summary>
+        /// <param name="id">The ID of the updated expense.</param>
         void ReselectExpenseOnceUpdated(int id);
 
+        /// <summary>
+        /// Retrieves the list of all currently displayed budget items from the view.
+        /// </summary>
+        /// <returns>A list of <see cref="BudgetItem"/> objects.</returns>
         List<BudgetItem> GetAllItems();
+
     }
 }
