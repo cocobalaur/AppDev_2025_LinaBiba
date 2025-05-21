@@ -54,10 +54,10 @@
 		<TargetPlatformVersion>10.0.26100.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.14393.0</TargetPlatformMinVersion>
 		<DefaultLanguage>en-US</DefaultLanguage>
-		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<AppxPackageSigningEnabled>False</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>4FF7894C7BEEB7F6F11C3FED57BA3BF7D1273D3B</PackageCertificateThumbprint>
 		<NoWarn>$(NoWarn);NU1702</NoWarn>
 		<EntryPointProjectUniqueName>..\BudgetModel\BudgetModel.csproj</EntryPointProjectUniqueName>
-		<PackageCertificateThumbprint>4FF7894C7BEEB7F6F11C3FED57BA3BF7D1273D3B</PackageCertificateThumbprint>
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
