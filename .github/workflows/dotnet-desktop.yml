@@ -84,8 +84,8 @@ jobs:
 
     #Specifying the certificate directly in MSBuild command:
     - name: MSBuild certificate
-      run: msbuild $env:Wap_Project_Path /p:PackageCertificateThumbprint=4FF7894C7BEEB7F6F11C3FED57BA3BF7D1273D3B /p:PackageCertificateKeyFile=Installer\to\cert.pfx
-    
+      run: msbuild Installer\Installer.wapproj /p:PackageCertificateKeyFile=Installer /p:AppxPackageSigningEnabled=true
+
     # MSBuild command to ONLY build your solution
     - name: MSBuild to build only our solution
       run: msbuild Budget.sln 
