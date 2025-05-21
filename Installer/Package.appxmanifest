@@ -9,7 +9,7 @@
   <Identity
     Name="e171f215-79bb-40cb-b8a6-8b8604e56730"
     Publisher="CN=LinaBiba"
-    Version="1.0.17.0" />
+    Version="1.0.18.0" />
 
   <Properties>
     <DisplayName>BudgetPlan</DisplayName>

@@ -1,9 +1,4 @@
 ﻿using Budget;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Views
 {
@@ -39,7 +34,7 @@ namespace Views
         /// </summary>
         /// <param name="name">The name of the new category.</param>
         /// <param name="type">The type of the category (e.g., "Income", "Expense", etc.).</param>
-        void DisplayCategoryFilterWindow (List<string> name, string type);
+        void DisplayCategoryFilterWindow(List<string> name, string type);
 
         /// <summary>
         /// Displays a list of category names in the Add Expense window's ComboBox.
@@ -100,6 +95,14 @@ namespace Views
         void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete);
 
         /// <summary>
+
+        /// Enables the chart to be shown with grouped data and a list of all categories.
+        /// Typically called when both 'By Month' and 'By Category' filters are active.
+        /// </summary>
+        /// <param name="groupedData">A list of dictionaries representing expense data grouped by month and category.</param>
+        /// <param name="allCategories">A list of all category names used as chart segments.</param>
+        void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories);
+
         /// Reselects an appropriate expense in the view after one has been deleted,
         /// typically the next or previous item in the list.
         /// </summary>
@@ -118,5 +121,10 @@ namespace Views
         /// <returns>A list of <see cref="BudgetItem"/> objects.</returns>
         List<BudgetItem> GetAllItems();
 
+        /// <summary>
+        /// Hides the chart when the current filter conditions do not support chart display
+        /// (i.e., when either 'By Month' or 'By Category' is not selected).
+        /// </summary>
+        void HideChart();
     }
 }
