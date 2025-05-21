@@ -45,6 +45,9 @@
       <Platform>ARM64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+	<ItemGroup>
+		<None Include="Installer_TemporaryKey.pfx" />
+	</ItemGroup>
   <PropertyGroup>
     <WapProjPath Condition="'$(WapProjPath)'==''">$(MSBuildExtensionsPath)\Microsoft\DesktopBridge\</WapProjPath>
   </PropertyGroup>
