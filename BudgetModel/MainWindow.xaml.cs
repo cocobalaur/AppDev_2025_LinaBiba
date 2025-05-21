@@ -13,6 +13,7 @@ using Microsoft.Win32;
 using Views;
 using Budget;
 using System.Reflection;
+using Xunit.Abstractions;
 
 namespace BudgetModel
 {
@@ -252,6 +253,7 @@ namespace BudgetModel
             _updateWindow.Show();
         }
 
+
         /// <summary>
         /// Displays the pie chart control in the filter window and populates it with grouped expense data.
         /// Used when both 'By Month' and 'By Category' filters are selected, and the user switches to chart view.
@@ -273,6 +275,34 @@ namespace BudgetModel
             _filterWindow.MyChartControl.Visibility = Visibility.Collapsed;
         }
 
+
+        /// <summary>
+        /// Reselects an expense in the data grid after one has been deleted,
+        /// selecting the next or previous item if available.
+        /// </summary>
+        /// <param name="deletedId">The ID of the expense that was deleted.</param>
+        public void ReselectExpenseOnceDeleted(int deletedId)
+        {
+            var items = _filterWindow?.ExpenseDataGrid.ItemsSource.Cast<BudgetItem>().ToList();
+            int? nextId = _presenter.GetNextOrPreviousExpenseId(items, deletedId);
+            _filterWindow?.ReselectExpenseById(nextId);
+        }
+        /// <summary>
+        /// Reselects a specific expense in the data grid after it has been updated.
+        /// </summary>
+        /// <param name="id">The ID of the updated expense.</param>
+        public void ReselectExpenseOnceUpdated(int id)
+        {
+            _filterWindow?.ReselectExpenseById(id);
+        }
+        /// <summary>
+        /// Retrieves all budget items currently displayed in the ExpenseDataGrid.
+        /// </summary>
+        /// <returns>A list of <see cref="BudgetItem"/> objects.</returns>
+        public List<BudgetItem> GetAllItems()
+        {
+            return _filterWindow.ExpenseDataGrid.ItemsSource.Cast<BudgetItem>().ToList();
+        }
 
     }
 }

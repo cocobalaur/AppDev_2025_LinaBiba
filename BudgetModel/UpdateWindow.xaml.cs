@@ -68,8 +68,8 @@ namespace BudgetModel
 
         /// <summary>
         /// Handles the update operation when the user clicks the "Update" button.
-        /// It will retrieves the input value from the form, sends them to the presenter
-        /// and then, depending on what happen, send a success and refresh the expenses, or error message.
+        /// Retrieves input values from the form, sends them to the presenter,
+        /// and displays the result.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event data associated with the click event.</param>
@@ -90,6 +90,7 @@ namespace BudgetModel
             {                
                 _view.DisplaySuccessMessage(message);
                 _onUpdateComplete?.Invoke();
+                _view.ReselectExpenseOnceUpdated(_expense.Id);
                 this.Close();
             }
             else
@@ -120,14 +121,18 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Delete the current expense using the presenter. 
+        /// Deletes the current expense using the presenter when the "Delete" button is clicked.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event data associated with the click event.</param>
         private void Delete_Click(object sender, RoutedEventArgs e)
         {
             //Call the presenter to try and delete the expense.
-            bool success = _presenter.DeleteExpense(_expense.Id, out string message, _onUpdateComplete);
+            bool success = _presenter.DeleteExpense(_expense.Id, out string message,
+                _onUpdateComplete // Refresh the grid
+            );
+
+
 
             //If the delete was successfully return a success message; else an Error message
             if (success)
