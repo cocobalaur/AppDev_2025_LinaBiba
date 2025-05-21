@@ -20,7 +20,7 @@ namespace PresenterTest
         public void DisplayAddExpense()
         {
             //Not needed for presenter test
-        }
+        } 
 
         public void DisplaySuccessMessage(string message)
         {
