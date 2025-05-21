@@ -6,7 +6,6 @@
 		<RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<PlatformTarget>x86</PlatformTarget>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 	</PropertyGroup>
 

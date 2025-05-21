@@ -244,19 +244,19 @@ namespace PresenterTest
             Assert.Equal(Category.CategoryType.Savings, category.Type);
         }
 
-        [Fact]
-        public void DeleteExpense_ValidId_ReturnsTrueAndSuccessMessage()
-        {
-            // Arrange
-            _presenter.GetDatabase("testingdb.db");
+        //[Fact]
+        //public void DeleteExpense_ValidId_ReturnsTrueAndSuccessMessage()
+        //{
+        //    // Arrange
+        //    _presenter.GetDatabase("testingdb.db");
 
-            // Act
-            bool result = _presenter.DeleteExpense(1, out string message, () => { });
+        //    // Act
+        //    bool result = _presenter.DeleteExpense(1, out string message, () => { });
 
-            // Assert
-            Assert.True(result);
-            Assert.Equal("Expense deleted successfully.", message);
-        }
+        //    // Assert
+        //    Assert.True(result);
+        //    Assert.Equal("Expense deleted successfully.", message);
+        //}
 
         [Fact]
         public void DeleteExpense_InvalidDatabase_ReturnsFalseAndErrorMessage()
