@@ -451,25 +451,29 @@ namespace BudgetModel
         /// <param name="resultMessage">
         /// A message describing the result of the operation, either confirming deletion or detailing the error.
         /// </param>
-        /// <param name="onUpdateComplete">The action to do once the expense have been deleted.</param>
+        /// <param name="onDeleteComplete">The action to perform once the expense has been deleted.</param>
         /// <returns>True if the expense was successfully deleted; otherwise, false.</returns>
-        public bool DeleteExpense(int id, out string resultMessage, Action onUpdateComplete)
+        public bool DeleteExpense(int id, out string resultMessage, Action onDeleteComplete)
         {
             if (_budget == null)
             {
                 resultMessage = "Database not initialized.";
                 return false;
             }
+
             try
             {
+                var items = _view.GetAllItems();
+                int nextId = GetNextOrPreviousExpenseId(items, id);
                 _budget.expenses.Delete(id);
-                onUpdateComplete.Invoke();
+                onDeleteComplete.Invoke();
+                _view.ReselectExpenseOnceUpdated(nextId);
                 resultMessage = "Expense deleted successfully.";
                 return true;
             }
             catch (Exception ex)
             {
-                resultMessage = $"Error while deleting expense: {ex.Message}";
+                resultMessage = $"Error deleting expense: {ex.Message}";
                 return false;
             }
         }
@@ -534,7 +538,11 @@ namespace BudgetModel
 
             return category.Description;
         }
-
+        /// <summary>
+        /// Triggers the view to display the update UI for a given expense.
+        /// </summary>
+        /// <param name="expense">The expense to update.</param>
+        /// <param name="onUpdateComplete">Callback to refresh the view once update is completed.</param>
         public void UpdateExpense(Expense expense, Action onUpdateComplete)
         {
             try
@@ -543,9 +551,35 @@ namespace BudgetModel
             }
             catch (Exception ex)
             {
-                _view.DisplayErrorMessage($"Error setting up database: {ex.Message}");
+                _view.DisplayErrorMessage($"Error during update: {ex.Message}");
             }
         }
+        /// <summary>
+        /// Returns the next or previous expense ID relative to the deleted one, to maintain selection in the UI.
+        /// </summary>
+        /// <param name="items">The list of current budget items.</param>
+        /// <param name="deletedId">The ID of the deleted expense.</param>
+        /// <returns>The ID of the next or previous expense, or -1 if none found.</returns>
+        public int GetNextOrPreviousExpenseId(List<BudgetItem> items, int deletedId)
+        {
+            if (items == null || items.Count == 0)
+                return -1;
+
+            int index = items.FindIndex(x => x.ExpenseID == deletedId);
+            if (index == -1) return -1;
+
+            // Try next
+            if (index + 1 < items.Count)
+                return items[index + 1].ExpenseID;
+
+            // Try previous
+            if (index - 1 >= 0)
+                return items[index - 1].ExpenseID;
+
+            return -1;
+        }
+
+
     }
 }
 

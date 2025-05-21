@@ -100,5 +100,9 @@ namespace Views
         void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete);
 
 
+        void ReselectExpenseOnceDeleted(int deleteId);
+        void ReselectExpenseOnceUpdated(int id);
+
+        List<BudgetItem> GetAllItems();
     }
 }
