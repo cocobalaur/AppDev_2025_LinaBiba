@@ -17,6 +17,7 @@ namespace BudgetModel
         private IView _view;
 
         public event EventHandler DateRangeChanged;
+        private int? _lastSelectedExpenseId = null;
 
         public Filter(Presenter presenter, IView view)
         {
@@ -165,21 +166,22 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Handles a double click event on the ExpenseDataGrid row.
-        /// It will open the updateWindow pre-filled with the selected expense data.
+        /// Handles a double-click on the ExpenseDataGrid row.
+        /// Opens an update window for the selected expense.
         /// </summary>
         /// <param name="sender">The DataGrid control that detected the double-click.</param>
         /// <param name="e">Provides information about the double-click event, including mouse position and button state.</param>
-        private void ExenseDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e) //not working???
+        private void ExenseDataGrid_MouseDoubleClick(object sender, RoutedEventArgs e)
         {
-            //If the selected object is a Budget item, find the expense info and open the update window.
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
-                Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
-                _presenter.UpdateExpense(theSelectedExpense, UpdateSummaryDisplay);
-
+                _lastSelectedExpenseId = selectedItem.ExpenseID;
+                var expense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
+                _presenter.UpdateExpense(expense, UpdateSummaryDisplay);
             }
         }
+
+
 
         /// <summary>
         /// Handles the right click event on the expenseDataGrid.
@@ -197,34 +199,40 @@ namespace BudgetModel
             {
                 depObj = VisualTreeHelper.GetParent(depObj);
             }
+
+
             if (depObj is DataGridRow row)
             {
                 row.IsSelected = true;
+                ExpenseDataGrid.SelectedItem = row.Item;
+                ExpenseDataGrid.Focus();
             }
         }
+
         /// <summary>
-        /// Handles the click event for the "Update" context menu item.
-        /// Opens the UpdateWindow with the selected expense for editing.
+        /// Opens the Update window for editing the selected expense.
+        /// Triggered from the "Update" context menu item.
         /// </summary>
         /// <param name="sender">The MenuItem that triggered the event</param>
         /// <param name="e">Event data associated with the menu item click.</param>
         private void UpdateMenuItem_Click(object sender, RoutedEventArgs e)
         {
-
-            //Make sure that the object is a Budget Item
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
-                //Get the expense information from the 
-                Expense theSelectedExpense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
-                _presenter.UpdateExpense(theSelectedExpense, UpdateSummaryDisplay);
-                //refresh to load updated expense
+                //For delete.
+                int selectedIndex = ExpenseDataGrid.SelectedIndex;
+                int deletedId = selectedItem.ExpenseID;
+
+                //For update
+                _lastSelectedExpenseId = selectedItem.ExpenseID;
+                var expense = new Expense(selectedItem.ExpenseID, selectedItem.Date, selectedItem.CategoryID, selectedItem.Amount, selectedItem.ShortDescription);
+                _presenter.UpdateExpense(expense, UpdateSummaryDisplay);
             }
         }
 
+
         /// <summary>
-        /// Hnaldes the click event for the "Delete" context menu item.
-        /// Deletes the selected expense using the presenter and display
-        /// a message.
+        /// Deletes the selected expense from the context menu and updates the view.
         /// </summary>
         /// <param name="sender">The MenuItem that triggered the event</param>
         /// <param name="e">Event data associated with the menu item click.</param>
@@ -232,7 +240,17 @@ namespace BudgetModel
         {
             if (ExpenseDataGrid.SelectedItem is BudgetItem selectedItem)
             {
-                bool success = _presenter.DeleteExpense(selectedItem.ExpenseID, out string message, UpdateSummaryDisplay);
+                int selectedIndex = ExpenseDataGrid.SelectedIndex;
+                int deletedId = selectedItem.ExpenseID;
+
+                // Get a snapshot of the list
+                var items = ExpenseDataGrid.ItemsSource.Cast<BudgetItem>().ToList();
+                int? nextId = _presenter.GetNextOrPreviousExpenseId(items, deletedId);
+
+                bool success = _presenter.DeleteExpense(deletedId, out string message, 
+                    UpdateSummaryDisplay // Refresh the grid
+                );
+
 
                 if (success)
                 {
@@ -242,8 +260,10 @@ namespace BudgetModel
                 {
                     _view.DisplayErrorMessage(message);
                 }
+
             }
         }
+
 
 
         /// <summary>
@@ -546,7 +566,29 @@ namespace BudgetModel
             }
         }
 
+        /// Reselects a budget item in the data grid by its ID.
+        /// If found, the item is selected, focused, and scrolled into view.
+        /// </summary>
+        /// <param name="expenseId">The ID of the expense to reselect.</param>
+        public void ReselectExpenseById(int? expenseId)
+        {
+            if (expenseId == null)
+                return;
 
+            foreach (var item in ExpenseDataGrid.Items)
+            {
+                if (item is BudgetItem budget && budget.ExpenseID == expenseId)
+                {
+                    ExpenseDataGrid.SelectedItem = item;
+                    ExpenseDataGrid.ScrollIntoView(item);
+                    ExpenseDataGrid.Focus();
+                    break;
+                }
+            }
+
+
+
+        }
     }
 
 

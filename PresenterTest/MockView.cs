@@ -20,7 +20,7 @@ namespace PresenterTest
         public void DisplayAddExpense()
         {
             //Not needed for presenter test
-        }
+        } 
 
         public void DisplaySuccessMessage(string message)
         {
@@ -94,6 +94,21 @@ namespace PresenterTest
         }
 
         public void HideChart()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReselectExpenseOnceDeleted(int deleteId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ReselectExpenseOnceUpdated(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<BudgetItem> GetAllItems()
         {
             throw new NotImplementedException();
         }
