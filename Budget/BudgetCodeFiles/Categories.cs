@@ -262,7 +262,7 @@ namespace Budget
 
                 if (count > 0)
                 {
-                    throw new InvalidOperationException("A category with that description already exist.");
+                    throw new ArgumentException("A category with that description already exist.");
                 }
             }
 
