@@ -10,107 +10,145 @@ namespace PresenterTest
 {
     class MockView : IView
     {
-        public string LastError { get; private set; } = "";
+        // Tracking logs
+        public List<string> ErrorMessages { get; } = new();
+        public List<string> SuccessMessages { get; } = new();
+        public List<string> CalledMethods { get; } = new();
+
+        public List<(List<string> names, string type)> CategoryFilterCalls { get; } = new();
+        public List<(List<string> categories, string selected)> CategoryExpenseCalls { get; } = new();
+        public List<List<BudgetItem>> DisplayedItems { get; } = new();
+        public List<Expense> ExpenseUpdateCalls { get; } = new();
+        public List<int> DeletedExpenseIds { get; } = new();
+        public List<int> UpdatedExpenseIds { get; } = new();
+        public List<(List<Dictionary<string, object>> groupedData, List<string> allCategories)> ChartCalls { get; } = new();
+
+        // Stubs for return values (can be set during test)
+        public DateTime? StubStartDate { get; set; }
+        public DateTime? StubEndDate { get; set; }
+        public bool StubDisplayByCategorySummary { get; set; }
+        public bool StubDisplayByMonthSummary { get; set; }
+        public bool StubIsCategoryFilter { get; set; }
+        public string StubRenameSelectedCategory { get; set; } = "";
+        public List<BudgetItem> StubAllItems { get; set; } = new();
 
         public void DisplayErrorMessage(string message)
         {
-            LastError = message;
+            ErrorMessages.Add(message);
+            CalledMethods.Add(nameof(DisplayErrorMessage));
         }
 
         public void DisplayAddExpense()
         {
-            //Not needed for presenter test
-        } 
+            CalledMethods.Add(nameof(DisplayAddExpense));
+        }
 
         public void DisplaySuccessMessage(string message)
         {
-            //Not needed for presenter test
+            SuccessMessages.Add(message);
+            CalledMethods.Add(nameof(DisplaySuccessMessage));
         }
 
         public void DisplayCategoryFilterWindow(List<string> name, string type)
         {
-            //Not needed for presenter test
+            CategoryFilterCalls.Add((new List<string>(name), type));
+            CalledMethods.Add(nameof(DisplayCategoryFilterWindow));
         }
 
         public void DisplayCategoryExpense(List<string> categories, string selectedCategory)
         {
-            //Not needed for presenter test
+            CategoryExpenseCalls.Add((new List<string>(categories), selectedCategory));
+            CalledMethods.Add(nameof(DisplayCategoryExpense));
         }
 
-        //add the implementation
         public DateTime? GetStartDate()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(GetStartDate));
+            return StubStartDate;
         }
 
         public DateTime? GetEndDate()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(GetEndDate));
+            return StubEndDate;
         }
 
         public void DisplayItems(List<BudgetItem> items)
         {
-            //Not needed for presenter test
+            DisplayedItems.Add(new List<BudgetItem>(items));
+            CalledMethods.Add(nameof(DisplayItems));
         }
 
         public bool DisplayByCategorySummary()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(DisplayByCategorySummary));
+            return StubDisplayByCategorySummary;
         }
 
         public bool DisplayByMonthSummary()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(DisplayByMonthSummary));
+            return StubDisplayByMonthSummary;
         }
 
         public bool DisplayIsCategoryFilter()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(DisplayIsCategoryFilter));
+            return StubIsCategoryFilter;
         }
 
         public string RenameSelectedCategory()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(RenameSelectedCategory));
+            return StubRenameSelectedCategory;
         }
 
         public void ShowSucessMessage(string message)
         {
-            //Not needed for presenter test
+            SuccessMessages.Add(message);
+            CalledMethods.Add(nameof(ShowSucessMessage));
         }
 
         public void ShowErrorMessage(string message)
         {
-            //Not needed for presenter test
+            ErrorMessages.Add(message);
+            CalledMethods.Add(nameof(ShowErrorMessage));
         }
 
         public void DisplayExpenseUpdate(Expense expense, Action onUpdateComplete)
         {
-            throw new NotImplementedException();
+            ExpenseUpdateCalls.Add(expense);
+            CalledMethods.Add(nameof(DisplayExpenseUpdate));
+            onUpdateComplete?.Invoke();
         }
 
         public void ShowChart(List<Dictionary<string, object>> groupedData, List<string> allCategories)
         {
-            throw new NotImplementedException();
+            ChartCalls.Add((groupedData, allCategories));
+            CalledMethods.Add(nameof(ShowChart));
         }
 
         public void HideChart()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(HideChart));
         }
 
         public void ReselectExpenseOnceDeleted(int deleteId)
         {
-            throw new NotImplementedException();
+            DeletedExpenseIds.Add(deleteId);
+            CalledMethods.Add(nameof(ReselectExpenseOnceDeleted));
         }
 
         public void ReselectExpenseOnceUpdated(int id)
         {
-            throw new NotImplementedException();
+            UpdatedExpenseIds.Add(id);
+            CalledMethods.Add(nameof(ReselectExpenseOnceUpdated));
         }
 
         public List<BudgetItem> GetAllItems()
         {
-            throw new NotImplementedException();
+            CalledMethods.Add(nameof(GetAllItems));
+            return StubAllItems;
         }
     }
 }

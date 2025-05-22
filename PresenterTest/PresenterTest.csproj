@@ -8,7 +8,7 @@
 
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
-		<Platforms>AnyCPU;x86;x64</Platforms>
+		<!-- <PlatformTarget>x86</PlatformTarget> -->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -21,8 +21,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Budget\Budget.csproj" />
-		<ProjectReference Include="..\Views\Views.csproj" />
+	  <ProjectReference Include="..\BudgetModel\BudgetModel.csproj" />
+	  <ProjectReference Include="..\Budget\Budget.csproj" />
+	  <ProjectReference Include="..\Views\Views.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
