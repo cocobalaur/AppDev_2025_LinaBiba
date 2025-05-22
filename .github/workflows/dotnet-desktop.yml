@@ -61,7 +61,6 @@ jobs:
       Test_Project_Path: PresenterTest                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       Wap_Project_Directory: Installer   # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
       Wap_Project_Path: Installer\Installer.wapproj                  # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
-      CertificatePath : Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
     
     steps:
     - name: Checkout
@@ -91,8 +90,8 @@ jobs:
     - name: Decode the pfx
       run: |
         $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-        
-        [IO.File]::WriteAllBytes("$env:CertificatePath", $pfx_cert_byte)
+        $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
+        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
 
     # Restore NuGet packages
     - name: Restore NuGet packages
@@ -100,8 +99,7 @@ jobs:
 
    # Create the app package by building and packaging the Windows Application Packaging project
     - name: Build the Windows Application Packaging Project (wapproj)
-      run: msbuild $env:Solution_Name /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=$env:CertificatePath /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
-      env:
+      run: msbuild $env:Solution_Path /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}      env:
         AppxBundle: Never
         BuildMode: SideloadOnly
         Configuration: ${{ matrix.Configuration }}
