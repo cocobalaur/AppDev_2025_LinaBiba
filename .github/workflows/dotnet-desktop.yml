@@ -61,7 +61,7 @@ jobs:
       Test_Project_Path: PresenterTest                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       Wap_Project_Directory: Installer   # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
       Wap_Project_Path: Installer\Installer.wapproj                  # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
-
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -97,9 +97,9 @@ jobs:
     - name: Restore NuGet packages
       run: dotnet restore Budget.sln 
 
-   # Create the app package by building and packaging the Windows Application Packaging project
+    # Create the app package by building and packaging the Windows Application Packaging project
     - name: Build the Windows Application Packaging Project (wapproj)
-      run: msbuild $env:Solution_Name /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
+      run: msbuild $env:Solution_Path /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
       env:
         AppxBundle: Never
         BuildMode: SideloadOnly
@@ -108,16 +108,16 @@ jobs:
         TargetPlatform: ${{ matrix.targetplatform }}
         
     # MSBuild command to ONLY build your solution
-    - name: MSBuild to build only our solution
-      run: msbuild Budget.sln 
+    # - name: MSBuild to build only our solution
+    #   run: msbuild Budget.sln 
     
     #Run property can be used to run commands.
-    - name: Show the contents of the current directory
-      run: dir
+    # - name: Show the contents of the current directory
+    #   run: dir
 
     # Execute all unit tests in the solution
-    - name: Execute unit tests
-      run: dotnet test ${{ env.Test_Project_Path }}
+    # - name: Execute unit tests
+    #   run: dotnet test ${{ env.Test_Project_Path }}
 
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
@@ -133,8 +133,16 @@ jobs:
       run: Remove-Item -path $env:Wap_Project_Directory\GitHubActionsWorkflow.pfx
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
+    # - name: Upload build artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: MSIX Package - ${{ matrix.targetPlatform }}
+    #     path: .\
+
+    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: MSIX Package - ${{ matrix.targetPlatform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages
+    
