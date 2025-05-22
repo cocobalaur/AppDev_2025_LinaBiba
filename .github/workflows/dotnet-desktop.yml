@@ -61,7 +61,7 @@ jobs:
       Test_Project_Path: PresenterTest                # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
       Wap_Project_Directory: Installer   # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
       Wap_Project_Path: Installer\Installer.wapproj                  # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
-
+    
     steps:
     - name: Checkout
       uses: actions/checkout@v4
@@ -77,48 +77,7 @@ jobs:
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
-
-    # Restore NuGet packages
-    - name: Restore NuGet packages
-      run: dotnet restore Budget.sln 
       
-    # MSBuild command to ONLY build your solution
-    - name: MSBuild to build only our solution
-      run: msbuild Budget.sln 
-
-    # Create the app package by building and packaging the Windows Application Packaging project
-    - name: Build the Windows Application Packaging Project (wapproj)
-      run: msbuild $env:Solution_Name /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
-      env:
-        AppxBundle: Never
-        BuildMode: SideloadOnly
-        Configuration: ${{ matrix.Configuration }}
-        GenerateAppInstallerFile: True
-        TargetPlatform: ${{ matrix.targetplatform }}
-        
-    #Specifying the certificate directly in MSBuild command:
-    - name: MSBuild certificate
-      run: msbuild Wap_Project_Directory /p:PackageCertificateThumbprint=4FF7894C7BEEB7F6F11C3FED57BA3BF7D1273D3B /p:PackageCertificateKeyFile=Installer\to\cert.pfx
-      
-    - name: Create PFX certificate
-      id: create-pfx
-      shell: pwsh
-      env:
-        PFX_CONTENT: ${{ secrets.BASE64_PFX_CONTENT }}
-      run: |
-        $pfxPath = Join-Path -Path $env:RUNNER_TEMP -ChildPath "cert.pfx"
-        $encodedBytes = [System.Convert]::FromBase64String($env:PFX_CONTENT)
-        Set-Content $pfxPath -Value $encodedBytes -AsByteStream
-        Write-Output "::set-output name=PFX_PATH::$pfxPath"
-    
-    #Run property can be used to run commands.
-    - name: Show the contents of the current directory
-      run: dir
-
-    # Execute all unit tests in the solution
-    - name: Execute unit tests
-      run: dotnet test ${{ env.Test_Project_Path }}
-
     # Restore the application
     - name:  Restore the Wpf application to populate the obj folder
       run: |
@@ -134,6 +93,32 @@ jobs:
         $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
         [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
 
+    # Restore NuGet packages
+    - name: Restore NuGet packages
+      run: dotnet restore Budget.sln 
+
+    # Create the app package by building and packaging the Windows Application Packaging project
+    - name: Build the Windows Application Packaging Project (wapproj)
+      run: msbuild $env:Solution_Path /p:Platform=$env:TargetPlatform /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
+      env:
+        AppxBundle: Never
+        BuildMode: SideloadOnly
+        Configuration: ${{ matrix.Configuration }}
+        GenerateAppInstallerFile: True
+        TargetPlatform: ${{ matrix.targetplatform }}
+        
+    # MSBuild command to ONLY build your solution
+    # - name: MSBuild to build only our solution
+    #   run: msbuild Budget.sln 
+    
+    #Run property can be used to run commands.
+    # - name: Show the contents of the current directory
+    #   run: dir
+
+    # Execute all unit tests in the solution
+    # - name: Execute unit tests
+    #   run: dotnet test ${{ env.Test_Project_Path }}
+
     # Create the app package by building and packaging the Windows Application Packaging project
     - name: Create the app package
       run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
@@ -148,8 +133,16 @@ jobs:
       run: Remove-Item -path $env:Wap_Project_Directory\GitHubActionsWorkflow.pfx
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
+    # - name: Upload build artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: MSIX Package - ${{ matrix.targetPlatform }}
+    #     path: .\
+
+    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: MSIX Package - ${{ matrix.targetPlatform }}
         path: ${{ env.Wap_Project_Directory }}\AppPackages
+    
