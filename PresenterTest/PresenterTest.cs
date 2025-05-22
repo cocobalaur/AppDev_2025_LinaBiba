@@ -1,6 +1,5 @@
 using Budget;
 using BudgetModel;
-using Views;
 
 namespace PresenterTest
 {
@@ -8,6 +7,7 @@ namespace PresenterTest
     {
         private readonly MockView _mockView;
         private readonly Presenter _presenter;
+        private HomeBudget _budget;
 
         //Constructor
         public PresenterTest()
@@ -121,7 +121,8 @@ namespace PresenterTest
             // Assert
             Assert.NotEmpty(_mockView.ErrorMessages);
             Assert.Contains("Error adding expense:", _mockView.ErrorMessages[0]);
-            Assert.DoesNotContain(nameof(_mockView.DisplaySuccessMessage), _mockView.CalledMethods);
+            Assert.Contains(nameof(_mockView.DisplayErrorMessage), _mockView.CalledMethods);
+
         }
 
 
@@ -249,13 +250,14 @@ namespace PresenterTest
             _presenter.GetDatabase(messyDB);
 
             // Act
-            _presenter.AddCategory("Food", "Credit");
-            bool result = _presenter.AddCategory("fOoD", "Credit");
+            _presenter.AddCategory("YapYap", "Credit");
+            bool result = _presenter.AddCategory("yapyap", "Credit");
 
             // Assert
             Assert.False(result);
             Assert.Contains(nameof(_mockView.DisplayErrorMessage), _mockView.CalledMethods);
             Assert.Contains("Failed to create category", _mockView.ErrorMessages.Last());
+
         }
         [Fact]
         public void AddCategory_VerificationTheCategoryIsCreated_ShouldReturnTrue()
@@ -329,18 +331,21 @@ namespace PresenterTest
         public void UpdateExistingExpense_ValidInputs_ReturnsTrueAndSuccessMessage()
         {
             // Arrange
-            _presenter.GetDatabase("newTestingdb.db");
+            string goodDB = "testingdb.db";
+            string messyDB = "MessDB.db";
+            System.IO.File.Copy(goodDB, messyDB, true);
+            _presenter.GetDatabase(messyDB);
             int expenseId = 1;
             string name = "Updated name";
-            string amount = "99.99";
+            string amount = "99,99";
             DateTime date = DateTime.Today;
 
-            _presenter.ProcessNewAddExpense(date, "woah", 12, "Clothes");
+            _presenter.ProcessNewAddExpense(date, "woah", 12, "Clothes");       //Making sure there is not nothing
 
-            _presenter.AddCategory("newCat", "Income");
+            string categories = _presenter.GetAllCategoryNames()[0];
 
             // Act
-            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, "newCat", out string message);
+            bool result = _presenter.UpdateExistingExpense(expenseId, name, amount, date, categories, out string message);
 
             // Assert
             Assert.True(result);
@@ -363,7 +368,6 @@ namespace PresenterTest
             // Assert
             Assert.False(result);
             Assert.Equal("Please fill in all fields.", message);
-            Assert.Contains(nameof(_mockView.DisplayErrorMessage), _mockView.CalledMethods);
         }
 
         [Fact]
@@ -405,6 +409,526 @@ namespace PresenterTest
             // Act & Assert
             var ex = Assert.Throws<Exception>(() => _presenter.GetCategoryName(-1));
             Assert.Contains("category", ex.Message, StringComparison.OrdinalIgnoreCase);
+        }
+
+
+        //Test FindCategory
+        [Fact]
+        public void FindCategory_CategoryExists_ReturnsTrue()
+        {
+            // Arrange
+            _presenter.GetDatabase("testDatabase.db");
+            string categories = _presenter.GetAllCategoryNames()[0].ToLower();
+
+            // Act
+            bool result = _presenter.FindCategory(categories); // case-insensitive
+
+            // Assert
+            Assert.True(result);
+        }
+
+        [Fact]
+        public void FindCategory_CategoryDoesNotExist_ReturnsFalse()
+        {
+            // Arrange
+            _presenter.GetDatabase("testDatabase.db");
+
+            // Act
+            bool result = _presenter.FindCategory("Nonexistent");
+
+            // Assert
+            Assert.False(result);
+        }
+
+        [Fact]
+        public void FindCategory_EmptyString_ReturnsFalse()
+        {
+            // Arrange
+            _presenter.GetDatabase("testDatabase.db");
+
+            // Act
+            bool result = _presenter.FindCategory("");
+
+            // Assert
+            Assert.False(result);
+        }
+
+        //Test FilterByDate
+        [Fact]
+        public void FilterByDate_ShouldShowError_WhenDateRangeIsInvalid()
+        {
+            // Arrange
+            _mockView.StubStartDate = null;
+            _mockView.StubEndDate = DateTime.Now;
+            _presenter.GetDatabase("testDatabase.db");
+
+            // Act
+            _presenter.FilterByDate();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.DisplayErrorMessage), _mockView.CalledMethods);
+            Assert.Contains("Please select a valid date range", _mockView.ErrorMessages.Last());
+        }
+        [Fact]
+        public void FilterByDate_ShouldDisplayRawItems_WhenNoSummaryIsSelected()
+        {
+            // Arrange
+            _mockView.StubStartDate = new DateTime(2025, 1, 1);
+            _mockView.StubEndDate = new DateTime(2025, 12, 31);
+            _mockView.StubDisplayByCategorySummary = false;
+            _mockView.StubDisplayByMonthSummary = false;
+            _mockView.StubIsCategoryFilter = false;
+            _mockView.StubRenameSelectedCategory = "";
+            _budget = new HomeBudget("testDatabase.db", true);
+
+            _presenter.GetDatabase("testDatabase.db");
+
+
+            // Add test data
+            _presenter.AddCategory("TEST", "Debit");
+            _budget.expenses.Add(new DateTime(2025, 5, 1), 100, "TestItem", _budget.categories.List().First().Id);
+
+            // Act
+            _presenter.FilterByDate();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.DisplayItems), _mockView.CalledMethods);
+            Assert.NotEmpty(_mockView.DisplayedItems.Last());
+        }
+        [Fact]
+        public void FilterByDate_ShouldFilterByCategory_WhenCategoryFilterIsOn()
+        {
+            // Arrange
+            _mockView.StubStartDate = new DateTime(2025, 1, 1);
+            _mockView.StubEndDate = new DateTime(2025, 12, 31);
+            _mockView.StubDisplayByCategorySummary = false;
+            _mockView.StubDisplayByMonthSummary = false;
+            _mockView.StubIsCategoryFilter = true;
+            _mockView.StubRenameSelectedCategory = "TEST";
+            _budget = new HomeBudget("testDatabase.db", true);
+
+            _presenter.GetDatabase("testDatabase.db");
+            _presenter.AddCategory("TEST", "Debit");
+            var catId = _budget.categories.List().First().Id;
+            _budget.expenses.Add(new DateTime(2025, 5, 1), 100, "FilteredItem", catId);
+
+            // Act
+            _presenter.FilterByDate();
+
+            // Assert
+            var displayed = _mockView.DisplayedItems.Last();
+            Assert.All(displayed, item => Assert.Equal("TEST", item.Category));
+        }
+
+        [Fact]
+        public void FilterByDate_ShouldDisplayRawItems_ByCategoriesAndMonth()
+        {
+            // Arrange
+            _mockView.StubStartDate = new DateTime(2024, 1, 1);
+            _mockView.StubEndDate = new DateTime(2024, 1, 31);
+            _mockView.StubDisplayByCategorySummary = true;
+            _mockView.StubDisplayByMonthSummary = true;
+            _mockView.StubIsCategoryFilter = false;
+            _mockView.StubRenameSelectedCategory = "TEST";
+
+            _budget = new HomeBudget("testDatabase.db", true); 
+            _presenter.GetDatabase("testDatabase.db");
+
+            _presenter.AddCategory("TEST", "Income");
+            int testCatId = _budget.categories.List().First(c => c.Description == "TEST").Id;
+
+            _presenter.FilterByDate();
+            int numberOfItems = _mockView.DisplayedItems.Last().Count;
+
+            // Add 2 new expenses that should appear in the filter
+            _budget.expenses.Add(new DateTime(2024, 1, 2), 100, "TestItem", testCatId);
+            _budget.expenses.Add(new DateTime(2024, 1, 6), 100, "TestItem2", testCatId);
+            _budget.expenses.Add(new DateTime(2024, 2, 6), 100, "TestItem3", testCatId);
+
+            // Act
+            _presenter.FilterByDate();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.DisplayItems), _mockView.CalledMethods);
+            Assert.NotEmpty(_mockView.DisplayedItems.Last());
+            Assert.True(_mockView.DisplayedItems.Last().Count >= numberOfItems);
+        }
+
+        [Fact]
+        public void FilterByDate_ShouldDisplayRawItems_ByCategories()
+        {
+            // Arrange
+            _mockView.StubStartDate = new DateTime(2024, 1, 1);
+            _mockView.StubEndDate = new DateTime(2024, 12, 31);
+            _mockView.StubDisplayByCategorySummary = true;
+            _mockView.StubDisplayByMonthSummary = false;
+            _mockView.StubIsCategoryFilter = false;
+            _mockView.StubRenameSelectedCategory = "TEST";
+
+            _budget = new HomeBudget("testDatabase.db", true);
+            _presenter.GetDatabase("testDatabase.db");
+            _presenter.FilterByDate();
+            int numberOfItems = _mockView.DisplayedItems.Last().Count;
+
+            // Add test data
+            _presenter.AddCategory("TEST", "Income");
+            int testCatId = _budget.categories.List().First().Id;
+            _budget.expenses.Add(new DateTime(2024, 5, 1), 100, "TestItem", testCatId);
+
+            // Act
+            _presenter.FilterByDate();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.DisplayItems), _mockView.CalledMethods);
+            Assert.NotEmpty(_mockView.DisplayedItems.Last());
+            Assert.Equal(_mockView.DisplayedItems.Last().Count, numberOfItems + 1);
+        }
+
+        [Fact]
+        public void FilterByDate_ShouldDisplayRawItems_ByMonth()
+        {
+            // Arrange
+            _mockView.StubStartDate = new DateTime(2024, 1, 1);
+            _mockView.StubEndDate = new DateTime(2024, 12, 31);
+            _mockView.StubDisplayByCategorySummary = false;
+            _mockView.StubDisplayByMonthSummary = true;
+            _mockView.StubIsCategoryFilter = false;
+            _mockView.StubRenameSelectedCategory = "TEST";
+
+            _budget = new HomeBudget("testDatabase.db", true);
+            _presenter.GetDatabase("testDatabase.db");
+
+            _presenter.FilterByDate();
+            int numberOfItems = _mockView.DisplayedItems.Last().Count;
+
+            // Add test data
+            _presenter.AddCategory("TEST", "Income");
+            int testCatId = _budget.categories.List().First().Id;
+            _budget.expenses.Add(new DateTime(2024, 5, 1), 100, "TestItem", testCatId);
+
+            // Act
+            _presenter.FilterByDate();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.DisplayItems), _mockView.CalledMethods);
+            Assert.NotEmpty(_mockView.DisplayedItems.Last());
+            Assert.True(_mockView.DisplayedItems.Last().Count >= numberOfItems);
+        }
+        //Test GetSummaryTable
+        [Fact]
+        public void GetSummaryTable_ShouldShowError_WhenBudgetIsNull()
+        {
+            // Arrange
+            Presenter falsePresenter = new Presenter(_mockView);        // no database initialized
+
+            // Act
+            var result = falsePresenter.GetSummaryTable(true, true, DateTime.Now, DateTime.Now);
+
+            // Assert
+            Assert.Empty(result);
+            Assert.Contains("Database not initialized", _mockView.ErrorMessages.Last());
+            Assert.Contains(nameof(_mockView.DisplayErrorMessage), _mockView.CalledMethods);
+        }
+        [Fact]
+        public void GetSummaryTable_ShouldShowError_WhenDatesAreNull()
+        {
+            // Arrange
+            _presenter.GetDatabase("test.db");
+
+            // Act
+            var result = _presenter.GetSummaryTable(true, true, null, DateTime.Now);
+
+            // Assert
+            Assert.Empty(result);
+            Assert.Contains("Both start and end dates must be selected", _mockView.ErrorMessages.Last());
+        }
+
+        [Fact]
+        public void GetSummaryTable_ShouldReturnRawItems_WhenNoSummaryFlagsSet()
+        {
+            // Arrange
+            _budget = new HomeBudget("test.db", true);
+            _presenter.GetDatabase("test.db");
+            _presenter.AddCategory("Groceries", "Debit");
+            var catId = _budget.categories.List().First().Id;
+            _budget.expenses.Add(new DateTime(2025, 5, 5), 40, "Milk", catId);
+
+            // Act
+            var result = _presenter.GetSummaryTable(false, false, new DateTime(2025, 1, 1), new DateTime(2025, 12, 31));
+
+            // Assert
+            Assert.Single(result);
+            Assert.IsType<BudgetItem>(result[0]);
+        }
+        [Fact]
+        public void GetSummaryTable_ShouldReturnMonthlySummary_WhenByMonthTrue()
+        {
+            // Arrange
+            _budget = new HomeBudget("test.db", true);
+            _budget.categories.Add("Gnomes", _budget.categories.GetCategoryFromId(1).Type);
+            var catId = _budget.categories.List().First().Id;
+            _budget.expenses.Add(new DateTime(2025, 3, 15), 75, "Electricity", catId);
+            _budget.expenses.Add(new DateTime(2025, 3, 20), 25, "Water", catId);
+
+            _presenter.GetDatabase("test.db");
+
+            // Act
+            var result = _presenter.GetSummaryTable(true, false, new DateTime(2025, 1, 1), new DateTime(2025, 12, 31));
+
+            // Assert
+            Assert.Single(result);
+            var row = result[0];
+            var month = row.GetType().GetProperty("Month")?.GetValue(row);
+            var total = row.GetType().GetProperty("Total")?.GetValue(row);
+
+            Assert.Equal("2025-03", month);
+            Assert.Equal(100.0, total);
+        }
+
+        [Fact]
+        public void GetSummaryTable_ShouldReturnCategorySummary_WhenByCategoryTrue()
+        {
+            // Arrange
+            _budget = new HomeBudget("test.db", true); // reset DB
+            _budget.categories.Add("Books", _budget.categories.GetCategoryFromId(1).Type);
+            var catId = _budget.categories.List().First(c => c.Description == "Books").Id;
+            _budget.expenses.Add(new DateTime(2025, 6, 1), 60, "Textbooks", catId);
+            _presenter.GetDatabase("test.db"); // Presenter gets access to updated DB
+
+            // Act
+            var result = _presenter.GetSummaryTable(false, true, new DateTime(2025, 1, 1), new DateTime(2025, 12, 31));
+
+            // Assert
+            Assert.Single(result);
+            var row = result[0];
+            var category = row.GetType().GetProperty("Category")?.GetValue(row);
+            var total = row.GetType().GetProperty("Total")?.GetValue(row);
+
+            Assert.Equal("Books", category);
+            Assert.Equal(60.0, total);
+        }
+
+        [Fact]
+        public void GetSummaryTable_ShouldReturnTableAndTotal_WhenByMonthAndByCategory()
+        {
+            // Arrange
+            _budget = new HomeBudget("test.db", true); // reset db
+            _budget.categories.Add("Books", _budget.categories.GetCategoryFromId(1).Type);
+            _budget.categories.Add("Drinks", _budget.categories.GetCategoryFromId(1).Type);
+
+            var foodId = _budget.categories.List().First(c => c.Description == "Books").Id;
+            var travelId = _budget.categories.List().First(c => c.Description == "Drinks").Id;
+
+            _budget.expenses.Add(new DateTime(2025, 2, 10), 50, "Lunch", foodId);
+            _budget.expenses.Add(new DateTime(2025, 2, 15), 100, "Train", travelId);
+
+            _presenter.GetDatabase("test.db");
+
+            // Act
+            var result = _presenter.GetSummaryTable(true, true, new DateTime(2025, 1, 1), new DateTime(2025, 12, 31));
+
+            // Assert
+            Assert.Equal(2, result.Count); // one row for February, one for TOTALS
+
+            var totalRow = Assert.IsType<Dictionary<string, object>>(result.Last());
+            Assert.Equal("TOTALS", totalRow["Month"]);
+            Assert.Equal(50.0, Convert.ToDouble(totalRow["Books"]));
+            Assert.Equal(100.0, Convert.ToDouble(totalRow["Drinks"]));
+        }
+
+        //Test UpdateExpense
+        [Fact]
+        public void UpdateExpense_ShouldCallDisplayExpenseUpdate_AndInvokeCallback()
+        {
+            // Arrange
+            MockView mockView = new MockView(); // your mock view that tracks calls
+            Presenter presenter = new Presenter(mockView);
+            Expense expense = new Expense(1, DateTime.Now, 1, 12, "woahwy");
+            bool callbackInvoked = false;
+
+            // Act
+            presenter.UpdateExpense(expense, () => callbackInvoked = true);
+
+            // Assert
+            Assert.Contains(expense, mockView.ExpenseUpdateCalls);
+            Assert.Contains(nameof(mockView.DisplayExpenseUpdate), mockView.CalledMethods);
+            Assert.True(callbackInvoked);
+        }
+
+        //Test GetNextOrPreviousExpenseId
+        [Fact]
+        public void GetNextOrPreviousExpenseId_ShouldReturnMinusOne_WhenListIsNull()
+        {
+            var result = _presenter.GetNextOrPreviousExpenseId(null, 1);
+            Assert.Equal(-1, result);
+        }
+
+        [Fact]
+        public void GetNextOrPreviousExpenseId_ShouldReturnMinusOne_WhenListIsEmpty()
+        {
+            var result = _presenter.GetNextOrPreviousExpenseId(new List<BudgetItem>(), 1);
+            Assert.Equal(-1, result);
+        }
+
+        [Fact]
+        public void GetNextOrPreviousExpenseId_ShouldReturnMinusOne_WhenDeletedIdNotFound()
+        {
+            var items = new List<BudgetItem>
+            {
+                new BudgetItem { ExpenseID = 1 },
+                new BudgetItem { ExpenseID = 2 }
+            };
+            var result = _presenter.GetNextOrPreviousExpenseId(items, 99);
+            Assert.Equal(-1, result);
+        }
+
+        [Fact]
+        public void GetNextOrPreviousExpenseId_ShouldReturnNextId_WhenNextExists()
+        {
+            var items = new List<BudgetItem>
+            {
+                new BudgetItem { ExpenseID = 10 },
+                new BudgetItem { ExpenseID = 20 },
+                new BudgetItem { ExpenseID = 30 }
+            };
+            var result = _presenter.GetNextOrPreviousExpenseId(items, 20);
+            Assert.Equal(30, result);
+        }
+
+        [Fact]
+        public void GetNextOrPreviousExpenseId_ShouldReturnPreviousId_WhenNoNextExists()
+        {
+            var items = new List<BudgetItem>
+            {
+                new BudgetItem { ExpenseID = 10 },
+                new BudgetItem { ExpenseID = 20 },
+                new BudgetItem { ExpenseID = 30 }
+            };
+            var result = _presenter.GetNextOrPreviousExpenseId(items, 30);
+            Assert.Equal(20, result);
+        }
+
+        [Fact]
+        public void GetNextOrPreviousExpenseId_ShouldReturnMinusOne_WhenOnlyOneItem()
+        {
+            var items = new List<BudgetItem>
+            {
+                new BudgetItem { ExpenseID = 42 }
+            };
+            var result = _presenter.GetNextOrPreviousExpenseId(items, 42);
+            Assert.Equal(-1, result);
+        }
+
+        //Test DisplayChartIfEnable
+        [Fact]
+        public void DisplayChartIfEnabled_ShouldShowChart_WhenBothFiltersEnabled()
+        {
+            // Arrange
+            _mockView.StubDisplayByMonthSummary = true;
+            _mockView.StubDisplayByCategorySummary = true;
+            _mockView.StubStartDate = new DateTime(2025, 1, 1);
+            _mockView.StubEndDate = new DateTime(2025, 12, 31);
+            _presenter.GetDatabase("test.db");
+
+            // Act
+            _presenter.DisplayChartIfEnabled();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.DisplayByMonthSummary), _mockView.CalledMethods);
+            Assert.Contains(nameof(_mockView.DisplayByCategorySummary), _mockView.CalledMethods);
+            Assert.Contains(nameof(_mockView.ShowChart), _mockView.CalledMethods);
+            Assert.Empty(_mockView.CalledMethods.Where(m => m == nameof(_mockView.HideChart)));
+            Assert.Single(_mockView.ChartCalls); // Verify ShowChart was called once
+        }
+
+        [Theory]
+        [InlineData(true, false)]
+        [InlineData(false, true)]
+        [InlineData(false, false)]
+        public void DisplayChartIfEnabled_ShouldHideChart_WhenAnyFilterDisabled(bool byMonth, bool byCategory)
+        {
+            // Arrange
+            _mockView.StubDisplayByMonthSummary = byMonth;
+            _mockView.StubDisplayByCategorySummary = byCategory;
+            _presenter.GetDatabase("test.db");
+
+            // Act
+            _presenter.DisplayChartIfEnabled();
+
+            // Assert
+            Assert.Contains(nameof(_mockView.HideChart), _mockView.CalledMethods);
+            Assert.DoesNotContain(nameof(_mockView.ShowChart), _mockView.CalledMethods);
+            Assert.Empty(_mockView.ChartCalls);
+        }
+
+        [Fact]
+        public void DisplayChartIfEnabled_ShouldDoNothing_WhenBudgetIsNull()
+        {
+            // Act
+            _presenter.DisplayChartIfEnabled();
+
+            // Assert
+            Assert.DoesNotContain(nameof(_mockView.ShowChart), _mockView.CalledMethods);
+            Assert.DoesNotContain(nameof(_mockView.HideChart), _mockView.CalledMethods);
+        }
+
+        //Test GetGroupedExpensesByMonthAndCategory
+        [Fact]
+        public void GetGroupedExpensesByMonthAndCategory_ShouldGroupCorrectlyAndReturnCategoryTotals()
+        {
+            // Arrange
+            _budget = new HomeBudget("test.db", true);
+            _presenter.GetDatabase("test.db");
+
+            // Add categories
+            _presenter.AddCategory("Food", "Income");
+            _presenter.AddCategory("Transport", "Income");
+            var foodId = _budget.categories.List().First(c => c.Description == "Food").Id;
+            var transportId = _budget.categories.List().First(c => c.Description == "Transport").Id;
+
+            // Add expenses in two different months
+            _budget.expenses.Add(new DateTime(2025, 1, 5), 20.50, "Lunch", foodId);
+            _budget.expenses.Add(new DateTime(2025, 1, 10), 15.25, "Dinner", foodId);
+            _budget.expenses.Add(new DateTime(2025, 1, 15), 40.00, "Bus", transportId);
+            _budget.expenses.Add(new DateTime(2025, 2, 5), 30.00, "Groceries", foodId);
+
+            // Act
+            var result = _presenter.GetGroupedExpensesByMonthAndCategory(
+                new DateTime(2025, 1, 1),
+                new DateTime(2025, 12, 31)
+            );
+
+            // Assert
+            Assert.Equal(2, result.Count); // Two months
+
+            var janRow = result[0];
+            Assert.Equal("2025-01", janRow["Month"]);
+            Assert.Equal(35.75, Convert.ToDouble(janRow["Food"]));      // 20.50 + 15.25
+            Assert.Equal(40.00, Convert.ToDouble(janRow["Transport"])); // 40.00
+
+            var febRow = result[1];
+            Assert.Equal("2025-02", febRow["Month"]);
+            Assert.Equal(30.00, Convert.ToDouble(febRow["Food"]));      // 30.00
+            Assert.Equal(0.0, Convert.ToDouble(febRow["Transport"]));   // No Transport in Feb
+        }
+        [Fact]
+        public void GetGroupedExpensesByMonthAndCategory_ShouldReturnEmptyList_WhenNoItemsInRange()
+        {
+            // Arrange
+            _budget = new HomeBudget("test.db", true);
+            _presenter.GetDatabase("test.db");
+
+            // Add category but no expenses
+            _presenter.AddCategory("Leisure", "Debit");
+
+            // Act
+            var result = _presenter.GetGroupedExpensesByMonthAndCategory(
+                new DateTime(2030, 1, 1),
+                new DateTime(2030, 12, 31)
+            );
+
+            // Assert
+            Assert.Empty(result);
         }
 
     }

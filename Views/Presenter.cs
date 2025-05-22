@@ -88,7 +88,7 @@ namespace BudgetModel
                     return;
                 }
 
-                _view.DisplayAddExpense(); //open the add expense window
+                _view.DisplayAddExpense();              //open the add expense window
                 Category category = GetCategory(categoryName);
         
                 int categoryId = category.Id; //get category id when adding the expense 
@@ -198,6 +198,7 @@ namespace BudgetModel
             if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(typeString))
             {
                 _view.DisplayErrorMessage("Please enter a category name and select a type.");
+                return false;
             }
 
             Category.CategoryType type;
