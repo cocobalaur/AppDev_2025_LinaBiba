@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
-        Title="Filter" Height="479" Width="1002" >
+        Title="Filter" Height="479" Width="1002" MinWidth="740" MaxWidth="1100" MinHeight="451" MaxHeight="740">
     <Grid Margin="10">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="280"/>

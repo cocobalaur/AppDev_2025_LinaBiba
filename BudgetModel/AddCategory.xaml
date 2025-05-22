@@ -5,16 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BudgetModel"
         mc:Ignorable="d"
-        Title="AddCategory" Height="450" Width="800"> 
+        Title="AddCategory" Height="370" Width="405" MinHeight="260" MaxHeight="380" MaxWidth="420" MinWidth="270"> 
     <Grid Margin="10">
-              <Grid.RowDefinitions>
-          <RowDefinition Height="Auto"/>
-          <RowDefinition Height="*"/>
-      </Grid.RowDefinitions>
-      <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="2*" />
-          <ColumnDefinition Width="1.5*" />
-      </Grid.ColumnDefinitions>
+
         <StackPanel>
         <TextBlock Text="Create New Category" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
 
