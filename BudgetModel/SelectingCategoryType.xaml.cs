@@ -42,12 +42,19 @@ namespace BudgetModel
             return false;
         }
 
-
+        /// <summary>
+        /// Event handler for the Cancel button.
+        /// Closes the dialog without saving any selection.
+        /// </summary>
         private void OnCancelClick(object sender, RoutedEventArgs e)
         {
             this.DialogResult = false;
         }
 
+        /// <summary>
+        /// Event handler for the add category button.
+        /// Validates selection, sets the selected category type, and closes the dialog.
+        /// </summary>
         private void AddCategoryType(object sender, RoutedEventArgs e)
         {
             if (ChoosenCategoryType())
