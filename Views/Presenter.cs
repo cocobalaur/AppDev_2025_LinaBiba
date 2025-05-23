@@ -117,6 +117,11 @@ namespace BudgetModel
             return _budget.categories.List();
         }
 
+        /// <summary>
+        /// Checks if a category with the given name exists in the list of categories.
+        /// </summary>
+        /// <param name="category">The category name to search for.</param>
+        /// <returns>True if the category exists; otherwise, false.</returns>
         public bool FindCategory(string category)
         {
             List<Category> categories = GetCategories();
@@ -133,11 +138,13 @@ namespace BudgetModel
         }
 
         /// <summary>
-        /// Searches for a category by description or creates a new one if it doesn't exist.
+        /// Retrieves a category by its description match.
         /// </summary>
-        /// <param name="categoryDescription">The category name to find or create.</param>
-        /// <returns>The existing or newly created Category object.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if creation or retrieval fails.</exception>
+        /// <param name="categoryDescription">The description of the category to retrieve.</param>
+        /// <returns>The matching object.</returns>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if no matching category is found or if an error occurs during retrieval.
+        /// </exception>
         public Category GetCategory(string categoryDescription)
         {
             try
@@ -163,6 +170,13 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Refreshes the list of categories and updates the view components
+        /// that display category filters and expense entries.
+        /// </summary>
+        /// <param name="selectedCategory">
+        /// The category that should be pre-selected in the updated view, this is optional.
+        /// </param>
         public void RefreshCategoryList(string selectedCategory = null)
         {
             if (_budget == null)

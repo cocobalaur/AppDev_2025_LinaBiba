@@ -48,7 +48,17 @@ namespace BudgetModel
             ExpenseDatePicker.SelectedDate = DateTime.Today;
             this.Close();
         }
-  
+
+        /// <summary>
+        /// Triggered by Add Expense button. Attempts to add a new expense.
+        /// Validates and processes user input, then clears the form.
+        /// </summary>
+        private void AddExpenseClick(object sender, RoutedEventArgs e) 
+        {
+           GetExpense();
+           OnCancelClick(sender, e); //clear
+        }
+
         /// <summary>
         /// Handles adding a new expense entry after validating user input.
         /// Ensures that all required fields (name, amount, date, category, and category type) are properly filled.
@@ -57,12 +67,7 @@ namespace BudgetModel
         /// </summary>
         /// <param name="sender">The source of the event.</param>
         /// <param name="e">Event arguments associated with the button click.</param>
-        private void AddExpenseClick(object sender, RoutedEventArgs e) 
-        {
-           GetExpense();
-           OnCancelClick(sender, e); //clear
-        }
-
+        /// 
         public void GetExpense() //Looks more like PRocessandMaybeAddAnExpense
         {
             string name = ExpenseNameTextBox.Text;
@@ -103,12 +108,10 @@ namespace BudgetModel
 
 
         /// <summary>
-        /// Event handler triggered when the CategoryComboBox dropdown closes.
-        /// Attempts to create a new category if the entered text does not match an existing category,
-        /// then refreshes the list to immediately reflect any new categories.
+        /// Handles CategoryComboBox dropdown closing event.
+        /// Checks if the entered text matches an existing category.
+        /// If not, prompts for a category type and adds a new category.
         /// </summary>
-        /// <param name="sender">The source of the event (CategoryComboBox).</param>
-        /// <param name="e">Event arguments associated with the dropdown closing.</param>
         private void CategoryComboBox_DropDownClosed(object sender, EventArgs e)
         {
             string categoryName = CategoryComboBox.Text;
@@ -135,6 +138,10 @@ namespace BudgetModel
             }
         }
 
+        /// <summary>
+        /// Prompts user to select a category type for a new category with a dialog.
+        /// </summary>
+        /// <returns>Selected category type or null if canceled.</returns>
         public string PromptForCategoryType()
         {
             var categoryTypeWindow = new SelectingCategoryType();
@@ -148,6 +155,9 @@ namespace BudgetModel
             return null; //canceled
         }
 
+        /// <summary>
+        /// Opens the AddCategory window to add a category.
+        /// </summary>
         private void AddCategory_Click(object sender, RoutedEventArgs e)
         {
             _categoryWindow = new AddCategory(_presenter, _view);
